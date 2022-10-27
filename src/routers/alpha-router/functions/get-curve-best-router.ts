@@ -175,7 +175,7 @@ const _getUsdPricesFromApi = async (): Promise<IDict<number>> => {
     return priceDict
 }
 
-const _getUsdRate = async (assetId: string): Promise<number> => {
+export const _getUsdRate = async (assetId: string): Promise<number> => {
     const pricesFromApi = await _getUsdPricesFromApi();
     if (assetId.toLowerCase() in pricesFromApi) return pricesFromApi[assetId.toLowerCase()]!;
 

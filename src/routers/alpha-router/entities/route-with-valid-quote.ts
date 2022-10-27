@@ -105,6 +105,7 @@ export class V2RouteWithValidQuote implements IV2RouteWithValidQuote {
   public poolAddresses: string[];
   public tokenPath: Token[] | QToken[] | PToken[];
   public platform: BarterProtocol;
+  public output: CurrencyAmount;
   public toString(): string {
     return `${this.platform}: ${this.percent.toFixed(
       2
@@ -148,7 +149,8 @@ export class V2RouteWithValidQuote implements IV2RouteWithValidQuote {
       const quoteGasAdjusted = this.quote.add(gasCostInToken);
       this.quoteAdjustedForGas = quoteGasAdjusted;
     }
-
+    this.output = this.quote
+    this.quote = this.quoteAdjustedForGas
     if (
       v2PoolProvider instanceof QuickV2PoolProvider &&
       route instanceof QRoute
@@ -241,6 +243,7 @@ export class V3RouteWithValidQuote implements IV3RouteWithValidQuote {
   public poolAddresses: string[];
   public tokenPath: Token[];
   public platform: BarterProtocol;
+  public output: CurrencyAmount;
 
   public toString(): string {
     return `${this.percent.toFixed(
@@ -291,7 +294,8 @@ export class V3RouteWithValidQuote implements IV3RouteWithValidQuote {
       const quoteGasAdjusted = this.quote.add(gasCostInToken);
       this.quoteAdjustedForGas = quoteGasAdjusted;
     }
-
+    this.output = this.quote
+    this.quote = this.quoteAdjustedForGas
     this.poolAddresses = _.map(
       route.pools,
       (p) =>
@@ -326,6 +330,9 @@ export type CurveRouteWithValidQuoteParams = {
   percent: number;
   route: CurveRoute;
   quoteToken: Token;
+  gasPriceWei: BigNumber;
+  tokenOutPrice: number;
+  ethPrice: number;
   tradeType: TradeType;
   platform: BarterProtocol;
 };
@@ -348,6 +355,7 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
   public gasCostInToken: CurrencyAmount;
   public gasCostInUSD: CurrencyAmount;
   public gasEstimate: BigNumber;
+  public output: CurrencyAmount;
 
   public toString(): string {
     return `${this.platform}: ${this.percent.toFixed(
@@ -361,6 +369,9 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
     rawQuote,
     percent,
     route,
+    gasPriceWei,
+    tokenOutPrice,
+    ethPrice,
     quoteToken,
     tradeType,
     platform,
@@ -379,11 +390,17 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
       this.poolAddresses[i] = this.route.steps[i]!.poolAddress;
       this.tokenPath[i] = new Token(chainId, this.route.steps[i]!.outputCoinAddress, 6);
     }
-    route.txCostUsd
-    //test data
-    this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, 0);
-    this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, 0);
-    this.gasEstimate = BigNumber.from(0);
+
+    // Constant cost for doing any swap regardless of pools.
+    const BASE_SWAP_COST = BigNumber.from(115000);
+    // Constant per extra hop in the route.
+    const COST_PER_EXTRA_HOP = BigNumber.from(20000);
+    this.gasEstimate = BASE_SWAP_COST.add(COST_PER_EXTRA_HOP.mul(route.steps.length - 1));
+    const totalGasCostWei = gasPriceWei.mul(this.gasEstimate);
+    const gas_usd = totalGasCostWei.toNumber() * ethPrice
+    const gas_token = gas_usd * tokenOutPrice
+    this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, gas_token);
+    this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, gas_usd);
     if (this.tradeType == TradeType.EXACT_INPUT) {
       const quoteGasAdjusted = this.quote.subtract(this.gasCostInToken);
       this.quoteAdjustedForGas = quoteGasAdjusted;
@@ -391,6 +408,7 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
       const quoteGasAdjusted = this.quote.add(this.gasCostInToken);
       this.quoteAdjustedForGas = quoteGasAdjusted;
     }
+    this.output = this.quote
     this.quote = this.quoteAdjustedForGas
   }
 }

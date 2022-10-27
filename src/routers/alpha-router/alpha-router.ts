@@ -143,7 +143,7 @@ import {
 import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
 import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
-import { _getBestRouteAndOutput } from './functions/get-curve-best-router';
+import { _getBestRouteAndOutput, _getUsdRate } from './functions/get-curve-best-router';
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -976,6 +976,7 @@ export class AlphaRouter
           amounts,
           percents,
           quoteToken,
+          gasPriceWei,
           tradeType,
         )
       );
@@ -1124,6 +1125,7 @@ export class AlphaRouter
     amounts: CurrencyAmount[],
     percents: number[],
     quoteToken: Token,
+    gasPriceWei: BigNumber,
     swapType: TradeType,
   ): Promise<{
     routesWithValidQuotes: CurveRouteWithValidQuote[];
@@ -1163,6 +1165,15 @@ export class AlphaRouter
       return { routesWithValidQuotes: [] };
     }
 
+    let tokenOutPrice
+    let ethPrice
+    try{
+      tokenOutPrice = await _getUsdRate(tokenOut.address)
+      ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+    }catch{
+      throw("fail to get token price")
+    }
+
     for (let i = 0; i < amounts.length; i++) {
       const percent = percents[i]!;
       const amount = amounts[i]!;
@@ -1174,6 +1185,9 @@ export class AlphaRouter
         percent: percent,
         route: curveRoute,
         quoteToken: quoteToken,
+        gasPriceWei: gasPriceWei,
+        tokenOutPrice,
+        ethPrice,
         tradeType: swapType,
         platform: BarterProtocol.CURVE,
       });

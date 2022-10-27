@@ -49,6 +49,22 @@ export const WETH_MATIC = new Token(
   'Wrapped Ether'
 );
 
+export const USDC = new Token(
+  1,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'USD//C'
+);
+
+export const USDT = new Token(
+  1,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT',
+  'Tether USD'
+);
+
 export const USDC_MATIC = new Token(
   ChainId.MATIC,
   '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',

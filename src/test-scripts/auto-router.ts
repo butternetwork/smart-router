@@ -3,8 +3,8 @@ import { Protocol } from '@uniswap/router-sdk';
 import { Pool } from '@uniswap/v3-sdk';
 import { BigNumber, ethers } from 'ethers';
 import {
-  USDC_MATIC,
-  USDT_MATIC,
+  USDC,
+  USDT,
 } from '../providers/quickswap/util/token-provider';
 import { SwapRoute } from '../routers';
 import { getBestRoute } from '../routers/barter-router';
@@ -35,13 +35,13 @@ const protocols = [
   //BarterProtocol.QUICKSWAP,
   BarterProtocol.SUSHISWAP,
   // BarterProtocol.PANCAKESWAP,
-  //BarterProtocol.CURVE,
+  BarterProtocol.CURVE,
 ];
 
 // const tokenIn = USDT_BNB;
 // const tokenOut = USDC_BNB;
-const tokenIn = USDT_MATIC;
-const tokenOut = USDC_MATIC;
+const tokenIn = USDT;
+const tokenOut = USDC;
 const abiCoder = new ethers.utils.AbiCoder();
 
 async function main() {
@@ -51,10 +51,10 @@ async function main() {
     provider,
     protocols,
     '100000',
-    "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    6,
-    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    6,
+    tokenIn.address,
+    tokenIn.decimals,
+    tokenOut.address,
+    tokenOut.decimals,
     TradeType.EXACT_INPUT,
     // tokenIn.symbol,
     // tokenIn.name,
@@ -65,15 +65,16 @@ async function main() {
   if (swapRoute == null) {
     return;
   }
-  let excluding = 0 
+  let total = 0 
   let sum = 0;
   for (let route of swapRoute.route) {
     console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
-    excluding += Number(route.quoteAdjustedForGas.toFixed(2))
+    console.log(route.quoteAdjustedForGas.toFixed(2));
+    total += Number(route.output.toExact())
     sum += parseFloat(route.quote.toExact());
   }
-  console.log('total get: ', sum);
-  console.log('excluding fee: ', excluding);
+  console.log('total get: ', total);
+  console.log('excluding fee: ', sum);
   console.log('time: ', Date.now() - start);
   // console.log(await doSwap(swapRoute));
 }
