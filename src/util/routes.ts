@@ -9,7 +9,7 @@ import { Pool, Route as V3RouteRaw } from '@uniswap/v3-sdk';
 import _ from 'lodash';
 import { platform } from 'os';
 import { CurrencyAmount } from '.';
-import { RouteWithValidQuote } from '../routers/alpha-router';
+import { CurveRoute, RouteWithValidQuote } from '../routers/alpha-router';
 import {
   PancakeV2Route,
   QuickV2Route,
@@ -157,7 +157,7 @@ export const poolToString = (p: Pool | Pair | PPair): string => {
 };
 
 export function routeToString(
-  route: V2Route | V3Route | SushiV2Route | QuickV2Route | PancakeV2Route
+  route: V2Route | V3Route | SushiV2Route | QuickV2Route | PancakeV2Route | CurveRoute
 ): string {
   let routeStr = 'route type not found';
   if (route instanceof V2RouteRaw || route instanceof V3RouteRaw) {
@@ -167,7 +167,58 @@ export function routeToString(
   } else if (route instanceof PancakeV2RouteRaw) {
     routeStr = pancakeRouteToString(route);
   } else {
-    routeStr = uniRouteToString(route);
+    routeStr = otherRouteToString(route);
   }
   return routeStr;
 }
+
+export const otherRouteToString = (route: any): string => {
+  if (!route.steps) {
+    const isV3Route = (
+      route: V3Route | V2Route | SushiV2Route
+    ): route is V3Route => (route as V3Route).pools != undefined;
+    const routeStr = [];
+    const tokens = isV3Route(route) ? route.tokenPath : route.path;
+    const tokenPath = _.map(tokens, (token) => `${token.symbol}`);
+    const pools = isV3Route(route) ? route.pools : route.pairs;
+    const poolFeePath = _.map(
+      pools,
+      (pool) =>
+        `${pool instanceof Pool
+          ? ` -- ${pool.fee / 10000}% [${Pool.getAddress(
+            pool.token0,
+            pool.token1,
+            pool.fee
+          )}]`
+          : ` -- [${Pair.getAddress(
+            (pool as Pair).token0,
+            (pool as Pair).token1
+          )}]`
+        } --> `
+    );
+
+    for (let i = 0; i < tokenPath.length; i++) {
+      routeStr.push(tokenPath[i]);
+      if (i < poolFeePath.length) {
+        routeStr.push(poolFeePath[i]);
+      }
+    }
+
+    return routeStr.join('');
+  }
+  const routeStr = [];
+  const steps = route.steps;
+  const swapPath = _.map(steps, (token) => `swapAddress:${token.swapAddress}-->`);
+  const outputCoinPath = _.map(steps, (token) => `outputCoinAddress:${token.outputCoinAddress}-->`);
+  const poolAddresses = _.map(steps, (pool) => `[${pool.poolId} : ${pool.poolAddress}]--> `);
+  routeStr.push("tokenIn --> ");
+  for (let i = 0; i < poolAddresses.length; i++) {
+    if (i < poolAddresses.length) {
+      //routeStr.push(swapPath[i]);
+      routeStr.push(poolAddresses[i]);
+      //routeStr.push(outputCoinPath[i]);
+    }
+  }
+  routeStr.push("tokenOut");
+  return routeStr.join('');
+};

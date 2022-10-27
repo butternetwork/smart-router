@@ -180,9 +180,9 @@ function assemblePoolRequest(
   let protocolArr = [];
   for (let protocol of protocolSet) {
     if (protocol === BarterProtocol.UNI_V2) {
-      protocolArr.push('uniswap-v2');
+      protocolArr.push('uniswap_v2');
     } else if (protocol === BarterProtocol.UNI_V3) {
-      protocolArr.push('uniswap-v3');
+      protocolArr.push('uniswap_v3');
     } else {
       protocolArr.push(protocol.toLowerCase());
     }

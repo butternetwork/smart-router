@@ -3,6 +3,8 @@ import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
 import { TokenList } from '@uniswap/token-lists';
 import { Pair } from '@uniswap/v2-sdk';
+import { curve } from "@curvefi/api/lib/curve"
+import { IRoute } from "@curvefi/api/lib/interfaces";
 import {
   MethodParameters,
   Pool,
@@ -114,6 +116,8 @@ import {
   ETH_GAS_STATION_API_URL,
 } from './config';
 import {
+  CurveRoute,
+  CurveRouteWithValidQuote,
   RouteWithValidQuote,
   V2RouteWithValidQuote,
   V3RouteWithValidQuote,
@@ -139,6 +143,7 @@ import {
 import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
 import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
+import { _getBestRouteAndOutput } from './functions/get-curve-best-router';
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -960,6 +965,21 @@ export class AlphaRouter
         )
       );
     }
+    const quoteCurvePromises: Promise<{
+      routesWithValidQuotes: RouteWithValidQuote[];
+    }>[] = [];
+    if (protocolsSet.has(BarterProtocol.CURVE)) {
+      quoteCurvePromises.push(
+        this.getCurveQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          tradeType,
+        )
+      );
+    }
     const routesWithValidQuotesByProtocol = await Promise.all(quotePromises);
 
     let allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
@@ -973,6 +993,15 @@ export class AlphaRouter
         ...routesWithValidQuotes,
       ];
       allCandidatePools = [...allCandidatePools, candidatePools];
+    }
+    const routesWithValidQuotesByCurveProtocol = await Promise.all(quoteCurvePromises);
+    for (const {
+      routesWithValidQuotes,
+    } of routesWithValidQuotesByCurveProtocol) {
+      allRoutesWithValidQuotes = [
+        ...allRoutesWithValidQuotes,
+        ...routesWithValidQuotes,
+      ];
     }
     if (allRoutesWithValidQuotes.length == 0) {
       log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
@@ -1087,6 +1116,70 @@ export class AlphaRouter
     });
 
     return poolsFiltered;
+  }
+
+  private async getCurveQuotes(
+    tokenIn: Token,
+    tokenOut: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    swapType: TradeType,
+  ): Promise<{
+    routesWithValidQuotes: CurveRouteWithValidQuote[];
+  }> {
+    await curve.init(
+      'JsonRpc',
+      {
+        url: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+        privateKey:
+          'b87b1f26c7d0ffe0f65c25dbc09602e0ac9c0d14acc979b5d67439cade6cdb7b',
+      },
+      { chainId: 1 }
+    );
+
+    let quotePromises: Promise<IRoute>[] = [];
+
+    let quotes: IRoute[] = []
+
+    const routesWithValidQuotes = []
+
+    for (let i = 0; i < amounts.length; i++) {
+      const amount = amounts[i]!;
+      quotePromises.push(_getBestRouteAndOutput(tokenIn.address, tokenIn.decimals, tokenOut.address, tokenOut.decimals, amount.toFixed(2)))
+      if ((i + 1) % 5 == 0 || i == amounts.length - 1) {
+        const result = await Promise.all(quotePromises);
+        for (let j = 0; j < result.length; j++) {
+          if (result[j]) {
+            quotes.push(result[j]!)
+          }
+        }
+        console.log("Analysis curve routes:", percents[i], "%")
+        quotePromises = []
+      }
+    }
+
+    if (quotes.length == 0) {
+      return { routesWithValidQuotes: [] };
+    }
+
+    for (let i = 0; i < amounts.length; i++) {
+      const percent = percents[i]!;
+      const amount = amounts[i]!;
+      const curveRoute = new CurveRoute(quotes[i]!.steps, quotes[i]!._output, quotes[i]!.outputUsd, quotes[i]!.txCostUsd)
+      const routeWithValidQuote = new CurveRouteWithValidQuote({
+        chainId: this.chainId,
+        amount: amount,
+        rawQuote: quotes[i]!._output,
+        percent: percent,
+        route: curveRoute,
+        quoteToken: quoteToken,
+        tradeType: swapType,
+        platform: BarterProtocol.CURVE,
+      });
+      routesWithValidQuotes.push(routeWithValidQuote);
+    }
+    return { routesWithValidQuotes };
   }
 
   private async getV3Quotes(

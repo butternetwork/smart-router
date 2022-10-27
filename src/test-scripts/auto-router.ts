@@ -13,10 +13,10 @@ import { TradeType } from '../util/constants';
 import { BarterProtocol } from '../util/protocol';
 import abi from './routerabi.json';
 
-const chainId = 137;
+const chainId = 1;
 // const rpcUrl = 'https://bsc-dataseed1.defibit.io/';
 const rpcUrl =
-  'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372';
+  'https://mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
 const wallet = new ethers.Wallet(
@@ -30,11 +30,12 @@ const routerContract = new ethers.Contract(
 );
 const slippage = 3; // thousandth
 const protocols = [
-  // BarterProtocol.UNI_V2,
-  // BarterProtocol.UNI_V3,
-  BarterProtocol.QUICKSWAP,
+  BarterProtocol.UNI_V2,
+  BarterProtocol.UNI_V3,
+  //BarterProtocol.QUICKSWAP,
   BarterProtocol.SUSHISWAP,
   // BarterProtocol.PANCAKESWAP,
+  //BarterProtocol.CURVE,
 ];
 
 // const tokenIn = USDT_BNB;
@@ -49,30 +50,32 @@ async function main() {
     chainId,
     provider,
     protocols,
-    '1',
-    tokenIn.address,
-    tokenIn.decimals,
-    tokenOut.address,
-    tokenOut.decimals,
+    '100000',
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    6,
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    6,
     TradeType.EXACT_INPUT,
-    tokenIn.symbol,
-    tokenIn.name,
-    tokenOut.symbol,
-    tokenOut.name
+    // tokenIn.symbol,
+    // tokenIn.name,
+    // tokenOut.symbol,
+    // tokenOut.name
   );
 
   if (swapRoute == null) {
     return;
   }
-
+  let excluding = 0 
   let sum = 0;
   for (let route of swapRoute.route) {
     console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
+    excluding += Number(route.quoteAdjustedForGas.toFixed(2))
     sum += parseFloat(route.quote.toExact());
   }
   console.log('total get: ', sum);
+  console.log('excluding fee: ', excluding);
   console.log('time: ', Date.now() - start);
-  console.log(await doSwap(swapRoute));
+  // console.log(await doSwap(swapRoute));
 }
 
 async function doSwap(swapRoute: SwapRoute): Promise<TransactionReceipt> {

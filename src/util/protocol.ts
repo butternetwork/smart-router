@@ -4,4 +4,5 @@ export enum BarterProtocol {
   QUICKSWAP = 'QUICKSWAP',
   SUSHISWAP = 'SUSHISWAP',
   PANCAKESWAP = 'PANCAKESWAP',
+  CURVE = 'CURVE'
 }

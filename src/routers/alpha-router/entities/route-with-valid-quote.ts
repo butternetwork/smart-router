@@ -7,7 +7,7 @@ import { Route as SRoute } from '@sushiswap/sdk';
 import { Protocol } from '@uniswap/router-sdk';
 import { Token, TradeType } from '@uniswap/sdk-core';
 import { Route } from '@uniswap/v2-sdk';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import _ from 'lodash';
 import { pancakeTokenToUniToken } from '../../../adapter/pancake-adapter';
 import { quickTokenToUniToken } from '../../../adapter/quick-adapter';
@@ -28,7 +28,7 @@ import {
   V3Route,
 } from '../../router';
 import { IGasModel } from '../gas-models/gas-model';
-
+import { IRoute, IRouteStep } from '@curvefi/api/lib/interfaces';
 /**
  * Represents a route, a quote for swapping some amount on it, and other
  * metadata used by the routing algorithm.
@@ -38,7 +38,7 @@ import { IGasModel } from '../gas-models/gas-model';
  * @template Route
  */
 export interface IRouteWithValidQuote<
-  Route extends V3Route | V2Route | SushiV2Route | QuickV2Route | PancakeV2Route
+  Route extends V3Route | V2Route | SushiV2Route | QuickV2Route | PancakeV2Route | CurveRoute
 > {
   amount: CurrencyAmount;
   percent: number;
@@ -66,7 +66,7 @@ export type IV3RouteWithValidQuote = {
   protocol: Protocol.V3;
 } & IRouteWithValidQuote<V3Route>;
 
-export type RouteWithValidQuote = V2RouteWithValidQuote | V3RouteWithValidQuote;
+export type RouteWithValidQuote = V2RouteWithValidQuote | V3RouteWithValidQuote | CurveRouteWithValidQuote;
 
 export type V2RouteWithValidQuoteParams = {
   amount: CurrencyAmount;
@@ -299,5 +299,98 @@ export class V3RouteWithValidQuote implements IV3RouteWithValidQuote {
     );
 
     this.tokenPath = this.route.tokenPath;
+  }
+}
+
+export class CurveRoute implements IRoute {
+  readonly steps: IRouteStep[];
+  readonly _output: ethers.BigNumber;
+  readonly outputUsd: number;
+  readonly txCostUsd: number;
+  constructor(steps: IRouteStep[], _output: ethers.BigNumber, outputUsd: number, txCostUsd: number) {
+    this.steps = steps;
+    this._output = _output;
+    this.outputUsd = outputUsd;
+    this.txCostUsd = txCostUsd;
+  };
+}
+
+export type ICurveRouteWithValidQuote = {
+  protocol: BarterProtocol.CURVE;
+} & IRouteWithValidQuote<CurveRoute>;
+
+export type CurveRouteWithValidQuoteParams = {
+  chainId: number;
+  amount: CurrencyAmount;
+  rawQuote: BigNumber;
+  percent: number;
+  route: CurveRoute;
+  quoteToken: Token;
+  tradeType: TradeType;
+  platform: BarterProtocol;
+};
+
+export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
+  public readonly protocol = BarterProtocol.CURVE;
+  public amount: CurrencyAmount;
+  // The BigNumber representing the quote.
+  public rawQuote: BigNumber;
+  public quote: CurrencyAmount;
+  public percent: number;
+  public route: CurveRoute;
+  public quoteToken: Token;
+  public tradeType: TradeType;
+  public platform: BarterProtocol;
+  public tokenPath: Token[] | QToken[] | PToken[];
+  public poolAddresses: string[];
+
+  public quoteAdjustedForGas: CurrencyAmount;
+  public gasCostInToken: CurrencyAmount;
+  public gasCostInUSD: CurrencyAmount;
+  public gasEstimate: BigNumber;
+
+  public toString(): string {
+    return `${this.platform}: ${this.percent.toFixed(
+      2
+    )}% Quote[${this.quote.toExact()}] outputUsd[${this.route.outputUsd}] txCostUsd[${this.route.txCostUsd}] `;
+  }
+
+  constructor({
+    chainId,
+    amount,
+    rawQuote,
+    percent,
+    route,
+    quoteToken,
+    tradeType,
+    platform,
+  }: CurveRouteWithValidQuoteParams) {
+    this.amount = amount;
+    this.rawQuote = rawQuote;
+    this.quote = CurrencyAmount.fromRawAmount(quoteToken, rawQuote.toString());
+    this.percent = percent;
+    this.route = route;
+    this.quoteToken = quoteToken;
+    this.tradeType = tradeType;
+    this.platform = platform;
+    this.tokenPath = [];
+    this.poolAddresses = [];
+    for (let i = 0; i < this.route.steps.length; i++) {
+      this.poolAddresses[i] = this.route.steps[i]!.poolAddress;
+      this.tokenPath[i] = new Token(chainId, this.route.steps[i]!.outputCoinAddress, 6);
+    }
+    route.txCostUsd
+    //test data
+    this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, 0);
+    this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, 0);
+    this.gasEstimate = BigNumber.from(0);
+    if (this.tradeType == TradeType.EXACT_INPUT) {
+      const quoteGasAdjusted = this.quote.subtract(this.gasCostInToken);
+      this.quoteAdjustedForGas = quoteGasAdjusted;
+    } else {
+      const quoteGasAdjusted = this.quote.add(this.gasCostInToken);
+      this.quoteAdjustedForGas = quoteGasAdjusted;
+    }
+    this.quote = this.quoteAdjustedForGas
   }
 }

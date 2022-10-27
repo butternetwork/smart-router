@@ -30,6 +30,7 @@ export const ROUTER_ADDRESSES: {
   QUICKSWAP: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
   SUSHISWAP: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
   PANCAKESWAP: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+  CURVE: '',
 };
 
 export const ROUTER_INDEX: {
@@ -40,6 +41,7 @@ export const ROUTER_INDEX: {
   QUICKSWAP: BigNumber.from(2),
   SUSHISWAP: BigNumber.from(1),
   PANCAKESWAP: BigNumber.from(3),
+  CURVE: BigNumber.from(4),
 };
 export const WETH9: {
   [chainId in Exclude<
