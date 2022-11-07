@@ -397,10 +397,10 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
     const COST_PER_EXTRA_HOP = BigNumber.from(20000);
     this.gasEstimate = BASE_SWAP_COST.add(COST_PER_EXTRA_HOP.mul(route.steps.length - 1));
     const totalGasCostWei = gasPriceWei.mul(this.gasEstimate);
-    const gas_usd = totalGasCostWei.toNumber() * ethPrice
+    const gas_usd = totalGasCostWei.toNumber()  * ethPrice
     const gas_token = gas_usd * tokenOutPrice
-    this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, gas_token);
-    this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, gas_usd);
+    this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, gas_token).divide(Math.pow(10,18));
+    this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, gas_usd).divide(Math.pow(10,18));
     if (this.tradeType == TradeType.EXACT_INPUT) {
       const quoteGasAdjusted = this.quote.subtract(this.gasCostInToken);
       this.quoteAdjustedForGas = quoteGasAdjusted;

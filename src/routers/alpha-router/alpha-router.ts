@@ -804,7 +804,7 @@ export class AlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
-    const { gasPriceWei } = await this.gasPriceProvider.getGasPrice();
+    const gasPriceWei = BigNumber.from("12253330053");//await this.gasPriceProvider.getGasPrice();
 
     metric.putMetric(
       'GasPriceLoad',
