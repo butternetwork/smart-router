@@ -12,6 +12,7 @@ export enum ChainId {
   POLYGON = 137,
   POLYGON_MUMBAI = 80001,
   BSC = 56,
+  NEAR = 1313161555
 }
 
 export const V2_SUPPORTED = [
@@ -53,6 +54,8 @@ export const ID_TO_CHAIN_ID = (id: number): ChainId => {
       return ChainId.POLYGON;
     case 80001:
       return ChainId.POLYGON_MUMBAI;
+    case 1313161555:
+      return ChainId.NEAR;  
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -72,6 +75,7 @@ export enum ChainName {
   POLYGON = 'polygon-mainnet',
   POLYGON_MUMBAI = 'polygon-mumbai',
   BSC_MAINNET = 'binance-mainnet',
+  NEAR = 'near-mainnet',
 }
 
 export enum NativeCurrencyName {
@@ -120,6 +124,8 @@ export const ID_TO_NETWORK_NAME = (id: number): ChainName => {
       return ChainName.POLYGON_MUMBAI;
     case 56:
       return ChainName.BSC_MAINNET;
+    case 1313161555:
+      return ChainName.NEAR;  
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -242,6 +248,13 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     18,
     'WBNB',
     'Wrapped BNB'
+  ),
+  [ChainId.NEAR]: new Token(
+    ChainId.NEAR,
+    '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+    24,
+    'Wrapped NEAR fungible token',
+    'wNEAR'
   ),
 };
 

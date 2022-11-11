@@ -9,7 +9,7 @@ import { Pool, Route as V3RouteRaw } from '@uniswap/v3-sdk';
 import _ from 'lodash';
 import { platform } from 'os';
 import { CurrencyAmount } from '.';
-import { CurveRoute, RouteWithValidQuote } from '../routers/alpha-router';
+import { CurveRoute, RefRoute, RouteWithValidQuote } from '../routers/alpha-router';
 import {
   PancakeV2Route,
   QuickV2Route,
@@ -157,7 +157,7 @@ export const poolToString = (p: Pool | Pair | PPair): string => {
 };
 
 export function routeToString(
-  route: V2Route | V3Route | SushiV2Route | QuickV2Route | PancakeV2Route | CurveRoute
+  route: V2Route | V3Route | SushiV2Route | QuickV2Route | PancakeV2Route | CurveRoute | RefRoute
 ): string {
   let routeStr = 'route type not found';
   if (route instanceof V2RouteRaw || route instanceof V3RouteRaw) {

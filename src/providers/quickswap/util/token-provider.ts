@@ -42,11 +42,28 @@ export const WMATIC_MATIC = new Token(
 );
 
 export const WETH_MATIC = new Token(
-  ChainId.MATIC,
+  1313161555,
   '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
   18,
   'WETH',
   'Wrapped Ether'
+);
+
+//NEAR tokens
+export const USDT_NEAR = new Token(
+  1313161555,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near',
+  'USDT.e'
+);
+
+export const USDC_NEAR = new Token(
+  1313161555,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near',
+  'USDC'
 );
 
 export const USDC = new Token(

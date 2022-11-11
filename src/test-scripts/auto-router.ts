@@ -31,16 +31,19 @@ const routerContract = new ethers.Contract(
   signer
 );
 const slippage = 3; // thousandth
+
+
 const protocols = [
-  BarterProtocol.UNI_V2,
-  BarterProtocol.UNI_V3,
+  //BarterProtocol.UNI_V2,
+  //BarterProtocol.UNI_V3,
   //BarterProtocol.QUICKSWAP,
   //BarterProtocol.SUSHISWAP,
   //BarterProtocol.PANCAKESWAP,
-  BarterProtocol.CURVE,
+  //BarterProtocol.CURVE,
+  BarterProtocol.REF
 ];
 
-const amount = '10'
+const amount = '100'
 const tokenIn = USDT;
 const tokenOut = USDC;
 const abiCoder = new ethers.utils.AbiCoder();
@@ -70,28 +73,31 @@ async function main() {
   let sum = 0;
   let a = 0
   let b = 0
+  
   for (let route of swapRoute.route) {
-    console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
-    console.log(route.quoteAdjustedForGas.toFixed(2));
-    total += Number(route.output.toExact())
+  //   console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
+  //   console.log(route.quoteAdjustedForGas.toFixed(2));
+  //   total += Number(route.output.toExact())
+  console.log(route.poolAddresses)
     sum += parseFloat(route.quote.toExact());
-    a += parseFloat(route.gasCostInUSD.toExact());
-    b += parseFloat(route.gasEstimate.toString());
+    //a += parseFloat(route.gasCostInUSD.toExact());
+    //b += parseFloat(route.gasEstimate.toString());
   }
-  console.log(a,b)
-  console.log('total get: ', total);
-  console.log('excluding fee: ', sum);
-  console.log('time: ', Date.now() - start);
 
-  const token = new ethers.Contract(
-    tokenIn.address,
-    ERC20_ABI,
-    signer
-  );
-  await token.approve(routerContract.address, amount, {
-    gasLimit: 3500000,
-    gasPrice: 70057219557,
-  })
+  //console.log(a,b)
+  // console.log('total get: ', total);
+  console.log('excluding fee: ', sum);
+  // console.log('time: ', Date.now() - start);
+
+  // const token = new ethers.Contract(
+  //   tokenIn.address,
+  //   ERC20_ABI,
+  //   signer
+  // );
+  // await token.approve(routerContract.address, amount, {
+  //   gasLimit: 3500000,
+  //   gasPrice: 70057219557,
+  // })
   //console.log(await doSwap(swapRoute));
 
 }

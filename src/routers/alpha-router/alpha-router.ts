@@ -1,3 +1,4 @@
+import { estimateSwap, EstimateSwapView, fetchAllPools, ftGetTokenMetadata, getExpectedOutputFromSwapTodos, getStablePools, init_env, Pool as RefPool, StablePool, SwapOptions as RefSwapOptions } from "@ref-finance/ref-sdk";
 import { ChainId as QChainId } from '@davidwgrossman/quickswap-sdk';
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
@@ -118,6 +119,8 @@ import {
 import {
   CurveRoute,
   CurveRouteWithValidQuote,
+  RefRoute,
+  RefRouteWithValidQuote,
   RouteWithValidQuote,
   V2RouteWithValidQuote,
   V3RouteWithValidQuote,
@@ -341,8 +344,8 @@ export type AlphaRouterConfig = {
 
 export class AlphaRouter
   implements
-    IRouter<AlphaRouterConfig>,
-    ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
+  IRouter<AlphaRouterConfig>,
+  ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
 {
   protected chainId: ChainId;
   protected provider: providers.BaseProvider;
@@ -536,10 +539,10 @@ export class AlphaRouter
         chainId,
         this.provider instanceof providers.JsonRpcProvider
           ? new OnChainGasPriceProvider(
-              chainId,
-              new EIP1559GasPriceProvider(this.provider),
-              new LegacyGasPriceProvider(this.provider)
-            )
+            chainId,
+            new EIP1559GasPriceProvider(this.provider),
+            new LegacyGasPriceProvider(this.provider)
+          )
           : new ETHGasStationInfoProvider(ETH_GAS_STATION_API_URL),
         new NodeJSCache<GasPrice>(
           new NodeCache({ stdTTL: 15, useClones: false })
@@ -804,7 +807,7 @@ export class AlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
-    const gasPriceWei = BigNumber.from("12253330053");//await this.gasPriceProvider.getGasPrice();
+    const gasPriceWei = BigNumber.from("22227711268");//await this.gasPriceProvider.getGasPrice();
 
     metric.putMetric(
       'GasPriceLoad',
@@ -825,7 +828,7 @@ export class AlphaRouter
       protocolsSet,
       this.chainId
     );
-
+ 
     const gasModel = await this.v3GasModelFactory.buildGasModel(
       this.chainId,
       gasPriceWei,
@@ -965,6 +968,24 @@ export class AlphaRouter
         )
       );
     }
+
+    const quoteRefPromises: Promise<{
+      routesWithValidQuotes: RouteWithValidQuote[];
+    }>[] = [];
+    if (protocolsSet.has(BarterProtocol.REF)) {
+      quoteRefPromises.push(
+        this.getRefQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          gasPriceWei,
+          tradeType,
+        )
+      );
+    }
+
     const quoteCurvePromises: Promise<{
       routesWithValidQuotes: RouteWithValidQuote[];
     }>[] = [];
@@ -995,6 +1016,7 @@ export class AlphaRouter
       ];
       allCandidatePools = [...allCandidatePools, candidatePools];
     }
+
     const routesWithValidQuotesByCurveProtocol = await Promise.all(quoteCurvePromises);
     for (const {
       routesWithValidQuotes,
@@ -1004,6 +1026,17 @@ export class AlphaRouter
         ...routesWithValidQuotes,
       ];
     }
+
+    const routesWithValidQuotesByRefProtocol = await Promise.all(quoteRefPromises);
+    for (const {
+      routesWithValidQuotes,
+    } of routesWithValidQuotesByRefProtocol) {
+      allRoutesWithValidQuotes = [
+        ...allRoutesWithValidQuotes,
+        ...routesWithValidQuotes,
+      ];
+    }
+
     if (allRoutesWithValidQuotes.length == 0) {
       log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
       return null;
@@ -1107,8 +1140,7 @@ export class AlphaRouter
 
       if (token0Invalid || token1Invalid) {
         log.info(
-          `Dropping pool ${poolToString(pool)} because token is invalid. ${
-            pool.token0.symbol
+          `Dropping pool ${poolToString(pool)} because token is invalid. ${pool.token0.symbol
           }: ${token0Validation}, ${pool.token1.symbol}: ${token1Validation}`
         );
       }
@@ -1167,11 +1199,11 @@ export class AlphaRouter
 
     let tokenOutPrice
     let ethPrice
-    try{
+    try {
       tokenOutPrice = await _getUsdRate(tokenOut.address)
       ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
-    }catch{
-      throw("fail to get token price")
+    } catch {
+      throw ("fail to get token price")
     }
 
     for (let i = 0; i < amounts.length; i++) {
@@ -1570,11 +1602,11 @@ export class AlphaRouter
     const quoteFn =
       swapType == TradeType.EXACT_INPUT
         ? this.quickV2QuoteProvider.getQuotesManyExactIn.bind(
-            this.quickV2QuoteProvider
-          )
+          this.quickV2QuoteProvider
+        )
         : this.quickV2QuoteProvider.getQuotesManyExactOut.bind(
-            this.quickV2QuoteProvider
-          );
+          this.quickV2QuoteProvider
+        );
 
     const beforeQuotes = Date.now();
     log.info(
@@ -1719,11 +1751,11 @@ export class AlphaRouter
     const quoteFn =
       swapType == TradeType.EXACT_INPUT
         ? this.sushiV2QuoteProvider.getQuotesManyExactIn.bind(
-            this.sushiV2QuoteProvider
-          )
+          this.sushiV2QuoteProvider
+        )
         : this.sushiV2QuoteProvider.getQuotesManyExactOut.bind(
-            this.sushiV2QuoteProvider
-          );
+          this.sushiV2QuoteProvider
+        );
 
     const beforeQuotes = Date.now();
     log.info(
@@ -1791,6 +1823,95 @@ export class AlphaRouter
       }
     }
     return { routesWithValidQuotes, candidatePools };
+  }
+
+  private async getRefQuotes(
+    token0: Token,
+    token1: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    gasPriceWei: BigNumber,
+    swapType: TradeType,
+  ): Promise<{
+    routesWithValidQuotes: RefRouteWithValidQuote[];
+  }> {
+
+    init_env('mainnet');
+
+    // let token0Name:string = ""
+    // let token1Name:string = ""
+    // if(token0.name&&token1.name){
+    //   token0Name = token0.name
+    //   token1Name = token1.name
+    // }
+
+    const tokenIn = await ftGetTokenMetadata("dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near");
+    const tokenOut = await ftGetTokenMetadata("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near");
+
+    const { ratedPools, unRatedPools, simplePools } = await fetchAllPools();
+
+    const stablePools: RefPool[] = unRatedPools.concat(ratedPools);
+
+    const stablePoolsDetail: StablePool[] = await getStablePools(stablePools);
+
+    const options: RefSwapOptions = {
+      enableSmartRouting: true,
+      stablePools,
+      stablePoolsDetail,
+    };
+
+    let routes = []
+    let outputs = []
+    for (let i = 0; i < amounts.length; i++) {
+      let swapTodos: EstimateSwapView[] = await estimateSwap({
+        tokenIn,
+        tokenOut,
+        amountIn: amounts[i]!.toExact(),
+        simplePools,
+        options
+      });
+      let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
+      routes.push(swapTodos)
+      outputs.push(amountOut)
+    }
+    
+    if (outputs.length == 0) {
+      return { routesWithValidQuotes: [] };
+    }
+
+    let tokenOutPrice =1
+    let ethPrice = 1200
+    // try {
+    //   tokenOutPrice = await _getUsdRate(token1.address)
+    //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+    // } catch {
+    //   throw ("fail to get token price")
+    // }
+
+    let routesWithValidQuotes:RefRouteWithValidQuote[] = []
+    for (let i = 0; i < amounts.length; i++) {
+      const percent = percents[i]!;
+      const amount = amounts[i]!;
+      const refRoute = new RefRoute(routes[i]!)
+      const quote = getExpectedOutputFromSwapTodos(routes[i]!, tokenOut.id)
+      const routeWithValidQuote = new RefRouteWithValidQuote({
+        chainId: 1313161554,//this.chainId,
+        amount: amount,
+        rawQuote: BigNumber.from(quote.toFixed(0)), 
+        percent: percent,
+        route: refRoute,
+        quoteToken: quoteToken,
+        gasPriceWei: gasPriceWei,
+        tokenOutPrice,
+        ethPrice,
+        tradeType: swapType,
+        platform: BarterProtocol.REF,
+      });
+      routesWithValidQuotes.push(routeWithValidQuote);
+    }
+
+    return { routesWithValidQuotes }
   }
 
   // Note multiplications here can result in a loss of precision in the amounts (e.g. taking 50% of 101)
