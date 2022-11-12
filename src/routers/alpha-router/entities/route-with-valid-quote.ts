@@ -438,7 +438,7 @@ export type RefRouteWithValidQuoteParams = {
   quoteToken: Token;
   gasPriceWei: BigNumber;
   tokenOutPrice: number;
-  ethPrice: number;
+  nearPrice: number;
   tradeType: TradeType;
   platform: BarterProtocol;
 };
@@ -475,14 +475,14 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
     route,
     gasPriceWei,
     tokenOutPrice,
-    ethPrice,
+    nearPrice,
     quoteToken,
     tradeType,
     platform,
   }: RefRouteWithValidQuoteParams) {
     this.amount = amount;
     this.rawQuote = rawQuote;
-    this.quote = CurrencyAmount.fromRawAmount(quoteToken, rawQuote.toString());
+    this.quote = CurrencyAmount.fromRawAmount(quoteToken, rawQuote.mul(1000000).toHexString());
     this.percent = percent;
     this.route = route;
     this.quoteToken = quoteToken;
@@ -504,7 +504,7 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
     const COST_PER_EXTRA_HOP = BigNumber.from(120000);
     this.gasEstimate = BASE_SWAP_COST.add(COST_PER_EXTRA_HOP.mul(route.allRoute.length - 1));
     const totalGasCostWei = gasPriceWei.mul(this.gasEstimate);
-    const gas_usd = totalGasCostWei.div(Math.pow(10,9)).div(Math.pow(10,3)).toNumber()  * ethPrice
+    const gas_usd = totalGasCostWei.div(Math.pow(10,9)).div(Math.pow(10,3)).toNumber()  * nearPrice
     const gas_token = gas_usd * tokenOutPrice
     this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, gas_token.toFixed(0));
     this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, gas_usd.toFixed(0));

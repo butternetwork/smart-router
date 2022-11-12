@@ -5,6 +5,8 @@ import { BigNumber, ethers } from 'ethers';
 import {
   USDC,
   USDT,
+  USDC_NEAR,
+  USDT_NEAR,
 } from '../providers/quickswap/util/token-provider';
 import { SwapRoute } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -15,7 +17,7 @@ import { BarterProtocol } from '../util/protocol';
 import abi from './routerabi.json';
 import ERC20_ABI from './tokenabi.json';
 
-const chainId = 1;
+const chainId = USDT_NEAR.chainId;
 
 const rpcUrl =
   'http://54.255.196.147:9003';
@@ -34,8 +36,8 @@ const slippage = 3; // thousandth
 
 
 const protocols = [
-  //BarterProtocol.UNI_V2,
-  //BarterProtocol.UNI_V3,
+  // BarterProtocol.UNI_V2,
+  // BarterProtocol.UNI_V3,
   //BarterProtocol.QUICKSWAP,
   //BarterProtocol.SUSHISWAP,
   //BarterProtocol.PANCAKESWAP,
@@ -44,8 +46,8 @@ const protocols = [
 ];
 
 const amount = '100'
-const tokenIn = USDT;
-const tokenOut = USDC;
+const tokenIn = USDT_NEAR;
+const tokenOut = USDC_NEAR;
 const abiCoder = new ethers.utils.AbiCoder();
 
 async function main() {
@@ -65,7 +67,7 @@ async function main() {
     tokenOut.symbol,
     tokenOut.name
   );
-
+console.log(swapRoute)
   if (swapRoute == null) {
     return;
   }
@@ -75,19 +77,19 @@ async function main() {
   let b = 0
   
   for (let route of swapRoute.route) {
-  //   console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
-  //   console.log(route.quoteAdjustedForGas.toFixed(2));
-  //   total += Number(route.output.toExact())
-  console.log(route.poolAddresses)
+    console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
+    console.log(route.quoteAdjustedForGas.toFixed(2));
+    total += Number(route.output.toExact())
+    console.log(route.poolAddresses)
     sum += parseFloat(route.quote.toExact());
-    //a += parseFloat(route.gasCostInUSD.toExact());
-    //b += parseFloat(route.gasEstimate.toString());
+    a += parseFloat(route.gasCostInUSD.toExact());
+    b += parseFloat(route.gasEstimate.toString());
   }
 
-  //console.log(a,b)
-  // console.log('total get: ', total);
+  console.log(a,b)
+  console.log('total get: ', total);
   console.log('excluding fee: ', sum);
-  // console.log('time: ', Date.now() - start);
+  console.log('time: ', Date.now() - start);
 
   // const token = new ethers.Contract(
   //   tokenIn.address,

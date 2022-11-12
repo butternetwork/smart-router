@@ -1,7 +1,8 @@
 import { Token, TradeType } from '@uniswap/sdk-core';
 import { ethers, providers } from 'ethers';
 import JSBI from 'jsbi';
-import { AlphaRouter, AlphaRouterConfig } from '../routers';
+import { AlphaRouter, AlphaRouterConfig, NearRouter } from '../routers';
+import { ChainId } from '../util';
 import { CurrencyAmount } from '../util/amounts';
 import { TradeType as VTradeType } from '../util/constants';
 import { BarterProtocol } from '../util/protocol';
@@ -24,11 +25,8 @@ export async function getBestRoute(
   tokenOutName?: string
 ): Promise<SwapRoute | null> {
   const router =
-    chainId === 56
-      ? new BSCAlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        })
+    chainId === ChainId.NEAR
+      ? new NearRouter(chainId)
       : new AlphaRouter({
           chainId: chainId,
           provider: provider,

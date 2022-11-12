@@ -54,16 +54,18 @@ export const USDT_NEAR = new Token(
   1313161555,
   '0xdac17f958d2ee523a2206206994597c13d831ec7',
   6,
-  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near',
-  'USDT.e'
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+
 );
 
 export const USDC_NEAR = new Token(
   1313161555,
   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   6,
-  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near',
-  'USDC'
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+
 );
 
 export const USDC = new Token(

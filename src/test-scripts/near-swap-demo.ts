@@ -50,9 +50,9 @@ async function main() {
 //main()
 
 async function getData(){
-  axios.get("http://54.255.196.147:9004/list-token").then((res)=>{
-   console.log(res)
-  })
+  // axios.get("http://54.255.196.147:9004/list-token").then((res)=>{
+  //  console.log(res)
+  // })
 
   init_env('mainnet');
 
@@ -72,12 +72,15 @@ async function getData(){
   const token4 = await ftGetTokenMetadata('a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near');//USDC
   const token5 = await ftGetTokenMetadata('6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near');//DAI
 
-  console.log(token1.name,token1.symbol)
-  console.log(token2.name,token2.symbol)
-  console.log(token3.name,token3.symbol)
-  console.log(token4.name,token4.symbol)
-  console.log(token5.name,token5.symbol)
-  //console.log(token5,stablePools[0])
+  // console.log(token1.name,token1.symbol)
+  // console.log(token2.name,token2.symbol)
+  // console.log(token3.name,token3.symbol)
+  // console.log(token4.name,token4.symbol)
+  // console.log(token5.name,token5.symbol)
+  console.log(token5,stablePools[0])
+
+  //let gasData = await axios.get("https://api.curve.fi/api/getGas")
+  //console.log("res",gasData.data.data.gas)
 }
 
 getData()
