@@ -100,6 +100,7 @@ import {
   getETHPoolsFromServer,
   getETHV2PoolsFromOneProtocol,
   getETHV3PoolsFromOneProtocol,
+  getMapPoolsFromOneProtocol,
 } from '../../util/pool';
 import { BarterProtocol } from '../../util/protocol';
 import { poolToString, routeToString } from '../../util/routes';
@@ -149,6 +150,7 @@ import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
 import { _getBestRouteAndOutput, _getUsdRate } from './functions/get-curve-best-router';
 import axios from "axios";
+import { MAP_MULTICALL_ADDRESS, UNISWAP_MULTICALL_ADDRESS } from "../../util/addresses";
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -398,9 +400,15 @@ export class AlphaRouter
   }: AlphaRouterParams) {
     this.chainId = chainId;
     this.provider = provider;
-    this.multicall2Provider =
+    if(chainId == ChainId.MAP_MAINNET){
+      this.multicall2Provider =
       multicall2Provider ??
-      new UniswapMulticallProvider(chainId, provider, 375_000);
+      new UniswapMulticallProvider(chainId, provider, 375_000, MAP_MULTICALL_ADDRESS);
+    }else{
+      this.multicall2Provider =
+      multicall2Provider ??
+      new UniswapMulticallProvider(chainId, provider, 375_000, UNISWAP_MULTICALL_ADDRESS);
+    }
     this.v3PoolProvider =
       v3PoolProvider ??
       new CachingV3PoolProvider(
@@ -964,8 +972,8 @@ export class AlphaRouter
       );
     }
     if (protocolsSet.has(BarterProtocol.BARTER)) {
-      let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
-      getETHV2PoolsFromOneProtocol(
+      let PoolsUnsanitized: RawETHV2SubgraphPool[] =
+      getMapPoolsFromOneProtocol(
         allPoolsUnsanitizedJsonStr,
         BarterProtocol.BARTER
       );
@@ -979,7 +987,7 @@ export class AlphaRouter
           gasPriceWei,
           tradeType,
           routingConfig,
-          v2PoolsUnsanitized
+          PoolsUnsanitized
         )
       );
     }
@@ -1229,7 +1237,6 @@ export class AlphaRouter
     routesWithValidQuotes: V2RouteWithValidQuote[];
     candidatePools: CandidatePoolsBySelectionCriteria;
   }> {
-    console.log("debug index")
     const { poolAccessor, candidatePools } = await getV2CandidatePools({
       tokenIn,
       tokenOut,
@@ -1338,8 +1345,7 @@ export class AlphaRouter
         routesWithValidQuotes.push(routeWithValidQuote);
       }
     }
-
-    return { routesWithValidQuotes: [], candidatePools };
+    return { routesWithValidQuotes, candidatePools };
   }
 
   private async getV3Quotes(
@@ -2413,240 +2419,240 @@ export class NearRouter
 
 
 
-export class MapRouter
-  implements
-  IRouter<AlphaRouterConfig>,
-  ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
-{
-  protected chainId: ChainId;
+// export class MapRouter
+//   implements
+//   IRouter<AlphaRouterConfig>,
+//   ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
+// {
+//   protected chainId: ChainId;
 
-  constructor(
-    chainId: number
-  ) {
-    this.chainId = chainId;
-  }
+//   constructor(
+//     chainId: number
+//   ) {
+//     this.chainId = chainId;
+//   }
 
-  public async routeToRatio(
-    token0Balance: CurrencyAmount,
-    token1Balance: CurrencyAmount,
-    position: Position,
-    swapAndAddConfig: SwapAndAddConfig,
-    swapAndAddOptions?: SwapAndAddOptions,
-    routingConfig: Partial<AlphaRouterConfig> = DEFAULT_ROUTING_CONFIG_BY_CHAIN(
-      this.chainId
-    )
-  ): Promise<any> {
-  }
+//   public async routeToRatio(
+//     token0Balance: CurrencyAmount,
+//     token1Balance: CurrencyAmount,
+//     position: Position,
+//     swapAndAddConfig: SwapAndAddConfig,
+//     swapAndAddOptions?: SwapAndAddOptions,
+//     routingConfig: Partial<AlphaRouterConfig> = DEFAULT_ROUTING_CONFIG_BY_CHAIN(
+//       this.chainId
+//     )
+//   ): Promise<any> {
+//   }
 
-  public async route(
-    amount: CurrencyAmount,
-    quoteCurrency: Currency,
-    tradeType: TradeType,
-    swapConfig?: SwapOptions,
-    partialRoutingConfig: Partial<AlphaRouterConfig> = {}
-  ): Promise<SwapRoute | null> {
+//   public async route(
+//     amount: CurrencyAmount,
+//     quoteCurrency: Currency,
+//     tradeType: TradeType,
+//     swapConfig?: SwapOptions,
+//     partialRoutingConfig: Partial<AlphaRouterConfig> = {}
+//   ): Promise<SwapRoute | null> {
 
-    const routingConfig: AlphaRouterConfig = _.merge(
-      {},
-      DEFAULT_ROUTING_CONFIG_BY_CHAIN(this.chainId),
-      partialRoutingConfig,
-    );
+//     const routingConfig: AlphaRouterConfig = _.merge(
+//       {},
+//       DEFAULT_ROUTING_CONFIG_BY_CHAIN(this.chainId),
+//       partialRoutingConfig,
+//     );
 
-    const { protocols } = routingConfig;
-    const protocolsSet = new Set(protocols ?? []);
+//     const { protocols } = routingConfig;
+//     const protocolsSet = new Set(protocols ?? []);
 
-    const currencyIn =
-      tradeType == TradeType.EXACT_INPUT ? amount.currency : quoteCurrency;
-    const currencyOut =
-      tradeType == TradeType.EXACT_INPUT ? quoteCurrency : amount.currency;
-    const tokenIn = currencyIn.wrapped;
-    const tokenOut = currencyOut.wrapped;
+//     const currencyIn =
+//       tradeType == TradeType.EXACT_INPUT ? amount.currency : quoteCurrency;
+//     const currencyOut =
+//       tradeType == TradeType.EXACT_INPUT ? quoteCurrency : amount.currency;
+//     const tokenIn = currencyIn.wrapped;
+//     const tokenOut = currencyOut.wrapped;
 
-    // Generate our distribution of amounts, i.e. fractions of the input amount.
-    // We will get quotes for fractions of the input amount for different routes, then
-    // combine to generate split routes.
-    const [percents, amounts] = this.getAmountDistribution(
-      amount,
-      routingConfig
-    );
+//     // Generate our distribution of amounts, i.e. fractions of the input amount.
+//     // We will get quotes for fractions of the input amount for different routes, then
+//     // combine to generate split routes.
+//     const [percents, amounts] = this.getAmountDistribution(
+//       amount,
+//       routingConfig
+//     );
 
-    const gasData  = await axios.get("https://api.curve.fi/api/getGas")
-    const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
-    const quoteToken = quoteCurrency.wrapped;
+//     const gasData  = await axios.get("https://api.curve.fi/api/getGas")
+//     const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
+//     const quoteToken = quoteCurrency.wrapped;
 
-    const quoteRefPromises: Promise<{
-      routesWithValidQuotes: RouteWithValidQuote[];
-    }>[] = [];
-    if (protocolsSet.has(BarterProtocol.REF)) {
-      quoteRefPromises.push(
-        this.getMapQuotes(
-          tokenIn,
-          tokenOut,
-          amounts,
-          percents,
-          quoteToken,
-          gasPriceWei,
-          tradeType,
-        )
-      );
-    }
+//     const quoteRefPromises: Promise<{
+//       routesWithValidQuotes: RouteWithValidQuote[];
+//     }>[] = [];
+//     if (protocolsSet.has(BarterProtocol.REF)) {
+//       quoteRefPromises.push(
+//         this.getMapQuotes(
+//           tokenIn,
+//           tokenOut,
+//           amounts,
+//           percents,
+//           quoteToken,
+//           gasPriceWei,
+//           tradeType,
+//         )
+//       );
+//     }
 
-    let allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
-    let methodParameters: MethodParameters | undefined;
-    const routesWithValidQuotesByRefProtocol = await Promise.all(quoteRefPromises);
+//     let allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
+//     let methodParameters: MethodParameters | undefined;
+//     const routesWithValidQuotesByRefProtocol = await Promise.all(quoteRefPromises);
 
-    for (const {
-      routesWithValidQuotes,
-    } of routesWithValidQuotesByRefProtocol) {
-      allRoutesWithValidQuotes = [
-        ...allRoutesWithValidQuotes,
-        ...routesWithValidQuotes,
-      ];
-    }
+//     for (const {
+//       routesWithValidQuotes,
+//     } of routesWithValidQuotesByRefProtocol) {
+//       allRoutesWithValidQuotes = [
+//         ...allRoutesWithValidQuotes,
+//         ...routesWithValidQuotes,
+//       ];
+//     }
 
-    if (allRoutesWithValidQuotes.length == 0) {
-      log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
-      return null;
-    }
+//     if (allRoutesWithValidQuotes.length == 0) {
+//       log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
+//       return null;
+//     }
 
-    const swapRouteRaw = await getBestSwapRoute(
-      amount,
-      percents,
-      allRoutesWithValidQuotes,
-      tradeType,
-      this.chainId,
-      routingConfig,
-    );
+//     const swapRouteRaw = await getBestSwapRoute(
+//       amount,
+//       percents,
+//       allRoutesWithValidQuotes,
+//       tradeType,
+//       this.chainId,
+//       routingConfig,
+//     );
 
-    if (!swapRouteRaw) {
-      return null;
-    }
+//     if (!swapRouteRaw) {
+//       return null;
+//     }
 
-    const {
-      quote,
-      quoteGasAdjusted,
-      estimatedGasUsed,
-      routes: routeAmounts,
-      estimatedGasUsedQuoteToken,
-      estimatedGasUsedUSD,
-    } = swapRouteRaw;
+//     const {
+//       quote,
+//       quoteGasAdjusted,
+//       estimatedGasUsed,
+//       routes: routeAmounts,
+//       estimatedGasUsedQuoteToken,
+//       estimatedGasUsedUSD,
+//     } = swapRouteRaw;
 
-    return {
-      quote,
-      quoteGasAdjusted,
-      estimatedGasUsed,
-      estimatedGasUsedQuoteToken,
-      estimatedGasUsedUSD,
-      gasPriceWei,
-      route: routeAmounts,
-      methodParameters,
-      blockNumber: BigNumber.from(0),
-    };
-  }
+//     return {
+//       quote,
+//       quoteGasAdjusted,
+//       estimatedGasUsed,
+//       estimatedGasUsedQuoteToken,
+//       estimatedGasUsedUSD,
+//       gasPriceWei,
+//       route: routeAmounts,
+//       methodParameters,
+//       blockNumber: BigNumber.from(0),
+//     };
+//   }
 
-  private async getMapQuotes(
-    token0: Token,
-    token1: Token,
-    amounts: CurrencyAmount[],
-    percents: number[],
-    quoteToken: Token,
-    gasPriceWei: BigNumber,
-    swapType: TradeType,
-  ): Promise<{
-    routesWithValidQuotes: RefRouteWithValidQuote[];
-  }> {
+//   private async getMapQuotes(
+//     token0: Token,
+//     token1: Token,
+//     amounts: CurrencyAmount[],
+//     percents: number[],
+//     quoteToken: Token,
+//     gasPriceWei: BigNumber,
+//     swapType: TradeType,
+//   ): Promise<{
+//     routesWithValidQuotes: RefRouteWithValidQuote[];
+//   }> {
 
-    init_env('mainnet');
+//     init_env('mainnet');
 
-    let token0Name:string
-    let token1Name:string 
-    if(token0.name&&token1.name){
-      token0Name = token0.name
-      token1Name = token1.name
-    }else{
-      throw("token id is null:")
-    }
+//     let token0Name:string
+//     let token1Name:string 
+//     if(token0.name&&token1.name){
+//       token0Name = token0.name
+//       token1Name = token1.name
+//     }else{
+//       throw("token id is null:")
+//     }
 
-    const tokenIn = await ftGetTokenMetadata(token0Name);
-    const tokenOut = await ftGetTokenMetadata(token1Name);
-    const { ratedPools, unRatedPools, simplePools } = await fetchAllPools();
-    const stablePools: RefPool[] = unRatedPools.concat(ratedPools);
-    const stablePoolsDetail: StablePool[] = await getStablePools(stablePools);
-    const options: RefSwapOptions = {
-      enableSmartRouting: true,
-      stablePools,
-      stablePoolsDetail,
-    };
+//     const tokenIn = await ftGetTokenMetadata(token0Name);
+//     const tokenOut = await ftGetTokenMetadata(token1Name);
+//     const { ratedPools, unRatedPools, simplePools } = await fetchAllPools();
+//     const stablePools: RefPool[] = unRatedPools.concat(ratedPools);
+//     const stablePoolsDetail: StablePool[] = await getStablePools(stablePools);
+//     const options: RefSwapOptions = {
+//       enableSmartRouting: true,
+//       stablePools,
+//       stablePoolsDetail,
+//     };
 
-    let routes = []
-    let outputs = []
-    for (let i = 0; i < amounts.length; i++) {
-      let swapTodos: EstimateSwapView[] = await estimateSwap({
-        tokenIn,
-        tokenOut,
-        amountIn: amounts[i]!.toExact(),
-        simplePools,
-        options
-      });
-      let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
-      routes.push(swapTodos)
-      outputs.push(amountOut)
-    }
+//     let routes = []
+//     let outputs = []
+//     for (let i = 0; i < amounts.length; i++) {
+//       let swapTodos: EstimateSwapView[] = await estimateSwap({
+//         tokenIn,
+//         tokenOut,
+//         amountIn: amounts[i]!.toExact(),
+//         simplePools,
+//         options
+//       });
+//       let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
+//       routes.push(swapTodos)
+//       outputs.push(amountOut)
+//     }
 
-    if (outputs.length == 0) {
-      return { routesWithValidQuotes: [] };
-    }
+//     if (outputs.length == 0) {
+//       return { routesWithValidQuotes: [] };
+//     }
 
-    let tokenOutPrice = 1
-    let nearPrice = 2
-    // try {
-    //   tokenOutPrice = await _getUsdRate(token1.address)
-    //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
-    // } catch {
-    //   throw ("fail to get token price")
-    // }
+//     let tokenOutPrice = 1
+//     let nearPrice = 2
+//     // try {
+//     //   tokenOutPrice = await _getUsdRate(token1.address)
+//     //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+//     // } catch {
+//     //   throw ("fail to get token price")
+//     // }
 
-    let routesWithValidQuotes: RefRouteWithValidQuote[] = []
-    for (let i = 0; i < amounts.length; i++) {
-      const percent = percents[i]!;
-      const amount = amounts[i]!;
-      const refRoute = new RefRoute(routes[i]!)
-      const quote = getExpectedOutputFromSwapTodos(routes[i]!, tokenOut.id)
-      const routeWithValidQuote = new RefRouteWithValidQuote({
-        chainId: this.chainId,//this.chainId,
-        amount: amount,
-        rawQuote: BigNumber.from(quote.toFixed(0)),
-        percent: percent,
-        route: refRoute,
-        quoteToken: quoteToken,
-        gasPriceWei: gasPriceWei,
-        tokenOutPrice,
-        nearPrice,
-        tradeType: swapType,
-        platform: BarterProtocol.REF,
-      });
-      routesWithValidQuotes.push(routeWithValidQuote);
-    }
+//     let routesWithValidQuotes: RefRouteWithValidQuote[] = []
+//     for (let i = 0; i < amounts.length; i++) {
+//       const percent = percents[i]!;
+//       const amount = amounts[i]!;
+//       const refRoute = new RefRoute(routes[i]!)
+//       const quote = getExpectedOutputFromSwapTodos(routes[i]!, tokenOut.id)
+//       const routeWithValidQuote = new RefRouteWithValidQuote({
+//         chainId: this.chainId,//this.chainId,
+//         amount: amount,
+//         rawQuote: BigNumber.from(quote.toFixed(0)),
+//         percent: percent,
+//         route: refRoute,
+//         quoteToken: quoteToken,
+//         gasPriceWei: gasPriceWei,
+//         tokenOutPrice,
+//         nearPrice,
+//         tradeType: swapType,
+//         platform: BarterProtocol.REF,
+//       });
+//       routesWithValidQuotes.push(routeWithValidQuote);
+//     }
 
-    return { routesWithValidQuotes }
-  }
+//     return { routesWithValidQuotes }
+//   }
 
-  // Note multiplications here can result in a loss of precision in the amounts (e.g. taking 50% of 101)
-  // This is reconcilled at the end of the algorithm by adding any lost precision to one of
-  // the splits in the route.
-  private getAmountDistribution(
-    amount: CurrencyAmount,
-    routingConfig: AlphaRouterConfig
-  ): [number[], CurrencyAmount[]] {
-    const { distributionPercent } = routingConfig;
-    let percents = [];
-    let amounts = [];
+//   // Note multiplications here can result in a loss of precision in the amounts (e.g. taking 50% of 101)
+//   // This is reconcilled at the end of the algorithm by adding any lost precision to one of
+//   // the splits in the route.
+//   private getAmountDistribution(
+//     amount: CurrencyAmount,
+//     routingConfig: AlphaRouterConfig
+//   ): [number[], CurrencyAmount[]] {
+//     const { distributionPercent } = routingConfig;
+//     let percents = [];
+//     let amounts = [];
 
-    for (let i = 1; i <= 100 / distributionPercent; i++) {
-      percents.push(i * distributionPercent);
-      amounts.push(amount.multiply(new Fraction(i * distributionPercent, 100)));
-    }
+//     for (let i = 1; i <= 100 / distributionPercent; i++) {
+//       percents.push(i * distributionPercent);
+//       amounts.push(amount.multiply(new Fraction(i * distributionPercent, 100)));
+//     }
 
-    return [percents, amounts];
-  }
-}
+//     return [percents, amounts];
+//   }
+// }

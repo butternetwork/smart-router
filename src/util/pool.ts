@@ -154,9 +154,22 @@ export function getETHV2PoolsFromOneProtocol(
     case BarterProtocol.SUSHISWAP:
       return allPools.sushiswap;
     case BarterProtocol.QUICKSWAP:
-      return allPools.quickswap;
+      return allPools.quickswap; 
     default:
       throw new Error(`protocol ${protocol} not supported yet on eth`);
+  }
+}
+
+export function getMapPoolsFromOneProtocol(
+  allPoolsUnsanitizedJsonStr: string,
+  protocol: BarterProtocol
+): RawETHV2SubgraphPool[] {
+  const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
+  switch (protocol) {
+    case BarterProtocol.BARTER:
+      return allPools.barter;  
+    default:
+      throw new Error(`protocol ${protocol} not supported yet on map`);
   }
 }
 
