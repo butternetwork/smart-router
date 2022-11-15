@@ -59,7 +59,7 @@ export class V3HeuristicGasModelFactory extends IV3GasModelFactory {
     const l2GasData = l2GasDataProvider
       ? await l2GasDataProvider.getGasData()
       : undefined;
-
+console.log("debug1")
     const usdPool: Pool = await this.getHighestLiquidityUSDPool(
       chainId,
       poolProvider

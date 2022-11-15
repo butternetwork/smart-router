@@ -183,6 +183,8 @@ function assemblePoolRequest(
       protocolArr.push('uniswap_v2');
     } else if (protocol === BarterProtocol.UNI_V3) {
       protocolArr.push('uniswap_v3');
+    } else if (protocol === BarterProtocol.BARTER) {
+      protocolArr.push('barter');
     } else {
       protocolArr.push(protocol.toLowerCase());
     }

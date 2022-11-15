@@ -6,7 +6,7 @@ import {
   USDC_BNB,
   USDT_BNB,
 } from '../../../providers/pancakeswap/util/token-provider';
-import { USDC_NEAR, USDT_NEAR } from '../../../providers/quickswap/util/token-provider';
+import { GLD_MAP, USDC_NEAR, USDT_NEAR } from '../../../providers/quickswap/util/token-provider';
 import {
   DAI_ARBITRUM,
   DAI_ARBITRUM_RINKEBY,
@@ -68,7 +68,8 @@ export const usdGasTokensByChain: { [chainId in ChainId]?: Token[] } = {
   [ChainId.POLYGON]: [USDC_POLYGON],
   [ChainId.POLYGON_MUMBAI]: [DAI_POLYGON_MUMBAI],
   [ChainId.BSC]: [BUSD_BNB, USDT_BNB, USDC_BNB],
-  [ChainId.NEAR]: [USDT_NEAR, USDC_NEAR],
+  [ChainId.NEAR_MAINNET]: [USDT_NEAR, USDC_NEAR],
+  [ChainId.MAP_MAINNET]: [GLD_MAP],
 };
 
 export type L1ToL2GasCosts = {

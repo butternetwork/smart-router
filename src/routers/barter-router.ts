@@ -25,7 +25,7 @@ export async function getBestRoute(
   tokenOutName?: string
 ): Promise<SwapRoute | null> {
   const router =
-    chainId === ChainId.NEAR
+    chainId === ChainId.NEAR_MAINNET
       ? new NearRouter(chainId)
       : new AlphaRouter({
           chainId: chainId,

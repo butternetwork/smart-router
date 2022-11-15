@@ -31,7 +31,7 @@ export const ROUTER_ADDRESSES: {
   SUSHISWAP: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
   PANCAKESWAP: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
   CURVE: '',
-  MAP_DEX: '',
+  BARTER: '',
   REF: '',
 };
 
@@ -44,7 +44,7 @@ export const ROUTER_INDEX: {
   SUSHISWAP: BigNumber.from(1),
   PANCAKESWAP: BigNumber.from(3),
   CURVE: BigNumber.from(4),
-  MAP_DEX: BigNumber.from(5),
+  BARTER: BigNumber.from(5),
   REF: BigNumber.from(6),
 };
 export const WETH9: {
@@ -123,9 +123,16 @@ export const WETH9: {
     'WETH',
     'Wrapped Ether'
   ),
-  [ChainId.NEAR]: new Token(
-    ChainId.NEAR,
+  [ChainId.NEAR_MAINNET]: new Token(
+    ChainId.NEAR_MAINNET,
     '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+    24,
+    'Wrapped NEAR fungible token',
+    'wNEAR'
+  ),
+  [ChainId.MAP_MAINNET]: new Token(
+    ChainId.MAP_MAINNET,
+    '0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23',
     24,
     'Wrapped NEAR fungible token',
     'wNEAR'

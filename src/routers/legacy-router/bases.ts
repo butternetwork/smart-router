@@ -41,8 +41,15 @@ export const BASES_TO_CHECK_TRADES_AGAINST = (
     [ChainId.POLYGON]: [WMATIC_POLYGON],
     [ChainId.POLYGON_MUMBAI]: [WMATIC_POLYGON_MUMBAI],
     [ChainId.BSC]: [WBNB_BNB],
-    [ChainId.NEAR]: [new Token(
-      ChainId.NEAR,
+    [ChainId.NEAR_MAINNET]: [new Token(
+      ChainId.NEAR_MAINNET,
+      '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+      24,
+      'Wrapped NEAR fungible token',
+      'wNEAR'
+    )],
+    [ChainId.MAP_MAINNET]: [new Token(
+      ChainId.MAP_MAINNET,
       '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
       24,
       'Wrapped NEAR fungible token',

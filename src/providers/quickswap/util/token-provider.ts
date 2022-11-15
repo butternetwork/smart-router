@@ -32,6 +32,61 @@ export type TokenAccessor = {
   getAllTokens: () => Token[];
 };
 
+
+
+//NEAR tokens
+export const USDT_NEAR = new Token(
+  1313161554,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+
+);
+
+export const USDC_NEAR = new Token(
+  1313161554,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
+//MAP tokens
+export const GLD_MAP = new Token(
+  212,
+  '0xdeebb41da493606119c9dcc89069ca51753e9000',
+  18,
+  'GLD',
+  'Gold'
+
+);
+
+export const KUN_MAP = new Token(
+  212,
+  '0x144e00194a0641dec63dfd0bfe0063ae74794304',
+  18,
+  'KUN',
+  'Gold'
+);
+
+//ETH tokens
+export const USDC = new Token(
+  1,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'USD//C'
+);
+
+export const USDT = new Token(
+  1,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT',
+  'Tether USD'
+);
+
 //MATIC tokens
 export const WMATIC_MATIC = new Token(
   ChainId.MATIC,
@@ -47,41 +102,6 @@ export const WETH_MATIC = new Token(
   18,
   'WETH',
   'Wrapped Ether'
-);
-
-//NEAR tokens
-export const USDT_NEAR = new Token(
-  1313161555,
-  '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  6,
-  'USDT.e',
-  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
-
-);
-
-export const USDC_NEAR = new Token(
-  1313161555,
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  6,
-  'USDC',
-  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
-
-);
-
-export const USDC = new Token(
-  1,
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  6,
-  'USDC',
-  'USD//C'
-);
-
-export const USDT = new Token(
-  1,
-  '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  6,
-  'USDT',
-  'Tether USD'
 );
 
 export const USDC_MATIC = new Token(

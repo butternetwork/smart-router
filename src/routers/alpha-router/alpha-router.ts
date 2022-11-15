@@ -809,8 +809,9 @@ export class AlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
-    const gasPriceWei = BigNumber.from("22227711268");//await this.gasPriceProvider.getGasPrice();
-
+    const gasData  = await axios.get("https://api.curve.fi/api/getGas")
+    const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
+    //const gasPriceWei = await this.gasPriceProvider.getGasPrice();
     metric.putMetric(
       'GasPriceLoad',
       Date.now() - beforeGas,
@@ -829,14 +830,6 @@ export class AlphaRouter
     const allPoolsUnsanitizedJsonStr = await getETHPoolsFromServer(
       protocolsSet,
       this.chainId
-    );
-
-    const gasModel = await this.v3GasModelFactory.buildGasModel(
-      this.chainId,
-      gasPriceWei,
-      this.v3PoolProvider,
-      quoteToken,
-      this.l2GasDataProvider
     );
 
     if (
@@ -858,7 +851,7 @@ export class AlphaRouter
           amounts,
           percents,
           quoteToken,
-          gasModel,
+          gasPriceWei,
           tradeType,
           routingConfig,
           v3PoolsUnsanitized
@@ -900,7 +893,7 @@ export class AlphaRouter
             amounts,
             percents,
             quoteToken,
-            gasModel,
+            gasPriceWei,
             tradeType,
             routingConfig,
             v3PoolsUnsanitized
@@ -970,6 +963,26 @@ export class AlphaRouter
         )
       );
     }
+    if (protocolsSet.has(BarterProtocol.BARTER)) {
+      let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
+      getETHV2PoolsFromOneProtocol(
+        allPoolsUnsanitizedJsonStr,
+        BarterProtocol.BARTER
+      );
+      quotePromises.push(
+        this.getMapQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          gasPriceWei,
+          tradeType,
+          routingConfig,
+          v2PoolsUnsanitized
+        )
+      );
+    }
 
     const quoteCurvePromises: Promise<{
       routesWithValidQuotes: RouteWithValidQuote[];
@@ -1025,7 +1038,6 @@ export class AlphaRouter
       tradeType,
       this.chainId,
       routingConfig,
-      gasModel
     );
 
     if (!swapRouteRaw) {
@@ -1203,13 +1215,140 @@ export class AlphaRouter
     return { routesWithValidQuotes };
   }
 
+  private async getMapQuotes(
+    tokenIn: Token,
+    tokenOut: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    gasPriceWei: BigNumber,
+    swapType: TradeType,
+    routingConfig: AlphaRouterConfig,
+    v2PoolsUnsanitized: RawETHV2SubgraphPool[]
+  ): Promise<{
+    routesWithValidQuotes: V2RouteWithValidQuote[];
+    candidatePools: CandidatePoolsBySelectionCriteria;
+  }> {
+    console.log("debug index")
+    const { poolAccessor, candidatePools } = await getV2CandidatePools({
+      tokenIn,
+      tokenOut,
+      tokenProvider: this.tokenProvider,
+      blockedTokenListProvider: this.blockedTokenListProvider,
+      poolProvider: this.v2PoolProvider,
+      routeType: swapType,
+      v2PoolsUnsanitized,
+      routingConfig,
+      chainId: this.chainId,
+    });
+    const poolsRaw = poolAccessor.getAllPools();
+    // Drop any pools that contain tokens that can not be transferred according to the token validator.
+    const pools = await this.applyTokenValidatorToPools(
+      poolsRaw,
+      (
+        token: Currency,
+        tokenValidation: TokenValidationResult | undefined
+      ): boolean => {
+        // If there is no available validation result we assume the token is fine.
+        if (!tokenValidation) {
+          return false;
+        }
+
+        // Only filters out *intermediate* pools that involve tokens that we detect
+        // cant be transferred. This prevents us trying to route through tokens that may
+        // not be transferrable, but allows users to still swap those tokens if they
+        // specify.
+        if (
+          tokenValidation == TokenValidationResult.STF &&
+          (token.equals(tokenIn) || token.equals(tokenOut))
+        ) {
+          return false;
+        }
+
+        return tokenValidation == TokenValidationResult.STF;
+      }
+    );
+
+    // Given all our candidate pools, compute all the possible ways to route from tokenIn to tokenOut.
+    const { maxSwapsPerPath } = routingConfig;
+    const routes = computeAllV2Routes(
+      tokenIn,
+      tokenOut,
+      pools as Pair[],
+      maxSwapsPerPath
+    );
+
+    if (routes.length == 0) {
+      return { routesWithValidQuotes: [], candidatePools };
+    }
+
+    // For all our routes, and all the fractional amounts, fetch quotes on-chain.
+    const quoteFn =
+      swapType == TradeType.EXACT_INPUT
+        ? this.v2QuoteProvider.getQuotesManyExactIn.bind(this.v2QuoteProvider)
+        : this.v2QuoteProvider.getQuotesManyExactOut.bind(this.v2QuoteProvider);
+
+    const beforeQuotes = Date.now();
+
+    log.info(
+      `Getting quotes for V2 for ${routes.length} routes with ${amounts.length} amounts per route.`
+    );
+    const { routesWithQuotes } = await quoteFn(amounts, routes);
+
+    const gasModel = await this.v2GasModelFactory.buildGasModel(
+      this.chainId,
+      gasPriceWei,
+      this.v2PoolProvider,
+      quoteToken
+    );
+
+    const routesWithValidQuotes = [];
+
+    for (const routeWithQuote of routesWithQuotes) {
+      const [route, quotes] = routeWithQuote;
+
+      for (let i = 0; i < quotes.length; i++) {
+        const percent = percents[i]!;
+        const amountQuote = quotes[i]!;
+        const { quote, amount } = amountQuote;
+
+        if (!quote) {
+          log.debug(
+            {
+              route: routeToString(route),
+              amountQuote,
+            },
+            'Dropping a null V2 quote for route.'
+          );
+          continue;
+        }
+
+        const routeWithValidQuote = new V2RouteWithValidQuote({
+          route,
+          rawQuote: quote,
+          amount,
+          percent,
+          gasModel,
+          quoteToken,
+          tradeType: swapType,
+          v2PoolProvider: this.v2PoolProvider,
+          platform: BarterProtocol.BARTER,
+        });
+
+        routesWithValidQuotes.push(routeWithValidQuote);
+      }
+    }
+
+    return { routesWithValidQuotes: [], candidatePools };
+  }
+
   private async getV3Quotes(
     tokenIn: Token,
     tokenOut: Token,
     amounts: CurrencyAmount[],
     percents: number[],
     quoteToken: Token,
-    gasModel: IGasModel<V3RouteWithValidQuote>,
+    gasPriceWei: BigNumber,
     swapType: TradeType,
     routingConfig: AlphaRouterConfig,
     allPoolsUnsanitized: RawV3SubgraphPool[]
@@ -1218,6 +1357,14 @@ export class AlphaRouter
     candidatePools: CandidatePoolsBySelectionCriteria;
   }> {
     log.info('Starting to get V3 quotes');
+    const gasModel = await this.v3GasModelFactory.buildGasModel(
+      this.chainId,
+      gasPriceWei,
+      this.v3PoolProvider,
+      quoteToken,
+      this.l2GasDataProvider
+    );
+
     // Fetch all the pools that we will consider routing via. There are thousands
     // of pools, so we filter them to a set of candidate pools that we expect will
     // result in good prices.
@@ -2177,7 +2324,247 @@ export class NearRouter
       token0Name = token0.name
       token1Name = token1.name
     }else{
-      throw("token id is null")
+      throw("token id is null:")
+    }
+
+    const tokenIn = await ftGetTokenMetadata(token0Name);
+    const tokenOut = await ftGetTokenMetadata(token1Name);
+    const { ratedPools, unRatedPools, simplePools } = await fetchAllPools();
+    const stablePools: RefPool[] = unRatedPools.concat(ratedPools);
+    const stablePoolsDetail: StablePool[] = await getStablePools(stablePools);
+    const options: RefSwapOptions = {
+      enableSmartRouting: true,
+      stablePools,
+      stablePoolsDetail,
+    };
+
+    let routes = []
+    let outputs = []
+    for (let i = 0; i < amounts.length; i++) {
+      let swapTodos: EstimateSwapView[] = await estimateSwap({
+        tokenIn,
+        tokenOut,
+        amountIn: amounts[i]!.toExact(),
+        simplePools,
+        options
+      });
+      let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
+      routes.push(swapTodos)
+      outputs.push(amountOut)
+    }
+
+    if (outputs.length == 0) {
+      return { routesWithValidQuotes: [] };
+    }
+
+    let tokenOutPrice = 1
+    let nearPrice = 2
+    // try {
+    //   tokenOutPrice = await _getUsdRate(token1.address)
+    //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+    // } catch {
+    //   throw ("fail to get token price")
+    // }
+
+    let routesWithValidQuotes: RefRouteWithValidQuote[] = []
+    for (let i = 0; i < amounts.length; i++) {
+      const percent = percents[i]!;
+      const amount = amounts[i]!;
+      const refRoute = new RefRoute(routes[i]!)
+      const quote = getExpectedOutputFromSwapTodos(routes[i]!, tokenOut.id)
+      const routeWithValidQuote = new RefRouteWithValidQuote({
+        chainId: this.chainId,//this.chainId,
+        amount: amount,
+        rawQuote: BigNumber.from(quote.toFixed(0)),
+        percent: percent,
+        route: refRoute,
+        quoteToken: quoteToken,
+        gasPriceWei: gasPriceWei,
+        tokenOutPrice,
+        nearPrice,
+        tradeType: swapType,
+        platform: BarterProtocol.REF,
+      });
+      routesWithValidQuotes.push(routeWithValidQuote);
+    }
+
+    return { routesWithValidQuotes }
+  }
+
+  // Note multiplications here can result in a loss of precision in the amounts (e.g. taking 50% of 101)
+  // This is reconcilled at the end of the algorithm by adding any lost precision to one of
+  // the splits in the route.
+  private getAmountDistribution(
+    amount: CurrencyAmount,
+    routingConfig: AlphaRouterConfig
+  ): [number[], CurrencyAmount[]] {
+    const { distributionPercent } = routingConfig;
+    let percents = [];
+    let amounts = [];
+
+    for (let i = 1; i <= 100 / distributionPercent; i++) {
+      percents.push(i * distributionPercent);
+      amounts.push(amount.multiply(new Fraction(i * distributionPercent, 100)));
+    }
+
+    return [percents, amounts];
+  }
+}
+
+
+
+export class MapRouter
+  implements
+  IRouter<AlphaRouterConfig>,
+  ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
+{
+  protected chainId: ChainId;
+
+  constructor(
+    chainId: number
+  ) {
+    this.chainId = chainId;
+  }
+
+  public async routeToRatio(
+    token0Balance: CurrencyAmount,
+    token1Balance: CurrencyAmount,
+    position: Position,
+    swapAndAddConfig: SwapAndAddConfig,
+    swapAndAddOptions?: SwapAndAddOptions,
+    routingConfig: Partial<AlphaRouterConfig> = DEFAULT_ROUTING_CONFIG_BY_CHAIN(
+      this.chainId
+    )
+  ): Promise<any> {
+  }
+
+  public async route(
+    amount: CurrencyAmount,
+    quoteCurrency: Currency,
+    tradeType: TradeType,
+    swapConfig?: SwapOptions,
+    partialRoutingConfig: Partial<AlphaRouterConfig> = {}
+  ): Promise<SwapRoute | null> {
+
+    const routingConfig: AlphaRouterConfig = _.merge(
+      {},
+      DEFAULT_ROUTING_CONFIG_BY_CHAIN(this.chainId),
+      partialRoutingConfig,
+    );
+
+    const { protocols } = routingConfig;
+    const protocolsSet = new Set(protocols ?? []);
+
+    const currencyIn =
+      tradeType == TradeType.EXACT_INPUT ? amount.currency : quoteCurrency;
+    const currencyOut =
+      tradeType == TradeType.EXACT_INPUT ? quoteCurrency : amount.currency;
+    const tokenIn = currencyIn.wrapped;
+    const tokenOut = currencyOut.wrapped;
+
+    // Generate our distribution of amounts, i.e. fractions of the input amount.
+    // We will get quotes for fractions of the input amount for different routes, then
+    // combine to generate split routes.
+    const [percents, amounts] = this.getAmountDistribution(
+      amount,
+      routingConfig
+    );
+
+    const gasData  = await axios.get("https://api.curve.fi/api/getGas")
+    const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
+    const quoteToken = quoteCurrency.wrapped;
+
+    const quoteRefPromises: Promise<{
+      routesWithValidQuotes: RouteWithValidQuote[];
+    }>[] = [];
+    if (protocolsSet.has(BarterProtocol.REF)) {
+      quoteRefPromises.push(
+        this.getMapQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          gasPriceWei,
+          tradeType,
+        )
+      );
+    }
+
+    let allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
+    let methodParameters: MethodParameters | undefined;
+    const routesWithValidQuotesByRefProtocol = await Promise.all(quoteRefPromises);
+
+    for (const {
+      routesWithValidQuotes,
+    } of routesWithValidQuotesByRefProtocol) {
+      allRoutesWithValidQuotes = [
+        ...allRoutesWithValidQuotes,
+        ...routesWithValidQuotes,
+      ];
+    }
+
+    if (allRoutesWithValidQuotes.length == 0) {
+      log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
+      return null;
+    }
+
+    const swapRouteRaw = await getBestSwapRoute(
+      amount,
+      percents,
+      allRoutesWithValidQuotes,
+      tradeType,
+      this.chainId,
+      routingConfig,
+    );
+
+    if (!swapRouteRaw) {
+      return null;
+    }
+
+    const {
+      quote,
+      quoteGasAdjusted,
+      estimatedGasUsed,
+      routes: routeAmounts,
+      estimatedGasUsedQuoteToken,
+      estimatedGasUsedUSD,
+    } = swapRouteRaw;
+
+    return {
+      quote,
+      quoteGasAdjusted,
+      estimatedGasUsed,
+      estimatedGasUsedQuoteToken,
+      estimatedGasUsedUSD,
+      gasPriceWei,
+      route: routeAmounts,
+      methodParameters,
+      blockNumber: BigNumber.from(0),
+    };
+  }
+
+  private async getMapQuotes(
+    token0: Token,
+    token1: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    gasPriceWei: BigNumber,
+    swapType: TradeType,
+  ): Promise<{
+    routesWithValidQuotes: RefRouteWithValidQuote[];
+  }> {
+
+    init_env('mainnet');
+
+    let token0Name:string
+    let token1Name:string 
+    if(token0.name&&token1.name){
+      token0Name = token0.name
+      token1Name = token1.name
+    }else{
+      throw("token id is null:")
     }
 
     const tokenIn = await ftGetTokenMetadata(token0Name);
