@@ -3,7 +3,7 @@ import { Pair } from '@uniswap/v2-sdk';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import _ from 'lodash';
 import { IUniswapV2Pair__factory } from '../../../types/v2';
-import { ChainId, CurrencyAmount } from '../../../util';
+import { ChainId, CurrencyAmount, MAP_FACTORY_ADDRESS } from '../../../util';
 import { log } from '../../../util/log';
 import { poolToString } from '../../../util/routes';
 import {
@@ -13,6 +13,9 @@ import {
 } from '../../interfaces/IPoolProvider';
 import { IMulticallProvider, Result } from '../../multicall-provider';
 import { ProviderConfig } from '../../provider';
+import { getCreate2Address } from '@ethersproject/address'
+import { pack, keccak256 } from '@ethersproject/solidity'
+import { INIT_CODE_HASH } from '../../../util/constants';
 
 export type V2PoolRetryOptions = AsyncRetry.Options;
 
@@ -149,7 +152,7 @@ export class V2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    const poolAddress = Pair.getAddress(token0, token1);
+    const poolAddress = computePairAddress({factoryAddress:MAP_FACTORY_ADDRESS,tokenA:token0, tokenB:token1})//Pair.getAddress(token0, token1);
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 
@@ -177,4 +180,21 @@ export class V2PoolProvider implements IV2PoolProvider {
 
     return results;
   }
+}
+
+export const computePairAddress = ({
+  factoryAddress,
+  tokenA,
+  tokenB
+}: {
+  factoryAddress: string
+  tokenA: Token
+  tokenB: Token
+}): string => {
+  const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA] // does safety checks
+  return getCreate2Address(
+    factoryAddress,
+    keccak256(['bytes'], [pack(['address', 'address'], [token0.address, token1.address])]),
+    INIT_CODE_HASH
+  )
 }

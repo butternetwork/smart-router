@@ -2,3 +2,6 @@ export enum TradeType {
   EXACT_INPUT = 0,
   EXACT_OUTPUT = 1,
 }
+
+//belong to MAP_FACTORY_ADDRESS 
+export const INIT_CODE_HASH = "0xa4af0896f907b3f8732395ba1c0c954cb79906401c982faff76a16d039810501"
