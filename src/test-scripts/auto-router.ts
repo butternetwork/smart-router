@@ -17,22 +17,23 @@ import { routeAmountToString, ROUTER_INDEX } from '../util';
 import { TradeType } from '../util/constants';
 import { BarterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
-import abi from './routerabi.json';
-import ERC20_ABI from './tokenabi.json';
+import eth_router_abi from './abi/eth-router.json';
+import map_router_abi from './abi/map-router.json';
+import ERC20_ABI from './abi/token.json';
 
 
-let rpcUrl:string
-let provider:any
-let wallet:any
-let signer:any
-let routerContract:any
-let protocols:BarterProtocol[] = [];
-let tokenIn:Token;
-let tokenOut:Token;
+let rpcUrl: string
+let provider: any
+let wallet: any
+let signer: any
+let routerContract: any
+let protocols: BarterProtocol[] = [];
+let tokenIn: Token;
+let tokenOut: Token;
 let chainId =
   //1313161554; //near
   212;        //map
-  //1;      //eth
+//1;      //eth
 switch (chainId) {
   case 1: //fork_eth
     tokenIn = USDT;
@@ -45,7 +46,7 @@ switch (chainId) {
     signer = wallet.connect(provider);
     routerContract = new ethers.Contract(
       '0xAe9Ed85dE2670e3112590a2BB17b7283ddF44d9c', // wait to do
-      abi,
+      eth_router_abi,
       signer
     );
 
@@ -59,7 +60,7 @@ switch (chainId) {
   case 212: //map
     tokenIn = GLD_MAP;
     tokenOut = KUN_MAP;
-    rpcUrl = 'http://18.142.54.137:7445'; 
+    rpcUrl = 'http://18.142.54.137:7445';
     provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     wallet = new ethers.Wallet(
       "438e472724961ae8a56e2247bebe921dc4e3437eecb6e15f9277871dfdb69383"
@@ -67,7 +68,7 @@ switch (chainId) {
     signer = wallet.connect(provider);
     routerContract = new ethers.Contract(
       '0x806e62028a4bab675dcf354ae190e8081b8a1137', // wait to do 
-      abi,
+      map_router_abi,
       signer
     );
     protocols = [
@@ -78,15 +79,15 @@ switch (chainId) {
     tokenIn = USDT_NEAR;
     tokenOut = USDC_NEAR;
     //wait to do
-    rpcUrl = 'http://54.255.196.147:9003'; 
+    rpcUrl = 'http://54.255.196.147:9003';
     provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     wallet = new ethers.Wallet(
       'e6a69dea3269974b57d09e0c07eede551a399ce50e7dd0be1ca7183994f94edb'
     );
     signer = wallet.connect(provider);
     routerContract = new ethers.Contract(
-      '0xB7ca895F81F20e05A5eb11B05Cbaab3DAe5e23cd', 
-      abi,
+      '0xB7ca895F81F20e05A5eb11B05Cbaab3DAe5e23cd',
+      eth_router_abi,
       signer
     );
     protocols = [
@@ -96,7 +97,7 @@ switch (chainId) {
   default:
     tokenIn = USDT;
     tokenOut = USDC;
-    rpcUrl = 'http://54.255.196.147:9003'; 
+    rpcUrl = 'http://54.255.196.147:9003';
     provider = new ethers.providers.JsonRpcProvider(rpcUrl, 31337); //forked net chianId
     wallet = new ethers.Wallet(
       'e6a69dea3269974b57d09e0c07eede551a399ce50e7dd0be1ca7183994f94edb'
@@ -104,7 +105,7 @@ switch (chainId) {
     signer = wallet.connect(provider);
     routerContract = new ethers.Contract(
       '0xB7ca895F81F20e05A5eb11B05Cbaab3DAe5e23cd', // wait to do
-      abi,
+      eth_router_abi,
       signer
     );
 
@@ -158,44 +159,37 @@ async function main() {
     gasEstimate += parseFloat(route.gasEstimate.toString());
   }
 
-  console.log("gasEstimate",gasEstimate)
-  console.log("gasCostInUSD",gasCostInUSD)
+  console.log("gasEstimate", gasEstimate)
+  console.log("gasCostInUSD", gasCostInUSD)
   console.log('total get: ', total);
   console.log('excluding fee: ', sum);
   console.log('time: ', Date.now() - start);
 
-  const [amountInArr, amountOutMinArr, pathArr, routerIndexArr, crv_Route, crv_Swap_Params] =
-  assembleSwapRequest(swapRoute);
+  // const token = new ethers.Contract(
+  //     tokenIn.address,
+  //     ERC20_ABI,
+  //     signer
+  //   );
+  // await token.approve(routerContract.address, amount)
+  // console.log("check approve",await token.allowance(routerContract.address, amount))
 
-const params = {
-  amountInArr: amountInArr,
-  amountOutMinArr: amountOutMinArr,
-  pathArr: pathArr,
-  // routerArr,
-  to: wallet.address,
-  deadLine: ethers.constants.MaxUint256,
-  input_Out_addre: [tokenIn.address, tokenOut.address],
-  routerIndex: routerIndexArr,
-  crv_Route: crv_Route,
-  crv_Swap_Params: crv_Swap_Params,
-  crv_expected: 1,
-};
-//console.log("params",params)
-
-//[["10000000"],["5679152"],['0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'],'0xd66B7b86c5f72E21CcEea8BF3A013528542846E5',115792089237316195423570985008687907853269984665640564039457584007913129639935,["0xdAC17F958D2ee523a2206206994597C13D831ec7","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"],[0],[['0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000'],['0xdAC17F958D2ee523a2206206994597C13D831ec7','0x1005f7406f32a61bd760cfa14accd2737913d546','0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000','0x0000000000000000000000000000000000000000']],[['1','0','1'],['0','0','0'],['0','0','0'],['0','0','0']],5]
-
-// const token = new ethers.Contract(
-//     tokenIn.address,
-//     ERC20_ABI,
-//     signer
-//   );
-//   await token.approve(routerContract.address, amount)
-//   console.log("check approve",await token.allowance(routerContract.address, amount))
-  // console.log(await doSwap(swapRoute));
-
+  switch (chainId) {
+    case 1: //fork_eth
+      console.log(await doSwapOnEth(swapRoute));
+      break
+    case 212: //map
+      console.log(await doSwapOnMap(swapRoute));
+      break
+    case 1313161554: //near
+      console.log(await doSwapOnNear(swapRoute));
+      break
+    default:
+      console.log(await doSwapOnEth(swapRoute));
+      break
+  }
 }
 
-async function doSwap(swapRoute: SwapRoute): Promise<TransactionReceipt> {
+async function doSwapOnEth(swapRoute: SwapRoute): Promise<TransactionReceipt> {
   const [amountInArr, amountOutMinArr, pathArr, routerIndexArr, crv_Route, crv_Swap_Params] =
     assembleSwapRequest(swapRoute);
 
@@ -212,7 +206,7 @@ async function doSwap(swapRoute: SwapRoute): Promise<TransactionReceipt> {
     crv_Swap_Params: crv_Swap_Params,
     crv_expected: 1,
   };
-//console.log("params",params)
+
   const swapTx = await routerContract.multiSwap(params, {
     gasLimit: 3500000,
     gasPrice: 70057219557,
@@ -220,6 +214,57 @@ async function doSwap(swapRoute: SwapRoute): Promise<TransactionReceipt> {
 
   return swapTx.wait();
 }
+
+async function doSwapOnMap(swapRoute: SwapRoute): Promise<TransactionReceipt> {
+  const [amountInArr, amountOutMinArr] =
+    assembleSwapRequest(swapRoute);
+
+  if(!amountInArr && !amountOutMinArr ){
+       throw("fail in doing swap on Map")
+  }
+  if(amountInArr!.length != 1 || amountOutMinArr!.length != 1){
+    throw("it's not corrected length for input")
+  }
+  const swapTx = await routerContract.swapExactTokensForTokens(
+    amountInArr![0],
+    amountOutMinArr![0],
+    [tokenIn.address,tokenOut.address],
+    wallet.address,
+    ethers.constants.MaxUint256,
+    {
+      gasLimit: 8500000,
+      gasPrice: 120*Math.pow(10,9),
+    });
+
+  return swapTx.wait();
+}
+
+async function doSwapOnNear(swapRoute: SwapRoute): Promise<TransactionReceipt> {
+  const [amountInArr, amountOutMinArr, pathArr, routerIndexArr, crv_Route, crv_Swap_Params] =
+    assembleSwapRequest(swapRoute);
+
+  const params = {
+    amountInArr: amountInArr,
+    amountOutMinArr: amountOutMinArr,
+    pathArr: pathArr,
+    // routerArr,
+    to: wallet.address,
+    deadLine: ethers.constants.MaxUint256,
+    input_Out_addre: [tokenIn.address, tokenOut.address],
+    routerIndex: routerIndexArr,
+    // crv_Route: crv_Route,
+    // crv_Swap_Params: crv_Swap_Params,
+    // crv_expected: 1,
+  };
+
+  const swapTx = await routerContract.multiSwap(params, {
+    gasLimit: 3500000,
+    gasPrice: 70057219557,
+  });
+
+  return swapTx.wait();
+}
+
 /**
  * assemble swap request to call barterRouter's multiSwap method.
  * @param swapRoute route from router.route()
@@ -277,7 +322,6 @@ export function assembleSwapRequest(swapRoute: SwapRoute) {
       let typeArr: string[] = [];
       let valueArr: any[] = [];
       const pools: Pool[] = route.route.pools;
-      //console.log('tokenPath', route.route.tokenPath);
       for (let i = 0; i < pools.length; i++) {
         let pool: Pool = pools[i]!;
         if (i == 0) {
@@ -296,8 +340,6 @@ export function assembleSwapRequest(swapRoute: SwapRoute) {
         }
       }
       routerIndexArray.push(ROUTER_INDEX[route.platform]);
-      //console.log('type', typeArr);
-      //console.log('value', valueArr);
 
       pathArr.push(ethers.utils.solidityPack(typeArr, valueArr));
     } else if (route.protocol == BarterProtocol.CURVE) {
@@ -307,7 +349,6 @@ export function assembleSwapRequest(swapRoute: SwapRoute) {
       routerIndexArray.push(ROUTER_INDEX[route.platform]);
 
       let args = _getExchangeMultipleArgs(tokenIn.address, route.route)
-      //console.log("_getExchangeMultipleArgs", args._factorySwapAddresses, args._route, args._swapParams)
 
       for (let i = 0; i < args._factorySwapAddresses.length; i++) {
         crv_route[0][i] = args._factorySwapAddresses[i]!

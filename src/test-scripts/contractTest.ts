@@ -1,6 +1,6 @@
 import { BigNumber, ethers } from 'ethers';
-import abi from './routerabi.json';
-import ERC20_ABI from './tokenabi.json';
+import abi from './abi/eth-router.json';
+import ERC20_ABI from './abi/token.json';
 
 const chainId = 31337
 const rpcUrl = //'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
