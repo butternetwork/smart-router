@@ -503,7 +503,7 @@ export class BSCAlphaRouter
       routingConfig,
       chainId: this.chainId,
     });
-    console.log('get candidate', Date.now() - start);
+
     const poolsRaw = poolAccessor.getAllPools();
     // Drop any pools that contain tokens that can not be transferred according to the token validator.
     const pools = await this.applyTokenValidatorToPools(
@@ -570,7 +570,6 @@ export class BSCAlphaRouter
       this.pancakeV2PoolProvider,
       quoteToken
     );
-    console.log('build gas', Date.now() - start);
 
     metric.putMetric(
       'V2QuotesLoad',

@@ -115,7 +115,6 @@ export const uniRouteToString = (
       routeStr.push(poolFeePath[i]);
     }
   }
-
   return routeStr.join('');
 };
 

@@ -52,6 +52,40 @@ export const USDC_NEAR = new Token(
   'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
 );
 
+export const WNEAR_NEAR = new Token(
+  1313161554,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'WNEAR',
+  'wrap.near'
+);
+
+//BSC tokens
+export const USDT_BNB = new Token(
+  56,
+  '0x55d398326f99059fF775485246999027B3197955',
+  18,
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+
+);
+
+export const USDC_BNB = new Token(
+  56,
+  '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  18,
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
+export const WBNB_BNB = new Token(
+  56,
+  '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  18,
+  'WBNB',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
 //MAP tokens
 export const GLD_MAP = new Token(
   212,

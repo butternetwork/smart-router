@@ -70,6 +70,7 @@
     "graphql-request": "^3.4.0",
     "lodash": "^4.17.21",
     "mnemonist": "^0.38.3",
+    "near-api-js": "^0.44.2",
     "node-cache": "^5.1.2",
     "stats-lite": "^2.2.0",
     "tslib": "^1.14.1",

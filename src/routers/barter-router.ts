@@ -24,13 +24,36 @@ export async function getBestRoute(
   tokenOutSymbol?: string,
   tokenOutName?: string
 ): Promise<SwapRoute | null> {
-  const router =
-    chainId === ChainId.NEAR_MAINNET
-      ? new NearRouter(chainId)
-      : new AlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        });
+  let router;
+  switch (chainId) {
+    case ChainId.MAINNET:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break
+    case ChainId.BSC:
+      router = new BSCAlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      })
+      break
+    case ChainId.MAP_MAINNET:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break
+    case ChainId.NEAR_MAINNET:
+      router = new NearRouter(chainId)
+      break
+    default:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break
+  }
 
   const tokenIn = new Token(
     chainId,
