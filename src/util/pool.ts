@@ -166,8 +166,8 @@ export function getMapPoolsFromOneProtocol(
 ): RawETHV2SubgraphPool[] {
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
-    case BarterProtocol.BARTER:
-      return allPools.barter;  
+    case BarterProtocol.HIVESWAP:
+      return allPools.hiveswap;  
     default:
       throw new Error(`protocol ${protocol} not supported yet on map`);
   }
@@ -196,8 +196,8 @@ function assemblePoolRequest(
       protocolArr.push('uniswap_v2');
     } else if (protocol === BarterProtocol.UNI_V3) {
       protocolArr.push('uniswap_v3');
-    } else if (protocol === BarterProtocol.BARTER) {
-      protocolArr.push('barter');
+    } else if (protocol === BarterProtocol.HIVESWAP) {
+      protocolArr.push('hiveswap');
     } else {
       protocolArr.push(protocol.toLowerCase());
     }

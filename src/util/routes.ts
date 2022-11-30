@@ -221,3 +221,14 @@ export const otherRouteToString = (route: any): string => {
   routeStr.push("tokenOut");
   return routeStr.join('');
 };
+
+export function nearRouterToString(route:RouteWithValidQuote,symbolA:string|undefined,symbolB:string|undefined):string{
+  let total =0 
+  let routerString = "ref "+  route.amount.toExact()  +" = "+symbolA+" --> "
+  for (let pool of route.poolAddresses){
+    routerString = routerString+"poolId:"+pool+" --> "
+  }
+  total += Number(route.output.toExact())
+  routerString = routerString+symbolB+" = "+total.toString() 
+  return routerString
+}

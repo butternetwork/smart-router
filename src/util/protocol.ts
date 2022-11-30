@@ -6,5 +6,5 @@ export enum BarterProtocol {
   PANCAKESWAP = 'PANCAKESWAP',
   CURVE = 'CURVE',
   REF = 'REF',
-  BARTER = 'BARTER'
+  HIVESWAP = 'HIVESWAP'
 }

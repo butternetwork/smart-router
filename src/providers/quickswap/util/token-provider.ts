@@ -87,13 +87,37 @@ export const WBNB_BNB = new Token(
 );
 
 //MAP tokens
+
+export const ETH_MAP = new Token(
+  22776,
+  '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
+  18,
+  'Mapped Wrapped Ether',
+  'ETH'
+);
+
+export const WMAP_MAP = new Token(
+  22776,
+  '0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23',
+  18,
+  'WMAP',
+  'Wrapped MAP'
+);
+
+export const USDC_MAP = new Token(
+  22776,
+  '0x9f722b2cb30093f766221fd0d37964949ed66918',
+  18,
+  'Mapped USD Coin',
+  'USDC'
+);
+
 export const GLD_MAP = new Token(
   212,
   '0xdeebb41da493606119c9dcc89069ca51753e9000',
   18,
   'GLD',
   'Gold'
-
 );
 
 export const KUN_MAP = new Token(

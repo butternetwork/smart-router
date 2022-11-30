@@ -4,7 +4,7 @@ import { FACTORY_ADDRESS } from '@uniswap/v3-sdk';
 import { ChainId } from './chains';
 import { BarterProtocol } from './protocol';
 
-export const MAP_FACTORY_ADDRESS = '0xC48992f8f2810a13929E16c2bf0fF7aA6135fF76';
+export const MAP_FACTORY_ADDRESS = '0x29c3d087302e3fCb75F16175A09E4C39119459B2';
 export const V3_CORE_FACTORY_ADDRESS = FACTORY_ADDRESS;
 export const QUOTER_V2_ADDRESS = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
 export const OVM_GASPRICE_ADDRESS =
@@ -21,7 +21,7 @@ export const UNISWAP_MULTICALL_ADDRESS =
 export const BSC_MULTICALL_ADDRESS =
   '0xC4b8A415EB2A1EABe12bfc34251e32ba2345036C';
 export const MAP_MULTICALL_ADDRESS =
-  '0x3CcfE2e6B6D42d8a56BDf74D03cf2E7cc83f0d86';
+  '0x4CeBB149dc672c9d0e008C40698ca8A0b8ac6c0a';
 
 export const MULTICALL2_ADDRESS = '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696';
 
@@ -34,7 +34,7 @@ export const ROUTER_ADDRESSES: {
   SUSHISWAP: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
   PANCAKESWAP: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
   CURVE: '',
-  BARTER: '',
+  HIVESWAP: '',
   REF: '',
 };
 
@@ -47,7 +47,7 @@ export const ROUTER_INDEX: {
   SUSHISWAP: BigNumber.from(1),
   PANCAKESWAP: BigNumber.from(3),
   CURVE: BigNumber.from(4),
-  BARTER: BigNumber.from(5),
+  HIVESWAP: BigNumber.from(5),
   REF: BigNumber.from(6),
 };
 export const WETH9: {

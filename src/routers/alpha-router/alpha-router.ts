@@ -971,11 +971,11 @@ export class AlphaRouter
         )
       );
     }
-    if (protocolsSet.has(BarterProtocol.BARTER)) {
+    if (protocolsSet.has(BarterProtocol.HIVESWAP)) {
       let PoolsUnsanitized: RawETHV2SubgraphPool[] =
       getMapPoolsFromOneProtocol(
         allPoolsUnsanitizedJsonStr,
-        BarterProtocol.BARTER
+        BarterProtocol.HIVESWAP
       );
       quotePromises.push(
         this.getMapQuotes(
@@ -1339,7 +1339,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.v2PoolProvider,
-          platform: BarterProtocol.BARTER,
+          platform: BarterProtocol.HIVESWAP,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);

@@ -13,7 +13,7 @@ export enum ChainId {
   POLYGON_MUMBAI = 80001,
   BSC = 56,
   NEAR_MAINNET = 1313161554,
-  MAP_MAINNET = 212,//22776
+  MAP_MAINNET = 22776
 }
 
 export const V2_SUPPORTED = [
@@ -57,8 +57,8 @@ export const ID_TO_CHAIN_ID = (id: number): ChainId => {
       return ChainId.POLYGON_MUMBAI;
     case 1313161554:
       return ChainId.NEAR_MAINNET;  
-    case 212: //22776
-      return ChainId.MAP_MAINNET;    
+    case 22776: //22776
+      return ChainId.MAP_MAINNET;      
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -263,8 +263,8 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     'wNEAR'
   ),
   [ChainId.MAP_MAINNET]: new Token(
-    212,
-    '0x46ffCcc0deA5530e95dE6fFF46208900B2b98d30',
+    22776,
+    '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
     18,
     'WMAP',
     'Wrapped MAP'

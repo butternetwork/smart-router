@@ -4,4 +4,4 @@ export enum TradeType {
 }
 
 //belong to MAP_FACTORY_ADDRESS 
-export const INIT_CODE_HASH = "0xa4af0896f907b3f8732395ba1c0c954cb79906401c982faff76a16d039810501"
+export const INIT_CODE_HASH = "0x217e567d2f8535a34608d9f9d66fa14c1b9d4f01c5c0dcd2712d23008a193fa0"
