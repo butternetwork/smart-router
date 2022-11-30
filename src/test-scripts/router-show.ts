@@ -21,7 +21,7 @@ import { getBestRoute } from '../routers/barter-router';
 import { nearRouterToString, routeAmountToString } from '../util';
 import { TradeType } from '../util/constants';
 import { getUsdcLiquidity } from '../util/mapLiquidity';
-import { getBridgeFee, getTokenCandidates } from '../util/mosFee';
+import { getBridgeFee, getTokenCandidates, toSrcToken } from '../util/mosFee';
 import { BarterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
 
@@ -30,24 +30,6 @@ let provider: any
 let protocols: BarterProtocol[] = [];
 const amount = '10'
 
-async function main() {
-  const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-  if (total1&&total1>=Number(usdcLiquidity)){
-    throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
-  }
-  const [total2,gasCostInUSD2,__] = await findBestRouter(1313161554,USDC_NEAR,WNEAR_NEAR,total1!.toString())
-  console.log("final output:",total2)
-  console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
-  
-  // data of demo 
-  const feeProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
-  const bridgeFee = await getBridgeFee(GLD_MAP,'212',amount,feeProvider)
-  console.log("bridge fee:",bridgeFee.amount)
-
-  // console.log(await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount))
-  // console.log(await findBestRouter(1,USDT,USDC,amount))
-}
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string) :Promise<[number,number,RouteWithValidQuote[]]>{
   switch (chainId) {
     case 1: //fork_eth
@@ -135,7 +117,39 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
   return [total, gasCostInUSD,swapRoute.route]
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+interface obj {
+  index:number,
+  value:number
+}
+
+async function show() {
+  // data of demo 
+  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)// map testnet chainId:212
+  //get the tokens common to both src chain and map chain
+  const TokenList = await getTokenCandidates('212','56',rpcProvider)
+  
+  let index = -1
+  let tmp:obj[] = []
+  let RouterMap = new Map();
+  for(let token of TokenList){
+    let bridgeFee = await getBridgeFee(token,'212',amount,rpcProvider)
+    let [total,gas,router] = await findBestRouter(56,WBNB_BNB,toSrcToken(token),amount)
+    //check the liquidity of token is enough or not.
+    let usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
+    if (total&&total>=Number(usdcLiquidity)){
+      continue
+    }
+    tmp.push({
+      index:index+1,
+      value:total-gas-Number(bridgeFee.amount)
+    })
+    RouterMap.set({
+      index:index+1,
+      value:total-gas-Number(bridgeFee.amount)
+    },router)
+  }
+  tmp.sort((a,b) => (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0))
+  //get router of most output
+  let bestRouter = RouterMap.get(tmp[tmp.length-1])
+  console.log("best router in src chain",bestRouter)
+}

@@ -224,3 +224,28 @@ export async function getBridgeFee(
     return '0x' + res;
   }
 
+  export async function getTokenCandidates(
+    fromChainId: string,
+    toChainId: string,
+    provider: ethers.providers.JsonRpcProvider
+  ): Promise<Token[]> { 
+    const SHOW_TOKEN = new Token(
+      56,
+      '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      18,
+      'WBNB',
+      'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+    );
+    return Promise.resolve([SHOW_TOKEN])
+  }
+
+  export function toSrcToken(t:Token){
+    const SHOW_TOKEN = new Token(
+      56,
+      '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      18,
+      'WBNB',
+      'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+    );
+    return SHOW_TOKEN
+  }

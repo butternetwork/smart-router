@@ -6,10 +6,10 @@ interface Liquidity {
     totalLiquidity: string;
 }
 
-export async function getUsdcLiquidity() {
+export async function getUsdcLiquidity(address:string) {
     let params = gql`
     {
-        token(id: "0x9f722b2cb30093f766221fd0d37964949ed66918") {
+        token(id: ${address}) {
             totalLiquidity
         }
     }
