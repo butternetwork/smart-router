@@ -8,8 +8,8 @@ import {
   RawV3SubgraphPool,
   V3SubgraphPool,
 } from '../providers/uniswap/v3/subgraph-provider';
-import { BarterProtocol } from './protocol';
-import { BARTER_SERVER_URL } from './urls';
+import { ButterProtocol } from './protocol';
+import { BUTTER_SERVER_URL } from './urls';
 
 const bscThreshold = 0.25;
 const ethThreshold = 0.025;
@@ -96,7 +96,7 @@ export function sanitizeETHV2Pools(
 }
 
 export async function getETHPoolsFromServer(
-  protocolSet: Set<BarterProtocol>,
+  protocolSet: Set<ButterProtocol>,
   chainId: number
 ): Promise<string> {
   const requestUrl = assemblePoolRequest(protocolSet, chainId);
@@ -114,7 +114,7 @@ export async function getETHPoolsFromServer(
 }
 
 export async function getBSCPoolsFromServer(
-  protocolSet: Set<BarterProtocol>,
+  protocolSet: Set<ButterProtocol>,
   chainId: number
 ): Promise<string> {
   const requestUrl = assemblePoolRequest(protocolSet, chainId);
@@ -132,11 +132,11 @@ export async function getBSCPoolsFromServer(
 
 export function getBSCPoolsFromOneProtocol(
   allPoolsUnsanitizedJsonStr: string,
-  protocol: BarterProtocol
+  protocol: ButterProtocol
 ): RawBNBV2SubgraphPool[] {
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
-    case BarterProtocol.PANCAKESWAP:
+    case ButterProtocol.PANCAKESWAP:
       return allPools.pancakeswap;
     default:
       throw new Error(`protocol ${protocol} not supported yet on bsc`);
@@ -145,15 +145,15 @@ export function getBSCPoolsFromOneProtocol(
 
 export function getETHV2PoolsFromOneProtocol(
   allPoolsUnsanitizedJsonStr: string,
-  protocol: BarterProtocol
+  protocol: ButterProtocol
 ): RawETHV2SubgraphPool[] {
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
-    case BarterProtocol.UNI_V2:
+    case ButterProtocol.UNI_V2:
       return allPools.uniswap_v2;
-    case BarterProtocol.SUSHISWAP:
+    case ButterProtocol.SUSHISWAP:
       return allPools.sushiswap;
-    case BarterProtocol.QUICKSWAP:
+    case ButterProtocol.QUICKSWAP:
       return allPools.quickswap; 
     default:
       throw new Error(`protocol ${protocol} not supported yet on eth`);
@@ -162,11 +162,11 @@ export function getETHV2PoolsFromOneProtocol(
 
 export function getMapPoolsFromOneProtocol(
   allPoolsUnsanitizedJsonStr: string,
-  protocol: BarterProtocol
+  protocol: ButterProtocol
 ): RawETHV2SubgraphPool[] {
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
-    case BarterProtocol.HIVESWAP:
+    case ButterProtocol.HIVESWAP:
       return allPools.hiveswap;  
     default:
       throw new Error(`protocol ${protocol} not supported yet on map`);
@@ -175,28 +175,28 @@ export function getMapPoolsFromOneProtocol(
 
 export function getETHV3PoolsFromOneProtocol(
   allPoolsUnsanitizedJsonStr: string,
-  protocol: BarterProtocol
+  protocol: ButterProtocol
 ): RawV3SubgraphPool[] {
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
-    case BarterProtocol.UNI_V3:
+    case ButterProtocol.UNI_V3:
       return allPools.uniswap_v3;
     default:
       throw new Error(`protocol ${protocol} not supported yet on eth`);
   }
 }
 function assemblePoolRequest(
-  protocolSet: Set<BarterProtocol>,
+  protocolSet: Set<ButterProtocol>,
   chainId: number
 ): string {
-  let request = BARTER_SERVER_URL;
+  let request = BUTTER_SERVER_URL;
   let protocolArr = [];
   for (let protocol of protocolSet) {
-    if (protocol === BarterProtocol.UNI_V2) {
+    if (protocol === ButterProtocol.UNI_V2) {
       protocolArr.push('uniswap_v2');
-    } else if (protocol === BarterProtocol.UNI_V3) {
+    } else if (protocol === ButterProtocol.UNI_V3) {
       protocolArr.push('uniswap_v3');
-    } else if (protocol === BarterProtocol.HIVESWAP) {
+    } else if (protocol === ButterProtocol.HIVESWAP) {
       protocolArr.push('hiveswap');
     } else {
       protocolArr.push(protocol.toLowerCase());

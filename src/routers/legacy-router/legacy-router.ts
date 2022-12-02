@@ -17,7 +17,7 @@ import {
 import { CurrencyAmount } from '../../util/amounts';
 import { ChainId } from '../../util/chains';
 import { log } from '../../util/log';
-import { BarterProtocol } from '../../util/protocol';
+import { ButterProtocol } from '../../util/protocol';
 import { routeToString } from '../../util/routes';
 import { V3RouteWithValidQuote } from '../alpha-router';
 import { IRouter, SwapOptions, SwapRoute, V3Route } from '../router';
@@ -305,7 +305,7 @@ export class LegacyRouter implements IRouter<LegacyRoutingConfig> {
         tradeType: routeType,
         quoteToken,
         v3PoolProvider: this.poolProvider,
-        platform: BarterProtocol.UNI_V3,
+        platform: ButterProtocol.UNI_V3,
       });
     });
 

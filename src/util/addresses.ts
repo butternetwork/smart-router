@@ -2,7 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { Token } from '@uniswap/sdk-core';
 import { FACTORY_ADDRESS } from '@uniswap/v3-sdk';
 import { ChainId } from './chains';
-import { BarterProtocol } from './protocol';
+import { ButterProtocol } from './protocol';
 
 export const MAP_FACTORY_ADDRESS = '0x29c3d087302e3fCb75F16175A09E4C39119459B2';
 export const V3_CORE_FACTORY_ADDRESS = FACTORY_ADDRESS;
@@ -26,7 +26,7 @@ export const MAP_MULTICALL_ADDRESS =
 export const MULTICALL2_ADDRESS = '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696';
 
 export const ROUTER_ADDRESSES: {
-  [protocol in BarterProtocol]: string;
+  [protocol in ButterProtocol]: string;
 } = {
   V2: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
   V3: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
@@ -39,7 +39,7 @@ export const ROUTER_ADDRESSES: {
 };
 
 export const ROUTER_INDEX: {
-  [protocol in BarterProtocol]: BigNumber;
+  [protocol in ButterProtocol]: BigNumber;
 } = {
   V2: BigNumber.from(0),
   V3: BigNumber.from(0),

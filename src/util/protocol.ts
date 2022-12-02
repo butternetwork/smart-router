@@ -1,4 +1,4 @@
-export enum BarterProtocol {
+export enum ButterProtocol {
   UNI_V2 = 'V2',
   UNI_V3 = 'V3',
   QUICKSWAP = 'QUICKSWAP',

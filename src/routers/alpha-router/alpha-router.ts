@@ -102,7 +102,7 @@ import {
   getETHV3PoolsFromOneProtocol,
   getMapPoolsFromOneProtocol,
 } from '../../util/pool';
-import { BarterProtocol } from '../../util/protocol';
+import { ButterProtocol } from '../../util/protocol';
 import { poolToString, routeToString } from '../../util/routes';
 import { UNSUPPORTED_TOKENS } from '../../util/unsupported-tokens';
 import {
@@ -307,7 +307,7 @@ export type AlphaRouterConfig = {
    * The protocols to consider when finding the optimal swap. If not provided all protocols
    * will be used.
    */
-  protocols?: BarterProtocol[];
+  protocols?: ButterProtocol[];
   /**
    * Config for selecting which pools to consider routing via on V2.
    */
@@ -842,15 +842,15 @@ export class AlphaRouter
 
     if (
       (protocolsSet.size == 0 ||
-        (protocolsSet.has(BarterProtocol.UNI_V2) &&
-          protocolsSet.has(BarterProtocol.UNI_V3))) &&
+        (protocolsSet.has(ButterProtocol.UNI_V2) &&
+          protocolsSet.has(ButterProtocol.UNI_V3))) &&
       V2_SUPPORTED.includes(this.chainId)
     ) {
       log.info({ protocols, tradeType }, 'Routing across all protocols');
       let v3PoolsUnsanitized: RawV3SubgraphPool[] =
         getETHV3PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.UNI_V3
+          ButterProtocol.UNI_V3
         );
       quotePromises.push(
         this.getV3Quotes(
@@ -868,7 +868,7 @@ export class AlphaRouter
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.UNI_V2
+          ButterProtocol.UNI_V2
         );
       quotePromises.push(
         this.getV2Quotes(
@@ -885,13 +885,13 @@ export class AlphaRouter
       );
     } else {
       if (
-        protocolsSet.has(BarterProtocol.UNI_V3) ||
+        protocolsSet.has(ButterProtocol.UNI_V3) ||
         (protocolsSet.size == 0 && !V2_SUPPORTED.includes(this.chainId))
       ) {
         let v3PoolsUnsanitized: RawV3SubgraphPool[] =
           getETHV3PoolsFromOneProtocol(
             allPoolsUnsanitizedJsonStr,
-            BarterProtocol.UNI_V3
+            ButterProtocol.UNI_V3
           );
         log.info({ protocols, swapType: tradeType }, 'Routing across V3');
         quotePromises.push(
@@ -909,12 +909,12 @@ export class AlphaRouter
         );
       }
 
-      if (protocolsSet.has(BarterProtocol.UNI_V2)) {
+      if (protocolsSet.has(ButterProtocol.UNI_V2)) {
         log.info({ protocols, swapType: tradeType }, 'Routing across V2');
         let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
           getETHV2PoolsFromOneProtocol(
             allPoolsUnsanitizedJsonStr,
-            BarterProtocol.UNI_V2
+            ButterProtocol.UNI_V2
           );
         quotePromises.push(
           this.getV2Quotes(
@@ -931,11 +931,11 @@ export class AlphaRouter
         );
       }
     }
-    if (protocolsSet.has(BarterProtocol.QUICKSWAP)) {
+    if (protocolsSet.has(ButterProtocol.QUICKSWAP)) {
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.QUICKSWAP
+          ButterProtocol.QUICKSWAP
         );
       quotePromises.push(
         this.getQuickQuotes(
@@ -951,11 +951,11 @@ export class AlphaRouter
         )
       );
     }
-    if (protocolsSet.has(BarterProtocol.SUSHISWAP)) {
+    if (protocolsSet.has(ButterProtocol.SUSHISWAP)) {
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.SUSHISWAP
+          ButterProtocol.SUSHISWAP
         );
       quotePromises.push(
         this.getSushiQuotes(
@@ -971,11 +971,11 @@ export class AlphaRouter
         )
       );
     }
-    if (protocolsSet.has(BarterProtocol.HIVESWAP)) {
+    if (protocolsSet.has(ButterProtocol.HIVESWAP)) {
       let PoolsUnsanitized: RawETHV2SubgraphPool[] =
       getMapPoolsFromOneProtocol(
         allPoolsUnsanitizedJsonStr,
-        BarterProtocol.HIVESWAP
+        ButterProtocol.HIVESWAP
       );
       quotePromises.push(
         this.getMapQuotes(
@@ -995,7 +995,7 @@ export class AlphaRouter
     const quoteCurvePromises: Promise<{
       routesWithValidQuotes: RouteWithValidQuote[];
     }>[] = [];
-    if (protocolsSet.has(BarterProtocol.CURVE)) {
+    if (protocolsSet.has(ButterProtocol.CURVE)) {
       quoteCurvePromises.push(
         this.getCurveQuotes(
           tokenIn,
@@ -1216,7 +1216,7 @@ export class AlphaRouter
         tokenOutPrice,
         ethPrice,
         tradeType: swapType,
-        platform: BarterProtocol.CURVE,
+        platform: ButterProtocol.CURVE,
       });
       routesWithValidQuotes.push(routeWithValidQuote);
     }
@@ -1339,7 +1339,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.v2PoolProvider,
-          platform: BarterProtocol.HIVESWAP,
+          platform: ButterProtocol.HIVESWAP,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1503,7 +1503,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v3PoolProvider: this.v3PoolProvider,
-          platform: BarterProtocol.UNI_V3,
+          platform: ButterProtocol.UNI_V3,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1647,7 +1647,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.v2PoolProvider,
-          platform: BarterProtocol.UNI_V2,
+          platform: ButterProtocol.UNI_V2,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1797,7 +1797,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.quickV2PoolProvider,
-          platform: BarterProtocol.QUICKSWAP,
+          platform: ButterProtocol.QUICKSWAP,
         });
         routesWithValidQuotes.push(routeWithValidQuote);
       }
@@ -1944,7 +1944,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.sushiV2PoolProvider,
-          platform: BarterProtocol.SUSHISWAP,
+          platform: ButterProtocol.SUSHISWAP,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -2062,12 +2062,12 @@ export class AlphaRouter
     let hasV2Route = false;
     for (const routeAmount of routeAmounts) {
       if (
-        routeAmount.protocol.toString() === BarterProtocol.UNI_V3.toString()
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V3.toString()
       ) {
         hasV3Route = true;
       }
       if (
-        routeAmount.protocol.toString() === BarterProtocol.UNI_V2.toString()
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V2.toString()
       ) {
         hasV2Route = true;
       }
@@ -2243,7 +2243,7 @@ export class NearRouter
     const quoteRefPromises: Promise<{
       routesWithValidQuotes: RouteWithValidQuote[];
     }>[] = [];
-    if (protocolsSet.has(BarterProtocol.REF)) {
+    if (protocolsSet.has(ButterProtocol.REF)) {
       quoteRefPromises.push(
         this.getRefQuotes(
           tokenIn,
@@ -2389,7 +2389,7 @@ export class NearRouter
         tokenOutPrice,
         nearPrice,
         tradeType: swapType,
-        platform: BarterProtocol.REF,
+        platform: ButterProtocol.REF,
       });
       routesWithValidQuotes.push(routeWithValidQuote);
     }
@@ -2483,7 +2483,7 @@ export class NearRouter
 //     const quoteRefPromises: Promise<{
 //       routesWithValidQuotes: RouteWithValidQuote[];
 //     }>[] = [];
-//     if (protocolsSet.has(BarterProtocol.REF)) {
+//     if (protocolsSet.has(ButterProtocol.REF)) {
 //       quoteRefPromises.push(
 //         this.getMapQuotes(
 //           tokenIn,
@@ -2629,7 +2629,7 @@ export class NearRouter
 //         tokenOutPrice,
 //         nearPrice,
 //         tradeType: swapType,
-//         platform: BarterProtocol.REF,
+//         platform: ButterProtocol.REF,
 //       });
 //       routesWithValidQuotes.push(routeWithValidQuote);
 //     }

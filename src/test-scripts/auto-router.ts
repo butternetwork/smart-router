@@ -17,25 +17,25 @@ import {
 } from '../providers/quickswap/util/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
-import { getBestRoute } from '../routers/barter-router';
+import { getBestRoute } from '../routers/butter-router';
 import { nearRouterToString, routeAmountToString } from '../util';
 import { TradeType } from '../util/constants';
 import { getUsdcLiquidity } from '../util/mapLiquidity';
 import { getBridgeFee, getTokenCandidates } from '../util/mosFee';
-import { BarterProtocol } from '../util/protocol';
+import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
 
 let rpcUrl: string
 let provider: any
-let protocols: BarterProtocol[] = [];
+let protocols: ButterProtocol[] = [];
 const amount = '10'
 
 async function main() {
   const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-  if (total1&&total1>=Number(usdcLiquidity)){
-    throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
-  }
+  //const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
+  // if (total1&&total1>=Number(usdcLiquidity)){
+  //   throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
+  // }
   const [total2,gasCostInUSD2,__] = await findBestRouter(1313161554,USDC_NEAR,WNEAR_NEAR,total1!.toString())
   console.log("final output:",total2)
   console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
@@ -54,24 +54,24 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
       rpcUrl = 'http://54.255.196.147:9003'  //"https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"; 
       provider = new ethers.providers.JsonRpcProvider(rpcUrl, 31337); //forked net chianId
       protocols = [
-        BarterProtocol.UNI_V2,
-        BarterProtocol.UNI_V3,
-        BarterProtocol.SUSHISWAP,
-        BarterProtocol.CURVE,
+        ButterProtocol.UNI_V2,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+        ButterProtocol.CURVE,
       ];
       break;
     case 56: //bsc
       rpcUrl = 'https://bsc-dataseed1.defibit.io/'
       provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);//forked net chianId
       protocols = [
-        BarterProtocol.PANCAKESWAP,
+        ButterProtocol.PANCAKESWAP,
       ];
       break;
     case 137:
       rpcUrl = 'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372'
       provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);//forked net chianId
       protocols = [
-        BarterProtocol.QUICKSWAP,
+        ButterProtocol.QUICKSWAP,
       ];
       break;
       break;
@@ -79,20 +79,20 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
       rpcUrl = 'https://poc3-rpc.maplabs.io/';
       provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
       protocols = [
-        BarterProtocol.HIVESWAP
+        ButterProtocol.HIVESWAP
       ];
       break;
     case 1313161554: //near
       protocols = [
-        BarterProtocol.REF,
+        ButterProtocol.REF,
       ];
       break;
     default:
       protocols = [
-        BarterProtocol.UNI_V2,
-        BarterProtocol.UNI_V3,
-        BarterProtocol.SUSHISWAP,
-        BarterProtocol.CURVE,
+        ButterProtocol.UNI_V2,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+        ButterProtocol.CURVE,
       ];
       break;
   }

@@ -1,18 +1,18 @@
 import { Token, TradeType } from '@uniswap/sdk-core';
 import { ethers, providers } from 'ethers';
 import JSBI from 'jsbi';
-import { AlphaRouter, AlphaRouterConfig, NearRouter } from '../routers';
+import { AlphaRouter, AlphaRouterConfig, NearRouter } from '.';
 import { ChainId } from '../util';
 import { CurrencyAmount } from '../util/amounts';
 import { TradeType as VTradeType } from '../util/constants';
-import { BarterProtocol } from '../util/protocol';
+import { ButterProtocol } from '../util/protocol';
 import { BSCAlphaRouter } from './alpha-router/bsc-alpha-router';
 import { SwapOptions, SwapRoute } from './router';
 
 export async function getBestRoute(
   chainId: number,
   provider: providers.BaseProvider,
-  protocols: BarterProtocol[],
+  protocols: ButterProtocol[],
   swapAmountHumanReadable: string,
   tokenInAddress: string,
   tokenInDecimal: number,

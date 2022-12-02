@@ -56,7 +56,7 @@ import {
   getBSCPoolsFromOneProtocol,
   getBSCPoolsFromServer,
 } from '../../util/pool';
-import { BarterProtocol } from '../../util/protocol';
+import { ButterProtocol } from '../../util/protocol';
 import {
   IRouter,
   ISwapToRatio,
@@ -184,7 +184,7 @@ export type AlphaRouterConfig = {
    * The protocols to consider when finding the optimal swap. If not provided all protocols
    * will be used.
    */
-  protocols?: BarterProtocol[];
+  protocols?: ButterProtocol[];
   /**
    * Config for selecting which pools to consider routing via on V2.
    */
@@ -394,11 +394,11 @@ export class BSCAlphaRouter
       this.chainId
     );
 
-    if (protocolsSet.has(BarterProtocol.PANCAKESWAP)) {
+    if (protocolsSet.has(ButterProtocol.PANCAKESWAP)) {
       let pancakePoolsUnsanitized: RawBNBV2SubgraphPool[] =
         getBSCPoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.PANCAKESWAP
+          ButterProtocol.PANCAKESWAP
         );
 
       if (pancakePoolsUnsanitized === undefined) {
@@ -615,7 +615,7 @@ export class BSCAlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.pancakeV2PoolProvider,
-          platform: BarterProtocol.PANCAKESWAP,
+          platform: ButterProtocol.PANCAKESWAP,
         });
         routesWithValidQuotes.push(routeWithValidQuote);
       }

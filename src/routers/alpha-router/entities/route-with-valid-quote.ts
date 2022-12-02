@@ -18,7 +18,7 @@ import { SushiV2PoolProvider } from '../../../providers/sushiswap/v2/pool-provid
 import { V2PoolProvider } from '../../../providers/uniswap/v2/pool-provider';
 import { IV3PoolProvider } from '../../../providers/uniswap/v3/pool-provider';
 import { CurrencyAmount } from '../../../util/amounts';
-import { BarterProtocol } from '../../../util/protocol';
+import { ButterProtocol } from '../../../util/protocol';
 import { routeToString } from '../../../util/routes';
 import {
   PancakeV2Route,
@@ -78,7 +78,7 @@ export type V2RouteWithValidQuoteParams = {
   quoteToken: Token;
   tradeType: TradeType;
   v2PoolProvider: IV2PoolProvider;
-  platform: BarterProtocol;
+  platform: ButterProtocol;
 };
 /**
  * Represents a quote for swapping on a V2 only route. Contains all information
@@ -105,7 +105,7 @@ export class V2RouteWithValidQuote implements IV2RouteWithValidQuote {
   public tradeType: TradeType;
   public poolAddresses: string[];
   public tokenPath: Token[] | QToken[] | PToken[];
-  public platform: BarterProtocol;
+  public platform: ButterProtocol;
   public output: CurrencyAmount;
   public toString(): string {
     return `${this.platform}: ${this.percent.toFixed(
@@ -213,7 +213,7 @@ export type V3RouteWithValidQuoteParams = {
   quoteToken: Token;
   tradeType: TradeType;
   v3PoolProvider: IV3PoolProvider;
-  platform: BarterProtocol;
+  platform: ButterProtocol;
 };
 
 /**
@@ -243,7 +243,7 @@ export class V3RouteWithValidQuote implements IV3RouteWithValidQuote {
   public tradeType: TradeType;
   public poolAddresses: string[];
   public tokenPath: Token[];
-  public platform: BarterProtocol;
+  public platform: ButterProtocol;
   public output: CurrencyAmount;
 
   public toString(): string {
@@ -321,7 +321,7 @@ export class CurveRoute implements IRoute {
 }
 
 export type ICurveRouteWithValidQuote = {
-  protocol: BarterProtocol.CURVE;
+  protocol: ButterProtocol.CURVE;
 } & IRouteWithValidQuote<CurveRoute>;
 
 export type CurveRouteWithValidQuoteParams = {
@@ -335,11 +335,11 @@ export type CurveRouteWithValidQuoteParams = {
   tokenOutPrice: number;
   ethPrice: number;
   tradeType: TradeType;
-  platform: BarterProtocol;
+  platform: ButterProtocol;
 };
 
 export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
-  public readonly protocol = BarterProtocol.CURVE;
+  public readonly protocol = ButterProtocol.CURVE;
   public amount: CurrencyAmount;
   // The BigNumber representing the quote.
   public rawQuote: BigNumber;
@@ -348,7 +348,7 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
   public route: CurveRoute;
   public quoteToken: Token;
   public tradeType: TradeType;
-  public platform: BarterProtocol;
+  public platform: ButterProtocol;
   public tokenPath: Token[] | QToken[] | PToken[];
   public poolAddresses: string[];
 
@@ -426,7 +426,7 @@ export class RefRoute {
 }
 
 export type IRefRouteWithValidQuote = {
-  protocol: BarterProtocol.REF;
+  protocol: ButterProtocol.REF;
 } & IRouteWithValidQuote<RefRoute>;
 
 export type RefRouteWithValidQuoteParams = {
@@ -440,11 +440,11 @@ export type RefRouteWithValidQuoteParams = {
   tokenOutPrice: number;
   nearPrice: number;
   tradeType: TradeType;
-  platform: BarterProtocol;
+  platform: ButterProtocol;
 };
 
 export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
-  public readonly protocol = BarterProtocol.REF;
+  public readonly protocol = ButterProtocol.REF;
   public amount: CurrencyAmount;
   // The BigNumber representing the quote.
   public rawQuote: BigNumber;
@@ -453,7 +453,7 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
   public route: RefRoute;
   public quoteToken: Token;
   public tradeType: TradeType;
-  public platform: BarterProtocol;
+  public platform: ButterProtocol;
   public tokenPath: Token[] | QToken[] | PToken[];
   public poolAddresses: string[];
 

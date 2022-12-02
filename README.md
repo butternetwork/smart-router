@@ -1,13 +1,13 @@
-# Barter Smart Router
+# Butter Smart Router
 finding the best cross-chain swap route.
 
-# Barter Smart Auto Router Usage
+# Butter Smart Auto Router Usage
 ## Function Call
 ```
 getBestRoute(
 	chainId: number,					// chainId. e.g. Polygon: 137
 	provider: providers.BaseProvider,	// provider
-	protocols: BarterProtocol[],		// protocol included
+	protocols: ButterProtocol[],		// protocol included
 	swapAmountHumanReadable: string,	// swap amount
 	tokenInAddress: string,				// tokenInAddress: 
 	tokenInDecimal: number,				// tokenInDecimal
@@ -22,10 +22,10 @@ getBestRoute(
 ```
 
 ## Parameters
-### protocols: BarterProtocol[]
-Array of protocol need to considered in swap， see ([here](https://github.com/BarterTeam/barter-smart-router/blob/master/src/util/protocol.ts))
+### protocols: ButterProtocol[]
+Array of protocol need to considered in swap， see ([here](https://github.com/ButterTeam/Butter-smart-router/blob/master/src/util/protocol.ts))
 ```
-export  enum  BarterProtocol {
+export  enum  ButterProtocol {
 	UNI_V2 = 'V2',
 	UNI_V3 = 'V3',
 	QUICKSWAP = 'QUICKSWAP',
@@ -42,11 +42,11 @@ export  enum  TradeType {
 ```
 
 ## return parameter
-### SwapRoutes see([definition](https://github.com/BarterTeam/barter-smart-router/blob/master/src/routers/router.ts#L25))
+### SwapRoutes see([definition](https://github.com/butternetwork/butter-smart-router/blob/master/src/routers/router.ts#L25))
 
 ## Example
 ### swap 8000000 usdt to usdc on polygon
-code: [test-script.ts](https://github.com/BarterTeam/barter-smart-router/blob/master/src/test-scripts/auto-router.ts) <br>
+code: [test-script.ts](https://github.com/butternetwork/butter-smart-router/blob/master/src/test-scripts/auto-router.ts) <br>
 run script: 
 ```
 npm install
