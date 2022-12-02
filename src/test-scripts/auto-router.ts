@@ -32,10 +32,10 @@ const amount = '10'
 
 async function main() {
   const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  //const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-  // if (total1&&total1>=Number(usdcLiquidity)){
-  //   throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
-  // }
+  const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
+  if (total1&&total1>=Number(usdcLiquidity)){
+    throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
+  }
   const [total2,gasCostInUSD2,__] = await findBestRouter(1313161554,USDC_NEAR,WNEAR_NEAR,total1!.toString())
   console.log("final output:",total2)
   console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
