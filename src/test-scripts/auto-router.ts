@@ -18,10 +18,8 @@ import {
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
 import { getBestRoute } from '../routers/butter-router';
-import { nearRouterToString, routeAmountToString } from '../util';
+import { nearRouterToString, routeAmountToString, ZERO_ADDRESS } from '../util';
 import { TradeType } from '../util/constants';
-import { getUsdcLiquidity } from '../util/mapLiquidity';
-import { getBridgeFee, getTokenCandidates } from '../util/mosFee';
 import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
 
@@ -32,27 +30,18 @@ const amount = '10'
 
 async function main() {
   const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  const usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-  if (total1&&total1>=Number(usdcLiquidity)){
-    throw(`usdc liquidity ${usdcLiquidity} less than the swapped amount ${total1}`)
-  }
   const [total2,gasCostInUSD2,__] = await findBestRouter(1313161554,USDC_NEAR,WNEAR_NEAR,total1!.toString())
   console.log("final output:",total2)
   console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
   
-  // data of demo 
-  const feeProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
-  const bridgeFee = await getBridgeFee(GLD_MAP,'212',amount,feeProvider)
-  console.log("bridge fee:",bridgeFee.amount)
-
   // console.log(await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount))
   // console.log(await findBestRouter(1,USDT,USDC,amount))
 }
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string) :Promise<[number,number,RouteWithValidQuote[]]>{
   switch (chainId) {
-    case 1: //fork_eth
-      rpcUrl = 'http://54.255.196.147:9003'  //"https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"; 
-      provider = new ethers.providers.JsonRpcProvider(rpcUrl, 31337); //forked net chianId
+    case 1:
+      rpcUrl = "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"; 
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
       protocols = [
         ButterProtocol.UNI_V2,
         ButterProtocol.UNI_V3,

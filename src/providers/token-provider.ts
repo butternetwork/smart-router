@@ -371,6 +371,90 @@ export const WETH_POLYGON_MUMBAI = new Token(
   'Wrapped Ether'
 );
 
+//MAP tokens
+export const ETH_MAP = new Token(
+  ChainId.MAP,
+  '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
+  18,
+  'Mapped Wrapped Ether',
+  'ETH'
+);
+
+export const WMAP_MAP = new Token(
+  ChainId.MAP,
+  '0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23',
+  18,
+  'WMAP',
+  'Wrapped MAP'
+);
+
+export const USDC_MAP = new Token(
+  ChainId.MAP,
+  '0x9f722b2cb30093f766221fd0d37964949ed66918',
+  18,
+  'Mapped USD Coin',
+  'USDC'
+);
+
+//BSC tokens
+export const WBNB_BNB = new Token(
+  ChainId.BSC,
+  '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  18,
+  'WBNB',
+  'Wrapped BNB'
+);
+
+export const BUSD_BNB = new Token(
+  ChainId.BSC,
+  '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+  18,
+  'BUSD',
+  'BUSD Token'
+);
+
+export const USDT_BNB = new Token(
+  ChainId.BSC,
+  '0x55d398326f99059fF775485246999027B3197955',
+  18,
+  'USDT',
+  'Tether USD'
+);
+
+export const USDC_BNB = new Token(
+  ChainId.BSC,
+  '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  18,
+  'USDC',
+  'USD Coin'
+);
+
+//NEAR tokens
+export const USDT_NEAR = new Token(
+  1313161554,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+
+);
+
+export const USDC_NEAR = new Token(
+  1313161554,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
+export const WNEAR_NEAR = new Token(
+  1313161554,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'WNEAR',
+  'wrap.near'
+);
+
 export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
@@ -464,3 +548,5 @@ export class TokenProvider implements ITokenProvider {
     };
   }
 }
+
+export const BRIDGE_SUPPORTED_TOKEN:Token[] = [ USDC_MAP ];

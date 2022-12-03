@@ -122,8 +122,8 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
     WMATIC_POLYGON_MUMBAI,
   ],
   [ChainId.BSC]: [],
-  [ChainId.NEAR_MAINNET]: [],
-  [ChainId.MAP_MAINNET]: [],
+  [ChainId.NEAR]: [],
+  [ChainId.MAP]: [],
 };
 
 /**

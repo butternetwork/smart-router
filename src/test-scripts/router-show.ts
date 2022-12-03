@@ -1,27 +1,22 @@
 import { ethers } from 'ethers';
 import {
-  USDC,
-  USDT,
+  USDC_MAINNET,
+  USDT_MAINNET,
   USDC_BNB,
   USDT_BNB,
   WBNB_BNB,
   USDC_NEAR,
   WNEAR_NEAR,
   USDT_NEAR,
-  GLD_MAP,
-  KUN_MAP,
-  USDC_MATIC,
-  USDT_MATIC,
   WMAP_MAP,
   USDC_MAP
-} from '../providers/quickswap/util/token-provider';
+} from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
 import { getBestRoute } from '../routers/butter-router';
-import { nearRouterToString, routeAmountToString } from '../util';
+import { ChainId, getChainProvider, nearRouterToString, routeAmountToString } from '../util';
 import { TradeType } from '../util/constants';
-import { getUsdcLiquidity } from '../util/mapLiquidity';
-import { getBridgeFee, getTokenCandidates, toSrcToken } from '../util/mosFee';
+import { getBridgeFee, getTokenCandidates, getVaultBalance, toTargetToken } from '../util/mos';
 import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
 
@@ -116,28 +111,22 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
   }
   return [total, gasCostInUSD,swapRoute.route]
 }
-
 interface obj {
   index:Token,
   value:number
 }
 
-async function srcChainRouter(tokenIn:Token,chainId:number) {
+async function srcChainRouter(tokenIn:Token,chainId:number):Promise<[Map<obj, RouteWithValidQuote[]>, obj[]]> {
   // data of demo 
-  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)// map testnet chainId:212
-  //get the tokens common to both src chain and map chain
-  const TokenList = await getTokenCandidates('212',chainId.toString(),rpcProvider)
+  // get the tokens common to both src chain and map chain
+  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
+  const TokenList = [USDC_MAP] //await getTokenCandidates('212',chainId.toString(),rpcProvider)
   
   let tmp:obj[] = []
   let RouterMap = new Map();
   for(let token of TokenList){
     let bridgeFee = await getBridgeFee(token,'212',amount,rpcProvider)
-    let [total,gas,router] = await findBestRouter(chainId,tokenIn,toSrcToken(token),amount)
-    //check the liquidity of token is enough or not.
-    let usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-    if (total&&total>=Number(usdcLiquidity)){
-      continue
-    }
+    let [total,gas,router] = await findBestRouter(chainId,tokenIn,toTargetToken(chainId,token),amount)
     tmp.push({
       index:token,
       value:total-gas-Number(bridgeFee.amount)
@@ -148,28 +137,22 @@ async function srcChainRouter(tokenIn:Token,chainId:number) {
     },router)
   }
   tmp.sort((a,b) => (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0))
-  //get router of most output
-  let bestRouter = RouterMap.get(tmp[tmp.length-1])
-  console.log("best router in src chain",bestRouter)
   return [RouterMap,tmp]
 }
 
-async function mapRouter() {
+async function mapRouter():Promise<[Map<obj, RouteWithValidQuote[]>, obj[]]> {
   // data of demo 
-  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)// map testnet chainId:212
+  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
   //get the tokens common to both src chain and map chain
   const TokenList = await getTokenCandidates('212','56',rpcProvider)
-  
   let tmp:obj[] = []
   let RouterMap = new Map();
+  if (TokenList.length<2){
+    return [RouterMap,tmp]
+  }
   for(let token of TokenList){
     let bridgeFee = await getBridgeFee(token,'212',amount,rpcProvider)
-    let [total,gas,router] = await findBestRouter(56,WBNB_BNB,toSrcToken(token),amount)
-    //check the liquidity of token is enough or not.
-    let usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-    if (total&&total>=Number(usdcLiquidity)){
-      continue
-    }
+    let [total,gas,router] = await findBestRouter(ChainId.MAP,WBNB_BNB,toTargetToken(ChainId.MAP,token),amount)
     tmp.push({
       index:token,
       value:total-gas-Number(bridgeFee.amount)
@@ -180,28 +163,20 @@ async function mapRouter() {
     },router)
   }
   tmp.sort((a,b) => (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0))
-  //get router of most output
-  let bestRouter = RouterMap.get(tmp[tmp.length-1])
-  console.log("best router in src chain",bestRouter)
   return [RouterMap,tmp]
 }
 
-async function targetChainRouter(tokenOut:Token,chainId:number) {
+async function targetChainRouter(tokenOut:Token,chainId:number):Promise<[Map<obj, RouteWithValidQuote[]>, obj[]]> {
   // data of demo 
-  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)// map testnet chainId:212
-  //get the tokens common to both src chain and map chain
-  const TokenList = await getTokenCandidates('212',chainId.toString(),rpcProvider)
+  // get the tokens common to both src chain and map chain
+  const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
+  const TokenList = [USDC_MAP] //await getTokenCandidates('212',chainId.toString(),rpcProvider)
   
   let tmp:obj[] = []
   let RouterMap = new Map();
   for(let token of TokenList){
     let bridgeFee = await getBridgeFee(token,'212',amount,rpcProvider)
-    let [total,gas,router] = await findBestRouter(chainId,toSrcToken(token),tokenOut,amount)
-    //check the liquidity of token is enough or not.
-    let usdcLiquidity = await getUsdcLiquidity(USDC_MAP.address)
-    if (total&&total>=Number(usdcLiquidity)){
-      continue
-    }
+    let [total,gas,router] = await findBestRouter(chainId,toTargetToken(chainId,token),tokenOut,amount)
     tmp.push({
       index:token,
       value:total-gas-Number(bridgeFee.amount)
@@ -212,15 +187,19 @@ async function targetChainRouter(tokenOut:Token,chainId:number) {
     },router)
   }
   tmp.sort((a,b) => (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0))
-  //get router of most output
-  let bestRouter = RouterMap.get(tmp[tmp.length-1])
-  console.log("best router in src chain",bestRouter)
   return [RouterMap,tmp]
 }
 
-async function crossChainRouter() {
+async function crossChainRouter():Promise<(RouteWithValidQuote[])[]> {
   const [bscRouters,bscToken] = await srcChainRouter(WBNB_BNB,56)
-  const [mapRouters,mapToken] = await mapRouter()
-  const [nearRouters,nearToken] = await targetChainRouter(WBNB_BNB,1313161554)
-  
+  const [nearRouters,nearToken] = await targetChainRouter(WNEAR_NEAR,1313161554)
+  //const [mapRouters,mapToken] = await mapRouter()
+
+  let bestRouterOnSrcChain = bscToken[bscToken.length-1]
+  let bestRouterOnTargetChain = nearToken[nearToken.length-1]
+  if(!bestRouterOnSrcChain&&!bestRouterOnTargetChain){
+     return []
+  }
+  return [bscRouters.get(bestRouterOnSrcChain!)!,nearRouters.get(bestRouterOnTargetChain!)!]
+
 }

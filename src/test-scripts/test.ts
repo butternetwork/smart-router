@@ -1,35 +1,48 @@
 import { ethers } from 'ethers';
-import { GraphQLClient } from 'graphql-request';
-import { gql } from 'graphql-request';
-import { GLD_MAP } from '../providers/quickswap/util/token-provider';
-import { getBridgeFee } from '../util/mosFee';
+import { USDC_NEAR } from '../providers';
+import { _getUsdRate } from '../routers/alpha-router/functions/get-curve-best-router';
+import { getBridgeFee, getVaultBalance } from '../util/mos';
+import { Token } from '../util/token';
 
-interface Liquidity {
-    totalLiquidity: string;
-}
+const MAP_TEST_MOST = new Token(
+    212,
+    '0xc74bc33a95a62D90672aEFAf4bA784285903cf09',
+    18,
+    'MOST',
+    'MOST Token',
+);
 
-async function testUrl() {
-    let params = gql`
-    {
-        token(id: "0x9f722b2cb30093f766221fd0d37964949ed66918") {
-            totalLiquidity
-        }
-    }
-    `
-    let client: GraphQLClient = new GraphQLClient("https://makalu-graph.maplabs.io/subgraphs/name/map/hiveswap2");
-    let usdc_liquidity = '0'
-    await client.request<{
-        token: Liquidity;
-    }>(params).then((res)=>{
-        usdc_liquidity = res.token.totalLiquidity
-    });
-    return usdc_liquidity
+const BSC_TEST_MOST = new Token(
+    97,
+    '0x688f3Ef5f728995a9DcB299DAEC849CA2E49ddE1',
+    18,
+    'MOST',
+    'MOST Token'
+);
+
+async function test1() {
+    const provider = new ethers.providers.JsonRpcProvider(
+        "https://testnet-rpc.maplabs.io"
+    );
+    const data = await getVaultBalance(212, MAP_TEST_MOST, 97, provider)
+    console.log("test1",data)
 }
 
 async function test2() {
-    let provider =  new ethers.providers.JsonRpcProvider('http://18.142.54.137:7445', 212);
-    let data = await getBridgeFee(GLD_MAP,'97','100',provider)
-    console.log(data)
+    let provider = new ethers.providers.JsonRpcProvider('http://18.142.54.137:7445', 212);
+    let data = await getBridgeFee(MAP_TEST_MOST, '97', '100', provider)
+    console.log("test2",data)
 }
 
-test2()
+async function test3() {
+    let tokenOutPrice
+    try {
+        tokenOutPrice = await _getUsdRate(USDC_NEAR.name!)
+    } catch {
+        throw ("fail to get token price")
+    }
+    console.log("test3",tokenOutPrice)
+}
+
+// test1()
+// test2()

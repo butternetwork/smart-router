@@ -1,12 +1,14 @@
 import { Token, TradeType } from '@uniswap/sdk-core';
 import { ethers, providers } from 'ethers';
 import JSBI from 'jsbi';
-import { AlphaRouter, AlphaRouterConfig, NearRouter } from '.';
+import { AlphaRouter, AlphaRouterConfig } from '.';
 import { ChainId } from '../util';
 import { CurrencyAmount } from '../util/amounts';
 import { TradeType as VTradeType } from '../util/constants';
 import { ButterProtocol } from '../util/protocol';
 import { BSCAlphaRouter } from './alpha-router/bsc-alpha-router';
+import { MapAlphaRouter } from './alpha-router/map-alpha-router';
+import { NearRouter } from './alpha-router/near-alpha-router';
 import { SwapOptions, SwapRoute } from './router';
 
 export async function getBestRoute(
@@ -38,13 +40,13 @@ export async function getBestRoute(
         provider: provider,
       })
       break
-    case ChainId.MAP_MAINNET:
-      router = new AlphaRouter({
+    case ChainId.MAP:
+      router = new MapAlphaRouter({
         chainId: chainId,
         provider: provider,
       });
       break
-    case ChainId.NEAR_MAINNET:
+    case ChainId.NEAR:
       router = new NearRouter(chainId)
       break
     default:
