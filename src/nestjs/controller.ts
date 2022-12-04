@@ -13,8 +13,8 @@ export class RouterController {
 
   @Get('best_route')
   async getBestRoute(
-    @Query('fromChainId') fromChainId: number,
-    @Query('toChainId') toChainId: number,
+    @Query('fromChainId') fromChainId: string,
+    @Query('toChainId') toChainId: string,
     @Query('amountIn') amountIn: string,
     @Query('tokenInAddress') tokenInAddress: string,
     @Query('tokenInDecimal') tokenInDecimal: number,

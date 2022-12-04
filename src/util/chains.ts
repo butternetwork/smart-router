@@ -350,6 +350,8 @@ export function getChainProvider(chainId:number){
         provider = new ethers.providers.JsonRpcProvider(POLYGON_MAINNET_URL, chainId);
         protocols = [
           ButterProtocol.QUICKSWAP,
+          ButterProtocol.UNI_V3,
+          ButterProtocol.SUSHISWAP
         ];
         break;
       case ChainId.MAP:

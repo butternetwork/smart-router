@@ -1,4 +1,6 @@
 import { FACTORY_ADDRESS } from '@uniswap/v3-sdk';
+import { BigNumber } from 'ethers';
+import { ButterProtocol } from './protocol';
 
 export const V3_CORE_FACTORY_ADDRESS = FACTORY_ADDRESS;
 export const QUOTER_V2_ADDRESS = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
@@ -22,19 +24,21 @@ export const MAP_FACTORY_ADDRESS = '0x29c3d087302e3fCb75F16175A09E4C39119459B2';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-/*
 export const ROUTER_INDEX: {
   [protocol in ButterProtocol]: BigNumber;
 } = {
   V2: BigNumber.from(0),
   V3: BigNumber.from(0),
-  QUICKSWAP: BigNumber.from(2),
   SUSHISWAP: BigNumber.from(1),
+  QUICKSWAP: BigNumber.from(2),
   PANCAKESWAP: BigNumber.from(3),
   CURVE: BigNumber.from(4),
   HIVESWAP: BigNumber.from(5),
   REF: BigNumber.from(6),
 };
+
+
+/*
 
 export const ROUTER_ADDRESSES: {
   [protocol in ButterProtocol]: string;

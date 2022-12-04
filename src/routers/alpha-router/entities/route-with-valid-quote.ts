@@ -30,6 +30,7 @@ import {
 import { IGasModel } from '../gas-models/gas-model';
 import { IRoute, IRouteStep } from '@curvefi/api/lib/interfaces';
 import { EstimateSwapView } from '@ref-finance/ref-sdk';
+import { numberToBinInt16LE } from '@bitauth/libauth';
 /**
  * Represents a route, a quote for swapping some amount on it, and other
  * metadata used by the routing algorithm.
@@ -414,13 +415,29 @@ export class CurveRouteWithValidQuote implements ICurveRouteWithValidQuote {
   }
 }
 
+type swapParams = {
+  amountIn:string,
+  amountOut:string,
+  tokenIn:string,
+  tokenOut:string,
+  poolId:number
+}
 export class RefRoute {
   readonly allRoute: EstimateSwapView[] = [];
-  readonly poolIds: number[] = [];
-  constructor(route: EstimateSwapView[]) {
-    this.allRoute = route
-    for(let i = 0; i < route.length; i++){
-      this.poolIds.push(route[i]!.pool.id) 
+  readonly swapData: swapParams[] = [];
+
+  constructor(routes: EstimateSwapView[],amount:string) {
+    this.allRoute = routes
+    let amountIn = amount
+    for(let r of routes){
+      this.swapData.push({
+        amountIn:amountIn,
+        amountOut:r.estimate,
+        tokenIn:r.inputToken!,
+        tokenOut:r.outputToken!,
+        poolId:r.pool.id!
+      }) 
+      amountIn = r.estimate
     }
   };
 }
@@ -430,15 +447,12 @@ export type IRefRouteWithValidQuote = {
 } & IRouteWithValidQuote<RefRoute>;
 
 export type RefRouteWithValidQuoteParams = {
-  chainId: number;
   amount: CurrencyAmount;
   rawQuote: BigNumber;
   percent: number;
   route: RefRoute;
   quoteToken: Token;
   gasPriceWei: BigNumber;
-  tokenOutPrice: number;
-  nearPrice: number;
   tradeType: TradeType;
   platform: ButterProtocol;
 };
@@ -456,7 +470,7 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
   public platform: ButterProtocol;
   public tokenPath: Token[] | QToken[] | PToken[];
   public poolAddresses: string[];
-
+  public swapData:swapParams[] | undefined
   public quoteAdjustedForGas: CurrencyAmount;
   public gasCostInToken: CurrencyAmount;
   public gasCostInUSD: CurrencyAmount;
@@ -468,14 +482,11 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
   }
 
   constructor({
-    chainId = 1313161554, //near mainnet
     amount,
     rawQuote,
     percent,
     route,
     gasPriceWei,
-    tokenOutPrice,
-    nearPrice,
     quoteToken,
     tradeType,
     platform,
@@ -490,22 +501,18 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
     this.platform = platform;
     this.tokenPath = [];
     this.poolAddresses = [];
-    for (let i = 0; i < this.route.poolIds.length; i++) {
-      this.poolAddresses[i] = this.route.poolIds[i]!.toString();
-      let tokenName = this.route.allRoute[i]!.inputToken
-      if (tokenName){
-        //this.tokenPath[i] = new Token(chainId, tokenName, 6);
-      }
+    for (let i = 0; i < this.route.swapData.length; i++) {
+      this.poolAddresses[i] = this.route.swapData[i]!.poolId.toString();
     }
-
+    this.swapData = this.route.swapData
     // Constant cost for doing any swap regardless of pools.
     const BASE_SWAP_COST = BigNumber.from(180000);
     // Constant per extra hop in the route.
     const COST_PER_EXTRA_HOP = BigNumber.from(120000);
     this.gasEstimate = BASE_SWAP_COST.add(COST_PER_EXTRA_HOP.mul(route.allRoute.length - 1));
     const totalGasCostWei = gasPriceWei.mul(this.gasEstimate);
-    const gas_usd = totalGasCostWei.div(Math.pow(10,9)).div(Math.pow(10,3)).toNumber()  * nearPrice
-    const gas_token = gas_usd * tokenOutPrice
+    const gas_usd = totalGasCostWei.div(Math.pow(10,9)).div(Math.pow(10,3)).toNumber()  * 2
+    const gas_token = gas_usd * 1
     this.gasCostInToken = CurrencyAmount.fromRawAmount(quoteToken, gas_token.toFixed(0));
     this.gasCostInUSD = CurrencyAmount.fromRawAmount(quoteToken, gas_usd.toFixed(0));
     if (this.tradeType == TradeType.EXACT_INPUT) {

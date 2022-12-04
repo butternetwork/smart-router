@@ -273,7 +273,7 @@ export class NearRouter
             token0Name = token0.name
             token1Name = token1.name
         } else {
-            throw ("token id is null:")
+            throw ("ref-router Quotes error: token id is null")
         }
 
         const tokenIn = await ftGetTokenMetadata(token0Name);
@@ -306,8 +306,6 @@ export class NearRouter
             return { routesWithValidQuotes: [] };
         }
 
-        let tokenOutPrice = 1
-        let nearPrice = 2
         // try {
         //   tokenOutPrice = await _getUsdRate(token1.address)
         //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
@@ -319,18 +317,15 @@ export class NearRouter
         for (let i = 0; i < amounts.length; i++) {
             const percent = percents[i]!;
             const amount = amounts[i]!;
-            const refRoute = new RefRoute(routes[i]!)
+            const refRoute = new RefRoute(routes[i]!,amount.toExact())
             const quote = getExpectedOutputFromSwapTodos(routes[i]!, tokenOut.id)
             const routeWithValidQuote = new RefRouteWithValidQuote({
-                chainId: this.chainId,
                 amount: amount,
                 rawQuote: BigNumber.from(quote.toFixed(0)),
                 percent: percent,
                 route: refRoute,
                 quoteToken: quoteToken,
                 gasPriceWei: gasPriceWei,
-                tokenOutPrice,
-                nearPrice,
                 tradeType: swapType,
                 platform: ButterProtocol.REF,
             });

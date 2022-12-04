@@ -18,7 +18,7 @@ import {
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
 import { getBestRoute } from '../routers/butter-router';
-import { nearRouterToString, routeAmountToString, ZERO_ADDRESS } from '../util';
+import { ChainId, nearRouterToString, routeAmountToString, ROUTER_INDEX, ZERO_ADDRESS } from '../util';
 import { TradeType } from '../util/constants';
 import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
@@ -29,13 +29,14 @@ let protocols: ButterProtocol[] = [];
 const amount = '10'
 
 async function main() {
-  const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  const [total2,gasCostInUSD2,__] = await findBestRouter(1313161554,USDC_NEAR,WNEAR_NEAR,total1!.toString())
-  console.log("final output:",total2)
-  console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
+  // const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
+  const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+  // console.log("final output:",total2)
+  // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
   
   // console.log(await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount))
   // console.log(await findBestRouter(1,USDT,USDC,amount))
+  // console.log(await findBestRouter(137,USDT_MATIC,USDC_MATIC,amount))
 }
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string) :Promise<[number,number,RouteWithValidQuote[]]>{
   switch (chainId) {
@@ -46,7 +47,7 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
         ButterProtocol.UNI_V2,
         ButterProtocol.UNI_V3,
         ButterProtocol.SUSHISWAP,
-        ButterProtocol.CURVE,
+        //ButterProtocol.CURVE,
       ];
       break;
     case 56: //bsc
@@ -58,11 +59,12 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
       break;
     case 137:
       rpcUrl = 'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372'
-      provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);//forked net chianId
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
       protocols = [
         ButterProtocol.QUICKSWAP,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP
       ];
-      break;
       break;
     case 22776: //map
       rpcUrl = 'https://poc3-rpc.maplabs.io/';
@@ -71,7 +73,7 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
         ButterProtocol.HIVESWAP
       ];
       break;
-    case 1313161554: //near
+    case ChainId.NEAR: //near
       protocols = [
         ButterProtocol.REF,
       ];
@@ -108,7 +110,7 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
   let total = 0
   let gasCostInUSD = 0
 
-  if (chainId == 1313161554) {
+  if (chainId == ChainId.NEAR) {
     for (let route of swapRoute.route) {
       total += Number(route.output.toExact())
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());

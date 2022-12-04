@@ -36,7 +36,7 @@ export type TokenAccessor = {
 
 //NEAR tokens
 export const USDT_NEAR = new Token(
-  1313161554,
+  ChainId.NEAR,
   '0xdac17f958d2ee523a2206206994597c13d831ec7',
   6,
   'USDT.e',
@@ -44,7 +44,7 @@ export const USDT_NEAR = new Token(
 );
 
 export const USDC_NEAR = new Token(
-  1313161554,
+  ChainId.NEAR,
   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   6,
   'USDC',
@@ -52,7 +52,7 @@ export const USDC_NEAR = new Token(
 );
 
 export const WNEAR_NEAR = new Token(
-  1313161554,
+  ChainId.NEAR,
   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   6,
   'WNEAR',
