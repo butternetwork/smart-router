@@ -146,11 +146,12 @@ async function srcChainRouter(tokenIn:Token,amount:string,chainId:number):Promis
   const key:Token = tmp[tmp.length-1]!.index
   const bestRouter:RouteWithValidQuote[] = RouterMap.get(key)
   let path:swapPrams[] = []
+  let targetTokenAddr = tokenIn.address
 
   if(bestRouter == null){
     return {
       path:[],
-      targetToken:tokenIn.address
+      targetToken:targetTokenAddr
     }
   }
 
@@ -168,6 +169,7 @@ async function srcChainRouter(tokenIn:Token,amount:string,chainId:number):Promis
             platform: bestRouter[i]!.platform 
           }
           path.push(param)
+          targetTokenAddr = tokenIn.name!
         }
       }else{
         throw("get ref router fail")
@@ -187,7 +189,7 @@ async function srcChainRouter(tokenIn:Token,amount:string,chainId:number):Promis
 
   return {
     path:path,
-    targetToken:tokenIn.address
+    targetToken:targetTokenAddr
   }
 }
 
@@ -214,11 +216,12 @@ async function targetChainRouter(tokenOut:Token,amount:string,chainId:number):Pr
   const key:Token = tmp[tmp.length-1]!.index
   const bestRouter:RouteWithValidQuote[] = RouterMap.get(key)
   let path:swapPrams[] = []
+  let targetTokenAddr = tokenOut.address
 
   if(bestRouter == null){
     return {
       path:path,
-      targetToken:tokenOut.address
+      targetToken:targetTokenAddr
     }
   }
 
@@ -236,6 +239,7 @@ async function targetChainRouter(tokenOut:Token,amount:string,chainId:number):Pr
             platform: bestRouter[i]!.platform 
           }
           path.push(param)
+          targetTokenAddr = tokenOut.name!
         }
       }else{
         throw("get ref router fail")
@@ -255,6 +259,6 @@ async function targetChainRouter(tokenOut:Token,amount:string,chainId:number):Pr
 
   return {
     path:path,
-    targetToken:tokenOut.address
+    targetToken:targetTokenAddr
   }
 }
