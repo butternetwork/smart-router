@@ -459,7 +459,7 @@ export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
     protected multicall2Provider: IMulticallProvider
-  ) {}
+  ) { }
 
   public async getTokens(
     _addresses: string[],
@@ -527,10 +527,8 @@ export class TokenProvider implements ITokenProvider {
       }
 
       log.info(
-        `Got token symbol and decimals for ${
-          Object.values(addressToToken).length
-        } out of ${addresses.length} tokens on-chain ${
-          providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
+        `Got token symbol and decimals for ${Object.values(addressToToken).length
+        } out of ${addresses.length} tokens on-chain ${providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
         }`
       );
     }
@@ -549,4 +547,27 @@ export class TokenProvider implements ITokenProvider {
   }
 }
 
-export const BRIDGE_SUPPORTED_TOKEN:Token[] = [ USDC_MAP ];
+export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
+
+export const GET_TOKEN_ICON = (address: string):string=> {
+  switch (address) {
+    case "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": 
+      return "https://files.mapprotocol.io/bridge/bnb.png" 
+    case "wrap.near":
+      return "https://cryptologos.cc/logos/near-protocol-near-logo.png"
+    case "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": //polygon usdc
+      return "https://files.mapprotocol.io/bridge/usdc.png"
+    case "0x9f722b2cb30093f766221fd0d37964949ed66918": //map usdc
+      return "https://files.mapprotocol.io/bridge/usdc.png"
+    case "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d": //bnb usdc
+      return "https://files.mapprotocol.io/bridge/usdc.png"  
+    case "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near":
+      return "https://files.mapprotocol.io/bridge/usdc.png" //near usdc
+    case "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270":
+      return "https://files.mapprotocol.io/bridge/polygon.png"
+    case "0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23":
+      return "https://files.maplabs.io/bridge/map.png"
+    default:
+      return ''
+  }
+}

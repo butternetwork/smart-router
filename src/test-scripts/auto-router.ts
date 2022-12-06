@@ -26,17 +26,18 @@ import { Token } from '../util/token';
 let rpcUrl: string
 let provider: any
 let protocols: ButterProtocol[] = [];
-const amount = '10'
+const amount = '10000'
 
 async function main() {
   // const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+  // const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
   // console.log("final output:",total2)
   // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
   
-  // console.log(await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount))
-  // console.log(await findBestRouter(1,USDT,USDC,amount))
-  // console.log(await findBestRouter(137,USDT_MATIC,USDC_MATIC,amount))
+  // await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount)
+  // await findBestRouter(1,USDT,USDC,amount)
+  // await findBestRouter(137,USDT_MATIC,USDC_MATIC,amount)
+  
 }
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string) :Promise<[number,number,RouteWithValidQuote[]]>{
   switch (chainId) {

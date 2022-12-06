@@ -420,7 +420,13 @@ type swapParams = {
   amountOut:string,
   tokenIn:string,
   tokenOut:string,
-  poolId:number
+  poolId:number,
+  tokenInName:string,
+  tokenOutName:string,
+  tokenInSymbol:string,
+  tokenOutSymbol:string,
+  tokenInIcon:string,
+  tokenOutIcon:string
 }
 export class RefRoute {
   readonly allRoute: EstimateSwapView[] = [];
@@ -429,13 +435,40 @@ export class RefRoute {
   constructor(routes: EstimateSwapView[],amount:string) {
     this.allRoute = routes
     let amountIn = amount
+    let tokenInName:string = ''
+    let tokenOutName:string = ''
+    let tokenInSymbol:string = ''
+    let tokenOutSymbol:string = ''
+    let tokenInIcon:string = ''
+    let tokenOutIcon:string = ''
+
     for(let r of routes){
+      if(r.tokens){
+        for(let t of r.tokens){
+          if(t.id == r.inputToken){
+            tokenInName = t.name
+            tokenInSymbol = t.symbol
+            tokenInIcon = t.icon
+          }
+          if(t.id == r.outputToken){
+            tokenOutName = t.name
+            tokenOutSymbol = t.symbol
+            tokenOutIcon = t.icon
+          }
+        }
+      }
       this.swapData.push({
-        amountIn:amountIn,
-        amountOut:r.estimate,
-        tokenIn:r.inputToken!,
-        tokenOut:r.outputToken!,
-        poolId:r.pool.id!
+        amountIn: amountIn,
+        amountOut: r.estimate,
+        tokenIn: r.inputToken!,
+        tokenOut: r.outputToken!,
+        poolId: r.pool.id!,
+        tokenInName: tokenInName,
+        tokenInSymbol: tokenInSymbol,
+        tokenInIcon: tokenInIcon,
+        tokenOutName: tokenOutName,
+        tokenOutSymbol: tokenOutSymbol,
+        tokenOutIcon: tokenOutIcon
       }) 
       amountIn = r.estimate
     }

@@ -817,9 +817,9 @@ export class AlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
-    const gasData  = await axios.get("https://api.curve.fi/api/getGas")
-    const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
-    //const gasPriceWei = await this.gasPriceProvider.getGasPrice();
+    // const gasData  = await axios.get("https://api.curve.fi/api/getGas")
+    // const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
+    const { gasPriceWei } = await this.gasPriceProvider.getGasPrice();
     metric.putMetric(
       'GasPriceLoad',
       Date.now() - beforeGas,

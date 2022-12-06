@@ -306,13 +306,6 @@ export class NearRouter
             return { routesWithValidQuotes: [] };
         }
 
-        // try {
-        //   tokenOutPrice = await _getUsdRate(token1.address)
-        //   ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
-        // } catch {
-        //   throw ("fail to get token price")
-        // }
-
         let routesWithValidQuotes: RefRouteWithValidQuote[] = []
         for (let i = 0; i < amounts.length; i++) {
             const percent = percents[i]!;

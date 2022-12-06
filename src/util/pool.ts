@@ -100,7 +100,6 @@ export async function getETHPoolsFromServer(
   chainId: number
 ): Promise<string> {
   const requestUrl = assemblePoolRequest(protocolSet, chainId);
-  console.log(requestUrl);
   try {
     const allPoolsUnsanitizedJsonStr = await axios.get(requestUrl);
     return JSON.stringify(allPoolsUnsanitizedJsonStr.data);

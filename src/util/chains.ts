@@ -370,3 +370,16 @@ export function getChainProvider(chainId:number){
     }
     return { provider , protocols }
 }
+
+export function IS_SUPPORT_CHAIN(id:string){
+  switch (id) {
+    case '1':
+    case '137':
+    case '56':
+    case '22776':
+    case '5566818579631833088':
+      break
+    default:
+      throw new Error(`Unsupported chain id: ${id}`);
+  }
+}
