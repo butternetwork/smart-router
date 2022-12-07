@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import {
   USDC,
   USDT,
@@ -20,24 +20,30 @@ import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-
 import { getBestRoute } from '../routers/butter-router';
 import { ChainId, nearRouterToString, routeAmountToString, ROUTER_INDEX, ZERO_ADDRESS } from '../util';
 import { TradeType } from '../util/constants';
+import { getBridgeFee } from '../util/mos';
 import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
+import { MAP_MAINNET_URL } from '../util/urls';
 
 let rpcUrl: string
 let provider: any
 let protocols: ButterProtocol[] = [];
-const amount = '10000'
+const amount = '9957.834227926980099164'
 
 async function main() {
-  // const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
-  // const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+  console.log(Number(amount).toFixed(6))
+  //const [total1,gasCostInUSD1,_] = await findBestRouter(56,USDT_BNB,USDC_BNB,amount)
+  //const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
   // console.log("final output:",total2)
   // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
   
   // await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount)
-  // await findBestRouter(1,USDT,USDC,amount)
+  // await findBestRouter(1,USDC,USDT,amount)
   // await findBestRouter(137,USDT_MATIC,USDC_MATIC,amount)
-  
+  // const rpcProvider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, ChainId.MAP)
+  // const fee = await getBridgeFee(USDC_MATIC,'56','100',rpcProvider)
+  // console.log(fee)
+  // console.log(Number("9957.834227126980099164")+Number("9957.834227126980099164"))
 }
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string) :Promise<[number,number,RouteWithValidQuote[]]>{
   switch (chainId) {
@@ -45,9 +51,9 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
       rpcUrl = "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"; 
       provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
       protocols = [
-        ButterProtocol.UNI_V2,
+        //ButterProtocol.UNI_V2,
         ButterProtocol.UNI_V3,
-        ButterProtocol.SUSHISWAP,
+        //ButterProtocol.SUSHISWAP,
         //ButterProtocol.CURVE,
       ];
       break;
