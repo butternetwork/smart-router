@@ -32,7 +32,7 @@ let protocols: ButterProtocol[] = [];
 const amount = '9957'
 
 async function main() {
-  const [total1,gasCostInUSD1,_] = await findBestRouter(56,USDT_BNB,USDC_BNB,amount)
+  const [total1,gasCostInUSD1,_] = await findBestRouter(56,WBNB_BNB,USDC_BNB,amount)
   // const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
   // console.log("final output:",total2)
   // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)

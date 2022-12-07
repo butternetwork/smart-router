@@ -184,6 +184,10 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
       tokenOut.address,
       tokenOut.decimals,
       TradeType.EXACT_INPUT,
+      tokenIn.symbol,
+      tokenIn.name,
+      tokenOut.symbol,
+      tokenOut.name
     );
   }else{
     swapRoute = await getBestRoute(
@@ -358,7 +362,7 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
         platform: bestRouter[i]!.platform
       }
       path.push(param)
-      
+      //console.log(bestRouter[i]!.tokenPath)
       for(let j=0;j<bestRouter[i]!.poolAddresses.length;j++){
         pairs.push({
           tokenIn: {
