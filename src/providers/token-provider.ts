@@ -1,7 +1,7 @@
 import { Token } from '@uniswap/sdk-core';
 import _ from 'lodash';
 import { IERC20Metadata__factory } from '../types/v3';
-import { ChainId, log } from '../util';
+import { ChainId, log, ZERO_ADDRESS } from '../util';
 import { IMulticallProvider } from './multicall-provider';
 import { ProviderConfig } from './provider';
 
@@ -338,6 +338,14 @@ export const DAI_POLYGON = new Token(
   'Dai Stablecoin'
 );
 
+export const USDT_MATIC = new Token(
+  ChainId.POLYGON,
+  '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+  6,
+  'USDT',
+  'Tether'
+);
+
 //polygon mumbai tokens
 export const WMATIC_POLYGON_MUMBAI = new Token(
   ChainId.POLYGON_MUMBAI,
@@ -432,7 +440,7 @@ export const USDC_BNB = new Token(
 //NEAR tokens
 export const USDT_NEAR = new Token(
   ChainId.NEAR,
-  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  ZERO_ADDRESS,
   6,
   'USDT.e',
   'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
@@ -441,7 +449,7 @@ export const USDT_NEAR = new Token(
 
 export const USDC_NEAR = new Token(
   ChainId.NEAR,
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  ZERO_ADDRESS,
   6,
   'USDC',
   'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
@@ -449,7 +457,7 @@ export const USDC_NEAR = new Token(
 
 export const WNEAR_NEAR = new Token(
   ChainId.NEAR,
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  ZERO_ADDRESS,
   6,
   'WNEAR',
   'wrap.near'
@@ -551,22 +559,30 @@ export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 
 export const GET_TOKEN_ICON = (address: string):string=> {
   switch (address) {
-    case "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": 
+    case WBNB_BNB.address: 
       return "https://files.mapprotocol.io/bridge/bnb.png" 
-    case "wrap.near":
+    case WNEAR_NEAR.name:
       return "https://cryptologos.cc/logos/near-protocol-near-logo.png"
-    case "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": //polygon usdc
+    case USDC_POLYGON.address: 
       return "https://files.mapprotocol.io/bridge/usdc.png"
-    case "0x9f722b2cb30093f766221fd0d37964949ed66918": //map usdc
+    case USDC_MAP.address: 
       return "https://files.mapprotocol.io/bridge/usdc.png"
-    case "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d": //bnb usdc
+    case USDC_BNB.address:
       return "https://files.mapprotocol.io/bridge/usdc.png"  
-    case "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near":
-      return "https://files.mapprotocol.io/bridge/usdc.png" //near usdc
-    case "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270":
+    case USDC_NEAR.name:
+      return "https://files.mapprotocol.io/bridge/usdc.png"
+    case WMATIC_POLYGON.address:
       return "https://files.mapprotocol.io/bridge/polygon.png"
-    case "0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23":
+    case WMAP_MAP.address:
       return "https://files.maplabs.io/bridge/map.png"
+    case BUSD_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/busd.png'
+    case USDT_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/usdt.png'
+    case USDT_NEAR.name:
+      return 'https://files.mapprotocol.io/bridge/usdt.png'
+    case USDT_MATIC.address:
+      return 'https://files.mapprotocol.io/bridge/usdt.png'
     default:
       return ''
   }

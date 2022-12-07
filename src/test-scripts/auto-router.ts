@@ -1,4 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
+import { GET_TOKEN_ICON } from '../providers';
 import {
   USDC,
   USDT,
@@ -28,12 +29,11 @@ import { MAP_MAINNET_URL } from '../util/urls';
 let rpcUrl: string
 let provider: any
 let protocols: ButterProtocol[] = [];
-const amount = '9957.834227926980099164'
+const amount = '9957'
 
 async function main() {
-  console.log(Number(amount).toFixed(6))
-  //const [total1,gasCostInUSD1,_] = await findBestRouter(56,USDT_BNB,USDC_BNB,amount)
-  //const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+  const [total1,gasCostInUSD1,_] = await findBestRouter(56,USDT_BNB,USDC_BNB,amount)
+  // const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
   // console.log("final output:",total2)
   // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
   

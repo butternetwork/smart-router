@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { BRIDGE_SUPPORTED_TOKEN, GET_TOKEN_ICON, USDC_MAP, WMAP_MAP } from '../providers/token-provider';
 import { RefRoute, RefRouteWithValidQuote, RouteWithValidQuote, SwapRoute } from '../routers/';
 import { getBestRoute } from '../routers/butter-router';
-import { ChainId, getChainProvider, IS_SUPPORT_CHAIN, ROUTER_INDEX, ZERO_ADDRESS } from '../util';
+import { ChainId, getChainProvider, IS_SUPPORT_CHAIN, routeAmountToString, ROUTER_INDEX, ZERO_ADDRESS } from '../util';
 import { TradeType } from '../util/constants';
 import { getBridgeFee, getTargetToken, toTargetToken } from '../util/mos';
 import { ButterProtocol } from '../util/protocol';
@@ -62,16 +62,16 @@ type token = {
 
 type returnData = {
   contractPrams: swapData,
-  frontParams: frontData
+  frontParams: frontData[]
 }
 
 type allRouter =  {
   srcChain:swapData,
   mapChain:swapData,
   targetChain:swapData,
-  front_srcChian:frontData,
-  front_mapChian:frontData,
-  front_targetChian:frontData,
+  front_srcChian:frontData[],
+  front_mapChian:frontData[],
+  front_targetChian:frontData[],
 }
 
 enum RouterType {
@@ -82,12 +82,13 @@ enum RouterType {
 @Injectable()
 export class RouterService {
 
-  async crossChainRouter(tokenInAddr:string,tokenInDecimals:number,tokenOutAddr:string,tokenOutDecimals:number,amount:string,fromChainId:string,toChainId:string):Promise<allRouter>{
+  async crossChainRouter(tokenInAddr:string,tokenInDecimals:number,tokenInSymbol:string,tokenOutAddr:string,tokenOutDecimals:number,tokenOutSymbol:string,amount:string,fromChainId:string,toChainId:string):Promise<allRouter>{
     IS_SUPPORT_CHAIN(fromChainId)
     IS_SUPPORT_CHAIN(toChainId)
     if (fromChainId == toChainId){
       throw new Error('fromChainId and toChainId cannot be the same')
     }
+
     const rpcProvider = new ethers.providers.JsonRpcProvider("http://18.142.54.137:7445", 212)
     const tokenADecimals:number = Number(tokenInDecimals)
     const tokenBDecimals:number = Number(tokenOutDecimals)
@@ -97,22 +98,21 @@ export class RouterService {
     let tokenOut:Token
     if(fromChainId == '5566818579631833088'){
       ChainAId = ChainId.NEAR
-      tokenIn = new Token(ChainAId,ZERO_ADDRESS,tokenBDecimals,"TOKEN IN",tokenInAddr)
+      tokenIn = new Token(ChainAId,ZERO_ADDRESS,tokenADecimals,tokenInSymbol,tokenInAddr)
     }else{
       ChainAId = Number(fromChainId)
-      tokenIn = new Token(ChainAId,tokenInAddr,tokenADecimals)
+      tokenIn = new Token(ChainAId,tokenInAddr,tokenADecimals,tokenInSymbol)
     }
     if(toChainId == '5566818579631833088'){
       ChainBId = ChainId.NEAR 
-      tokenOut = new Token(ChainBId,ZERO_ADDRESS,tokenBDecimals,"TOKEN OUT",tokenOutAddr)
+      tokenOut = new Token(ChainBId,ZERO_ADDRESS,tokenBDecimals,tokenOutSymbol,tokenOutAddr)
     }else{
       ChainBId = Number(toChainId)
-      tokenOut = new Token(ChainBId,tokenOutAddr,tokenBDecimals)
+      tokenOut = new Token(ChainBId,tokenOutAddr,tokenBDecimals,tokenOutSymbol)
     }
 
     const srcRouter = await chainRouter(tokenIn,Number(amount),ChainAId,RouterType.SRC_CHAIN)
     let srcAmountOut = 0
-    let srcAmountOutDecimals = srcRouter.contractPrams.targetTokenDecimals
     for(let p of srcRouter.contractPrams.path){
       srcAmountOut += Number(p.minAmountOut)
     }
@@ -128,7 +128,7 @@ export class RouterService {
         targetTokenAddress:USDC_MAP.address,
         targetTokenDecimals:WMAP_MAP.decimals
       },
-      frontParams:{
+      frontParams:[{
         chainId:ChainId.MAP.toString(),
         dexName:ButterProtocol.HIVESWAP,
         amountIn:'',
@@ -148,7 +148,7 @@ export class RouterService {
           icon:GET_TOKEN_ICON(USDC_MAP.address),
         },
         path:[]
-      }
+      }]
     } 
     const result:allRouter = {
       srcChain:srcRouter.contractPrams,
@@ -162,28 +162,6 @@ export class RouterService {
   }
 
 }
-
-const nullFrontRouter:frontData = {
-  chainId:'',
-  dexName:'',
-  amountIn:'',
-  amountOut:'',
-  tokenIn:{
-    address:'',
-    decimals:0,
-    name:'',
-    symbol:'',
-    icon:''
-  },
-  tokenOut:{
-    address:'',
-    decimals:0,
-    name:'',
-    symbol:'',
-    icon:''
-  },
-  path:[]
-} 
 
 const nullContractPrams:swapData = {
     targetTokenAddress:'',
@@ -269,8 +247,17 @@ async function chainRouter(swapToken:Token,amount:number,chainId:number,routerTy
   if(bestRouter == null){
     return {
       contractPrams:nullContractPrams,
-      frontParams:nullFrontRouter
+      frontParams:[]
     }
+  }
+
+  let icon_key1 = swapToken.address
+  let icon_key2 = key.address
+  if (swapToken.chainId == ChainId.NEAR){
+    icon_key1 = swapToken.name!
+  }
+  if(key.chainId == ChainId.NEAR){
+    icon_key2 = key.name!
   }
 
   const token1:token = {
@@ -278,14 +265,14 @@ async function chainRouter(swapToken:Token,amount:number,chainId:number,routerTy
     name:swapToken.name!,
     decimals:swapToken.decimals!,
     symbol:swapToken.symbol!,
-    icon:GET_TOKEN_ICON(swapToken.address)
+    icon:GET_TOKEN_ICON(icon_key1)
   }
   const token2:token = {
     address:key.address,
     name:key.name!,
     decimals:key.decimals!,
     symbol:key.symbol!,
-    icon:GET_TOKEN_ICON(key.address)
+    icon:GET_TOKEN_ICON(icon_key2)
   }
 
   if (routerType == RouterType.TARGET_CHAIN){
@@ -308,7 +295,7 @@ async function chainRouter(swapToken:Token,amount:number,chainId:number,routerTy
 function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:token,chainId:number):returnData{
   let path:swapPrams[] = []
   let pairs = []
-  let frontPath:frontData = nullFrontRouter
+  let frontPath:frontData[] = []
   let targetTokenAddr = tokenOut.address
 
   for (let i=0;i<bestRouter.length;i++){
@@ -345,7 +332,7 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
           })
         }
 
-        frontPath = {
+        frontPath.push({
           chainId: chainId.toString(),
           amountIn: refRouter.amount.toExact(),
           amountOut: refRouter.output.toExact(),
@@ -353,7 +340,7 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
           dexName:bestRouter[i]!.platform,
           tokenIn:tokenIn,
           tokenOut:tokenOut,
-        }
+        })
 
       }else{
         throw("get ref router fail")
@@ -371,27 +358,24 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
         platform: bestRouter[i]!.platform
       }
       path.push(param)
-
-      for(let i=0;i<bestRouter[i]!.poolAddresses.length;i++){
-
+      
+      for(let j=0;j<bestRouter[i]!.poolAddresses.length;j++){
         pairs.push({
           tokenIn: {
-            name: bestRouter[i]!.tokenPath[i]?.name!,
-            symbol: bestRouter[i]!.tokenPath[i]?.symbol!,
-            icon: bestRouter[i]!.tokenPath[i]?.address!,
-            address: bestRouter[i]!.tokenPath[i]?.address!
+            name: bestRouter[i]!.tokenPath[j]?.name!,
+            symbol: bestRouter[i]!.tokenPath[j]?.symbol!,
+            icon: GET_TOKEN_ICON(bestRouter[i]!.tokenPath[j]?.address!),
+            address: bestRouter[i]!.tokenPath[j]?.address!
           },
           tokenOut: {
-            name: bestRouter[i]!.tokenPath[i+1]?.name!,
-            symbol: bestRouter[i]!.tokenPath[i+1]?.symbol!,
-            icon: bestRouter[i]!.tokenPath[i+1]?.address!,
-            address: bestRouter[i]!.tokenPath[i+1]?.address!
+            name: bestRouter[i]!.tokenPath[j+1]?.name!,
+            symbol: bestRouter[i]!.tokenPath[j+1]?.symbol!,
+            icon: GET_TOKEN_ICON(bestRouter[i]!.tokenPath[j+1]?.address!),
+            address: bestRouter[i]!.tokenPath[j+1]?.address!
           },
         })
-
       }
-
-      frontPath = {
+      frontPath.push({
         chainId: chainId.toString(),
         amountIn: bestRouter[i]!.amount.toExact(),
         amountOut: bestRouter[i]!.quote.toExact(),
@@ -399,8 +383,8 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
         dexName:bestRouter[i]!.platform,
         tokenIn:tokenIn,
         tokenOut:tokenOut,
-      }
-
+      })
+      pairs = []
     }
   }
 
