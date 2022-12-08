@@ -14,22 +14,7 @@ type sortObj = {
   value:number
 }
 
-type swapPrams = {
-  amountIn:string, 
-  minAmountOut:string, 
-  tokenIn:string,
-  tokenOut:string,
-  platform:string,
-  poolId:string[]
-}
-
 type swapData = {
-  path:swapPrams[],
-  targetTokenAddress:string,
-  targetTokenDecimals:number,
-}
-
-type frontData = {
   chainId:string,
   dexName: string,
   amountIn:string,
@@ -60,18 +45,10 @@ type token = {
   icon:string
 }
 
-type returnData = {
-  contractPrams: swapData,
-  frontParams: frontData[]
-}
-
 type allRouter =  {
-  srcChain:swapData,
-  mapChain:swapData,
-  targetChain:swapData,
-  front_srcChian:frontData[],
-  front_mapChian:frontData[],
-  front_targetChian:frontData[],
+  srcChain:swapData[],
+  mapChain:swapData[],
+  targetChain:swapData[],
 }
 
 enum RouterType {
@@ -113,8 +90,8 @@ export class RouterService {
 
     const srcRouter = await chainRouter(tokenIn,Number(amount),ChainAId,RouterType.SRC_CHAIN)
     let srcAmountOut = 0
-    for(let p of srcRouter.contractPrams.path){
-      srcAmountOut += Number(p.minAmountOut)
+    for(let p of srcRouter){
+      srcAmountOut += Number(p.amountOut)
     }
     // let t = new Token(Number(fromChainId),srcRouter.contractPrams.targetToken,18)
     // toTargetToken(Number(fromChainId),t)
@@ -122,13 +99,7 @@ export class RouterService {
     // srcAmountOut -= Number(bridgeFee)
 
     const targetRouter = await chainRouter(tokenOut,srcAmountOut,ChainBId,RouterType.TARGET_CHAIN)
-    const mapRouter:returnData = {
-      contractPrams:{
-        path:[],
-        targetTokenAddress:USDC_MAP.address,
-        targetTokenDecimals:WMAP_MAP.decimals
-      },
-      frontParams:[{
+    const mapRouter:swapData[] = [{
         chainId:ChainId.MAP.toString(),
         dexName:ButterProtocol.HIVESWAP,
         amountIn:'',
@@ -149,24 +120,14 @@ export class RouterService {
         },
         path:[]
       }]
-    } 
-    const result:allRouter = {
-      srcChain:srcRouter.contractPrams,
-      mapChain:mapRouter.contractPrams,
-      targetChain:targetRouter.contractPrams,
-      front_srcChian:srcRouter.frontParams,
-      front_mapChian:mapRouter.frontParams,
-      front_targetChian:targetRouter.frontParams
+
+    return {
+      srcChain:srcRouter,
+      mapChain:mapRouter,
+      targetChain:targetRouter,
     }
-    return result
   }
 
-}
-
-const nullContractPrams:swapData = {
-    targetTokenAddress:'',
-    targetTokenDecimals:0,
-    path:[]
 }
 
 async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, amount: string): Promise<any> {
@@ -222,7 +183,7 @@ async function findBestRouter(chainId: number, tokenIn: Token, tokenOut: Token, 
   return [total, gasCostInUSD, swapRoute.route]
 }
 
-async function chainRouter(swapToken:Token,amount:number,chainId:number,routerType:number):Promise<returnData> {
+async function chainRouter(swapToken:Token,amount:number,chainId:number,routerType:number):Promise<swapData[]> {
   // data of demo, wait to deploy mos contract  
   const TokenList = BRIDGE_SUPPORTED_TOKEN //await getTokenCandidates('212',chainId.toString(),rpcProvider)
   let tmp:sortObj[] = []
@@ -249,10 +210,7 @@ async function chainRouter(swapToken:Token,amount:number,chainId:number,routerTy
   const bestRouter:RouteWithValidQuote[] = RouterMap.get(key)
 
   if(bestRouter == null){
-    return {
-      contractPrams:nullContractPrams,
-      frontParams:[]
-    }
+    return []
   }
 
   let icon_key1 = swapToken.address
@@ -296,11 +254,9 @@ async function chainRouter(swapToken:Token,amount:number,chainId:number,routerTy
     )
 }
 
-function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:token,chainId:number):returnData{
-  let path:swapPrams[] = []
+function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:token,chainId:number):swapData[]{
   let pairs = []
-  let frontPath:frontData[] = []
-  let targetTokenAddr = tokenOut.address
+  let swapPath:swapData[] = []
 
   for (let i=0;i<bestRouter.length;i++){
     
@@ -310,16 +266,6 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
       if (refRouter instanceof RefRouteWithValidQuote) {
 
         for(let r of refRouter.swapData!){
-          path.push({
-            amountIn: r.amountIn,
-            minAmountOut: r.amountOut,
-            tokenIn: r.tokenIn,
-            tokenOut: r.tokenOut,
-            poolId: [r.poolId.toString()],
-            platform: bestRouter[i]!.platform
-          })
-          targetTokenAddr = tokenOut.name!
-
           pairs.push({
             tokenIn:{
               address:r.tokenIn,
@@ -336,7 +282,7 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
           })
         }
 
-        frontPath.push({
+        swapPath.push({
           chainId: chainId.toString(),
           amountIn: refRouter.amount.toExact(),
           amountOut: refRouter.output.toExact(),
@@ -347,22 +293,13 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
         })
 
       }else{
+
         throw("get ref router fail")
+
       }
 
     }else{
 
-      bestRouter[i]!.tokenPath
-      let param:swapPrams = {
-        amountIn: bestRouter[i]!.amount.toExact(),
-        minAmountOut: bestRouter[i]!.quote.toExact(),
-        tokenIn:tokenIn.address,
-        tokenOut:tokenOut.address,
-        poolId:bestRouter[i]!.poolAddresses,
-        platform: bestRouter[i]!.platform
-      }
-      path.push(param)
-      //console.log(bestRouter[i]!.tokenPath)
       for(let j=0;j<bestRouter[i]!.poolAddresses.length;j++){
         pairs.push({
           tokenIn: {
@@ -379,7 +316,8 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
           },
         })
       }
-      frontPath.push({
+
+      swapPath.push({
         chainId: chainId.toString(),
         amountIn: bestRouter[i]!.amount.toExact(),
         amountOut: bestRouter[i]!.quote.toExact(),
@@ -388,16 +326,11 @@ function formatData(bestRouter:RouteWithValidQuote[],tokenIn:token,tokenOut:toke
         tokenIn:tokenIn,
         tokenOut:tokenOut,
       })
+
       pairs = []
+
     }
   }
 
-  return {
-    contractPrams:{
-      targetTokenAddress:targetTokenAddr,
-      targetTokenDecimals:tokenOut.decimals,
-      path:path
-    },
-    frontParams:frontPath
-  }
+  return swapPath
 }
