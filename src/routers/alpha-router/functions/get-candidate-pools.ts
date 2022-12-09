@@ -573,7 +573,6 @@ export async function getV2CandidatePools({
   const tokenOutAddress = tokenOut.address.toLowerCase();
 
   const beforeSubgraphPools = Date.now();
-
   const allPoolsRaw = sanitizeETHV2Pools(v2PoolsUnsanitized);
   const allPools = _.map(allPoolsRaw, (pool) => {
     return {

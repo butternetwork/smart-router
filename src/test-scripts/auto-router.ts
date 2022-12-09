@@ -1,55 +1,116 @@
-import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import { Protocol } from '@uniswap/router-sdk';
-import { Pool } from '@uniswap/v3-sdk';
 import { BigNumber, ethers } from 'ethers';
+import { GET_TOKEN_ICON } from '../providers';
 import {
+  USDC,
+  USDT,
+  USDC_BNB,
+  USDT_BNB,
+  WBNB_BNB,
+  USDC_NEAR,
+  WNEAR_NEAR,
+  USDT_NEAR,
+  GLD_MAP,
+  KUN_MAP,
   USDC_MATIC,
   USDT_MATIC,
+  WMAP_MAP,
+  USDC_MAP,
 } from '../providers/quickswap/util/token-provider';
-import { SwapRoute } from '../routers';
-import { getBestRoute } from '../routers/barter-router';
-import { routeAmountToString, ROUTER_INDEX } from '../util';
+import { RouteWithValidQuote } from '../routers';
+import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
+import { getBestRoute } from '../routers/butter-router';
+import {
+  ChainId,
+  nearRouterToString,
+  routeAmountToString,
+  ROUTER_INDEX,
+  ZERO_ADDRESS,
+} from '../util';
 import { TradeType } from '../util/constants';
-import { BarterProtocol } from '../util/protocol';
-import abi from './routerabi.json';
+import { getBridgeFee } from '../util/mos';
+import { ButterProtocol } from '../util/protocol';
+import { Token } from '../util/token';
+import { MAP_MAINNET_URL } from '../util/urls';
 
-const chainId = 137;
-// const rpcUrl = 'https://bsc-dataseed1.defibit.io/';
-const rpcUrl =
-  'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372';
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-
-const wallet = new ethers.Wallet(
-  '939ae45116ea2d4ef9061f13534bc451e9f9835e94f191970f23aac0299d5f7a'
-);
-const signer = wallet.connect(provider);
-const routerContract = new ethers.Contract(
-  '0x3044BED7679b031CCbefEC054FdA9aD350D372B4',
-  abi,
-  signer
-);
-const slippage = 3; // thousandth
-const protocols = [
-  // BarterProtocol.UNI_V2,
-  // BarterProtocol.UNI_V3,
-  BarterProtocol.QUICKSWAP,
-  BarterProtocol.SUSHISWAP,
-  // BarterProtocol.PANCAKESWAP,
-];
-
-// const tokenIn = USDT_BNB;
-// const tokenOut = USDC_BNB;
-const tokenIn = USDT_MATIC;
-const tokenOut = USDC_MATIC;
-const abiCoder = new ethers.utils.AbiCoder();
+let rpcUrl: string;
+let provider: any;
+let protocols: ButterProtocol[] = [];
+const amount = '9957';
 
 async function main() {
-  const start = Date.now();
+  const [total1, gasCostInUSD1, _] = await findBestRouter(
+    56,
+    WBNB_BNB,
+    USDC_BNB,
+    amount
+  );
+  // const [total2,gasCostInUSD2,__] = await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+  // console.log("final output:",total2)
+  // console.log("swap gas(USD)",gasCostInUSD1!+gasCostInUSD2!)
+
+  // await findBestRouter(22776,WMAP_MAP,USDC_MAP,amount)
+  // await findBestRouter(1,USDC,USDT,amount)
+  // await findBestRouter(137,USDT_MATIC,USDC_MATIC,amount)
+  // const rpcProvider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, ChainId.MAP)
+  // const fee = await getBridgeFee(USDC_MATIC,'56','100',rpcProvider)
+  // console.log(fee)
+  // console.log(Number("9957.834227126980099164")+Number("9957.834227126980099164"))
+}
+async function findBestRouter(
+  chainId: number,
+  tokenIn: Token,
+  tokenOut: Token,
+  amount: string
+): Promise<[number, number, RouteWithValidQuote[]]> {
+  switch (chainId) {
+    case 1:
+      rpcUrl = 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161';
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+      protocols = [
+        //ButterProtocol.UNI_V2,
+        ButterProtocol.UNI_V3,
+        //ButterProtocol.SUSHISWAP,
+        //ButterProtocol.CURVE,
+      ];
+      break;
+    case 56: //bsc
+      rpcUrl = 'https://bsc-dataseed1.defibit.io/';
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId); //forked net chianId
+      protocols = [ButterProtocol.PANCAKESWAP];
+      break;
+    case 137:
+      rpcUrl =
+        'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372';
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+      protocols = [
+        ButterProtocol.QUICKSWAP,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+      ];
+      break;
+    case 22776: //map
+      rpcUrl = 'https://poc3-rpc.maplabs.io/';
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+      protocols = [ButterProtocol.HIVESWAP];
+      break;
+    case ChainId.NEAR: //near
+      protocols = [ButterProtocol.REF];
+      break;
+    default:
+      protocols = [
+        ButterProtocol.UNI_V2,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+        ButterProtocol.CURVE,
+      ];
+      break;
+  }
+
   const swapRoute = await getBestRoute(
     chainId,
     provider,
     protocols,
-    '1',
+    amount,
     tokenIn.address,
     tokenIn.decimals,
     tokenOut.address,
@@ -62,101 +123,25 @@ async function main() {
   );
 
   if (swapRoute == null) {
-    return;
+    return [0, 0, []];
   }
+  let total = 0;
+  let gasCostInUSD = 0;
 
-  let sum = 0;
-  for (let route of swapRoute.route) {
-    console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
-    sum += parseFloat(route.quote.toExact());
-  }
-  console.log('total get: ', sum);
-  console.log('time: ', Date.now() - start);
-  console.log(await doSwap(swapRoute));
-}
-
-async function doSwap(swapRoute: SwapRoute): Promise<TransactionReceipt> {
-  const [amountInArr, amountOutMinArr, pathArr, routerIndexArr] =
-    assembleSwapRequest(swapRoute);
-  const params = {
-    amountInArr: amountInArr,
-    amountOutMinArr: amountOutMinArr,
-    pathArr: pathArr,
-    // routerArr,
-    to: wallet.address,
-    deadLine: ethers.constants.MaxUint256,
-    inputAddre: tokenIn.address,
-    outAddre: tokenOut.address,
-    routerIndex: routerIndexArr,
-  };
-  console.log(params);
-  // const swapTx = await routerContract.setFeeTo(wallet.address, {
-  //   gasLimit: 3500000,
-  //   gasPrice: 70057219557,
-  // });
-  const swapTx = await routerContract.multiSwap(params, {
-    gasLimit: 3500000,
-    gasPrice: 70057219557,
-  });
-
-  return swapTx.wait();
-}
-/**
- * assemble swap request to call barterRouter's multiSwap method.
- * @param swapRoute route from router.route()
- * @returns TBD
- */
-export function assembleSwapRequest(swapRoute: SwapRoute) {
-  let amountInArr: BigNumber[] = [];
-  let amountOutMinArr: BigNumber[] = [];
-  let pathArr: string[] = [];
-  let routerIndexArray: BigNumber[] = [];
-
-  for (let route of swapRoute.route) {
-    amountInArr.push(
-      ethers.utils.parseUnits(route.amount.toExact(), tokenIn.decimals)
-    );
-    amountOutMinArr.push(
-      ethers.utils
-        .parseUnits(route.quote.toExact(), tokenOut.decimals)
-        .mul(1000 - slippage)
-        .div(1000)
-    );
-    if (route.protocol != Protocol.V3) {
-      let path: string[] = [];
-      route.tokenPath.forEach((token) => path.push(token.address));
-      pathArr.push(abiCoder.encode(['address[]'], [path]));
-      routerIndexArray.push(ROUTER_INDEX[route.platform]);
-    } else {
-      let typeArr: string[] = [];
-      let valueArr: any[] = [];
-      const pools: Pool[] = route.route.pools;
-      console.log('tokenPath', route.route.tokenPath);
-      for (let i = 0; i < pools.length; i++) {
-        let pool: Pool = pools[i]!;
-        if (i == 0) {
-          typeArr = typeArr.concat(['address', 'uint24', 'address']);
-          valueArr = valueArr.concat([
-            route.route.tokenPath[i]?.address,
-            pool.fee,
-            route.route.tokenPath[i + 1]?.address,
-          ]);
-        } else {
-          typeArr = typeArr.concat(['uint24', 'address']);
-          valueArr = valueArr.concat([
-            pool.fee,
-            route.route.tokenPath[i * 2]?.address,
-          ]);
-        }
-      }
-      routerIndexArray.push(ROUTER_INDEX[route.platform]);
-      console.log('type', typeArr);
-      console.log('value', valueArr);
-
-      pathArr.push(ethers.utils.solidityPack(typeArr, valueArr));
+  if (chainId == ChainId.NEAR) {
+    for (let route of swapRoute.route) {
+      total += Number(route.output.toExact());
+      gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
+      console.log(nearRouterToString(route, tokenIn.symbol, tokenOut.symbol));
+    }
+  } else {
+    for (let route of swapRoute.route) {
+      console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
+      total += Number(route.output.toExact());
+      gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
     }
   }
-  return [amountInArr, amountOutMinArr, pathArr, routerIndexArray];
+  return [total, gasCostInUSD, swapRoute.route];
 }
 
 main().catch((error) => {

@@ -1,8 +1,22 @@
+import {
+  estimateSwap,
+  EstimateSwapView,
+  fetchAllPools,
+  ftGetTokenMetadata,
+  getExpectedOutputFromSwapTodos,
+  getStablePools,
+  init_env,
+  Pool as RefPool,
+  StablePool,
+  SwapOptions as RefSwapOptions,
+} from '@ref-finance/ref-sdk';
 import { ChainId as QChainId } from '@davidwgrossman/quickswap-sdk';
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
 import { TokenList } from '@uniswap/token-lists';
 import { Pair } from '@uniswap/v2-sdk';
+import { curve } from '@curvefi/api/lib/curve';
+import { IRoute } from '@curvefi/api/lib/interfaces';
 import {
   MethodParameters,
   Pool,
@@ -97,8 +111,9 @@ import {
   getETHPoolsFromServer,
   getETHV2PoolsFromOneProtocol,
   getETHV3PoolsFromOneProtocol,
+  getMapPoolsFromOneProtocol,
 } from '../../util/pool';
-import { BarterProtocol } from '../../util/protocol';
+import { ButterProtocol } from '../../util/protocol';
 import { poolToString, routeToString } from '../../util/routes';
 import { UNSUPPORTED_TOKENS } from '../../util/unsupported-tokens';
 import {
@@ -108,12 +123,17 @@ import {
   SwapAndAddOptions,
   SwapOptions,
   SwapRoute,
+  SwapToRatioResponse,
 } from '../router';
 import {
   DEFAULT_ROUTING_CONFIG_BY_CHAIN,
   ETH_GAS_STATION_API_URL,
 } from './config';
 import {
+  CurveRoute,
+  CurveRouteWithValidQuote,
+  RefRoute,
+  RefRouteWithValidQuote,
   RouteWithValidQuote,
   V2RouteWithValidQuote,
   V3RouteWithValidQuote,
@@ -139,6 +159,15 @@ import {
 import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
 import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
+import {
+  _getBestRouteAndOutput,
+  _getUsdRate,
+} from './functions/get-curve-best-router';
+import axios from 'axios';
+import {
+  MAP_MULTICALL_ADDRESS,
+  UNISWAP_MULTICALL_ADDRESS,
+} from '../../util/addresses';
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -295,7 +324,7 @@ export type AlphaRouterConfig = {
    * The protocols to consider when finding the optimal swap. If not provided all protocols
    * will be used.
    */
-  protocols?: BarterProtocol[];
+  protocols?: ButterProtocol[];
   /**
    * Config for selecting which pools to consider routing via on V2.
    */
@@ -388,9 +417,25 @@ export class AlphaRouter
   }: AlphaRouterParams) {
     this.chainId = chainId;
     this.provider = provider;
-    this.multicall2Provider =
-      multicall2Provider ??
-      new UniswapMulticallProvider(chainId, provider, 375_000);
+    if (chainId == ChainId.MAP) {
+      this.multicall2Provider =
+        multicall2Provider ??
+        new UniswapMulticallProvider(
+          chainId,
+          provider,
+          375_000,
+          MAP_MULTICALL_ADDRESS
+        );
+    } else {
+      this.multicall2Provider =
+        multicall2Provider ??
+        new UniswapMulticallProvider(
+          chainId,
+          provider,
+          375_000,
+          UNISWAP_MULTICALL_ADDRESS
+        );
+    }
     this.v3PoolProvider =
       v3PoolProvider ??
       new CachingV3PoolProvider(
@@ -799,8 +844,9 @@ export class AlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
+    // const gasData  = await axios.get("https://api.curve.fi/api/getGas")
+    // const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
     const { gasPriceWei } = await this.gasPriceProvider.getGasPrice();
-
     metric.putMetric(
       'GasPriceLoad',
       Date.now() - beforeGas,
@@ -821,25 +867,17 @@ export class AlphaRouter
       this.chainId
     );
 
-    const gasModel = await this.v3GasModelFactory.buildGasModel(
-      this.chainId,
-      gasPriceWei,
-      this.v3PoolProvider,
-      quoteToken,
-      this.l2GasDataProvider
-    );
-
     if (
       (protocolsSet.size == 0 ||
-        (protocolsSet.has(BarterProtocol.UNI_V2) &&
-          protocolsSet.has(BarterProtocol.UNI_V3))) &&
+        (protocolsSet.has(ButterProtocol.UNI_V2) &&
+          protocolsSet.has(ButterProtocol.UNI_V3))) &&
       V2_SUPPORTED.includes(this.chainId)
     ) {
       log.info({ protocols, tradeType }, 'Routing across all protocols');
       let v3PoolsUnsanitized: RawV3SubgraphPool[] =
         getETHV3PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.UNI_V3
+          ButterProtocol.UNI_V3
         );
       quotePromises.push(
         this.getV3Quotes(
@@ -848,7 +886,7 @@ export class AlphaRouter
           amounts,
           percents,
           quoteToken,
-          gasModel,
+          gasPriceWei,
           tradeType,
           routingConfig,
           v3PoolsUnsanitized
@@ -857,7 +895,7 @@ export class AlphaRouter
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.UNI_V2
+          ButterProtocol.UNI_V2
         );
       quotePromises.push(
         this.getV2Quotes(
@@ -874,13 +912,13 @@ export class AlphaRouter
       );
     } else {
       if (
-        protocolsSet.has(BarterProtocol.UNI_V3) ||
+        protocolsSet.has(ButterProtocol.UNI_V3) ||
         (protocolsSet.size == 0 && !V2_SUPPORTED.includes(this.chainId))
       ) {
         let v3PoolsUnsanitized: RawV3SubgraphPool[] =
           getETHV3PoolsFromOneProtocol(
             allPoolsUnsanitizedJsonStr,
-            BarterProtocol.UNI_V3
+            ButterProtocol.UNI_V3
           );
         log.info({ protocols, swapType: tradeType }, 'Routing across V3');
         quotePromises.push(
@@ -890,7 +928,7 @@ export class AlphaRouter
             amounts,
             percents,
             quoteToken,
-            gasModel,
+            gasPriceWei,
             tradeType,
             routingConfig,
             v3PoolsUnsanitized
@@ -898,12 +936,12 @@ export class AlphaRouter
         );
       }
 
-      if (protocolsSet.has(BarterProtocol.UNI_V2)) {
+      if (protocolsSet.has(ButterProtocol.UNI_V2)) {
         log.info({ protocols, swapType: tradeType }, 'Routing across V2');
         let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
           getETHV2PoolsFromOneProtocol(
             allPoolsUnsanitizedJsonStr,
-            BarterProtocol.UNI_V2
+            ButterProtocol.UNI_V2
           );
         quotePromises.push(
           this.getV2Quotes(
@@ -920,11 +958,11 @@ export class AlphaRouter
         );
       }
     }
-    if (protocolsSet.has(BarterProtocol.QUICKSWAP)) {
+    if (protocolsSet.has(ButterProtocol.QUICKSWAP)) {
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.QUICKSWAP
+          ButterProtocol.QUICKSWAP
         );
       quotePromises.push(
         this.getQuickQuotes(
@@ -940,11 +978,11 @@ export class AlphaRouter
         )
       );
     }
-    if (protocolsSet.has(BarterProtocol.SUSHISWAP)) {
+    if (protocolsSet.has(ButterProtocol.SUSHISWAP)) {
       let v2PoolsUnsanitized: RawETHV2SubgraphPool[] =
         getETHV2PoolsFromOneProtocol(
           allPoolsUnsanitizedJsonStr,
-          BarterProtocol.SUSHISWAP
+          ButterProtocol.SUSHISWAP
         );
       quotePromises.push(
         this.getSushiQuotes(
@@ -957,6 +995,42 @@ export class AlphaRouter
           tradeType,
           routingConfig,
           v2PoolsUnsanitized
+        )
+      );
+    }
+    if (protocolsSet.has(ButterProtocol.HIVESWAP)) {
+      let PoolsUnsanitized: RawETHV2SubgraphPool[] = getMapPoolsFromOneProtocol(
+        allPoolsUnsanitizedJsonStr,
+        ButterProtocol.HIVESWAP
+      );
+      quotePromises.push(
+        this.getMapQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          gasPriceWei,
+          tradeType,
+          routingConfig,
+          PoolsUnsanitized
+        )
+      );
+    }
+
+    const quoteCurvePromises: Promise<{
+      routesWithValidQuotes: RouteWithValidQuote[];
+    }>[] = [];
+    if (protocolsSet.has(ButterProtocol.CURVE)) {
+      quoteCurvePromises.push(
+        this.getCurveQuotes(
+          tokenIn,
+          tokenOut,
+          amounts,
+          percents,
+          quoteToken,
+          gasPriceWei,
+          tradeType
         )
       );
     }
@@ -974,6 +1048,19 @@ export class AlphaRouter
       ];
       allCandidatePools = [...allCandidatePools, candidatePools];
     }
+
+    const routesWithValidQuotesByCurveProtocol = await Promise.all(
+      quoteCurvePromises
+    );
+    for (const {
+      routesWithValidQuotes,
+    } of routesWithValidQuotesByCurveProtocol) {
+      allRoutesWithValidQuotes = [
+        ...allRoutesWithValidQuotes,
+        ...routesWithValidQuotes,
+      ];
+    }
+
     if (allRoutesWithValidQuotes.length == 0) {
       log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
       return null;
@@ -986,8 +1073,7 @@ export class AlphaRouter
       allRoutesWithValidQuotes,
       tradeType,
       this.chainId,
-      routingConfig,
-      gasModel
+      routingConfig
     );
 
     if (!swapRouteRaw) {
@@ -1089,13 +1175,230 @@ export class AlphaRouter
     return poolsFiltered;
   }
 
+  private async getCurveQuotes(
+    tokenIn: Token,
+    tokenOut: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    gasPriceWei: BigNumber,
+    swapType: TradeType
+  ): Promise<{
+    routesWithValidQuotes: CurveRouteWithValidQuote[];
+  }> {
+    await curve.init(
+      'JsonRpc',
+      {
+        url: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+        privateKey:
+          'b87b1f26c7d0ffe0f65c25dbc09602e0ac9c0d14acc979b5d67439cade6cdb7b',
+      },
+      { chainId: 1 }
+    );
+
+    let quotePromises: Promise<IRoute>[] = [];
+
+    let quotes: IRoute[] = [];
+
+    const routesWithValidQuotes = [];
+
+    for (let i = 0; i < amounts.length; i++) {
+      const amount = amounts[i]!;
+      quotePromises.push(
+        _getBestRouteAndOutput(
+          tokenIn.address,
+          tokenIn.decimals,
+          tokenOut.address,
+          tokenOut.decimals,
+          amount.toFixed(2)
+        )
+      );
+      if ((i + 1) % 5 == 0 || i == amounts.length - 1) {
+        const result = await Promise.all(quotePromises);
+        for (let j = 0; j < result.length; j++) {
+          if (result[j]) {
+            quotes.push(result[j]!);
+          }
+        }
+        console.log('Analysis curve routes:', percents[i], '%');
+        quotePromises = [];
+      }
+    }
+
+    if (quotes.length == 0) {
+      return { routesWithValidQuotes: [] };
+    }
+
+    let tokenOutPrice;
+    let ethPrice;
+    try {
+      tokenOutPrice = await _getUsdRate(tokenOut.address);
+      ethPrice = await _getUsdRate(
+        '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+      );
+    } catch {
+      throw 'fail to get token price';
+    }
+
+    for (let i = 0; i < amounts.length; i++) {
+      const percent = percents[i]!;
+      const amount = amounts[i]!;
+      const curveRoute = new CurveRoute(
+        quotes[i]!.steps,
+        quotes[i]!._output,
+        quotes[i]!.outputUsd,
+        quotes[i]!.txCostUsd
+      );
+      const routeWithValidQuote = new CurveRouteWithValidQuote({
+        chainId: this.chainId,
+        amount: amount,
+        rawQuote: quotes[i]!._output,
+        percent: percent,
+        route: curveRoute,
+        quoteToken: quoteToken,
+        gasPriceWei: gasPriceWei,
+        tokenOutPrice,
+        ethPrice,
+        tradeType: swapType,
+        platform: ButterProtocol.CURVE,
+      });
+      routesWithValidQuotes.push(routeWithValidQuote);
+    }
+    return { routesWithValidQuotes };
+  }
+
+  private async getMapQuotes(
+    tokenIn: Token,
+    tokenOut: Token,
+    amounts: CurrencyAmount[],
+    percents: number[],
+    quoteToken: Token,
+    gasPriceWei: BigNumber,
+    swapType: TradeType,
+    routingConfig: AlphaRouterConfig,
+    v2PoolsUnsanitized: RawETHV2SubgraphPool[]
+  ): Promise<{
+    routesWithValidQuotes: V2RouteWithValidQuote[];
+    candidatePools: CandidatePoolsBySelectionCriteria;
+  }> {
+    const { poolAccessor, candidatePools } = await getV2CandidatePools({
+      tokenIn,
+      tokenOut,
+      tokenProvider: this.tokenProvider,
+      blockedTokenListProvider: this.blockedTokenListProvider,
+      poolProvider: this.v2PoolProvider,
+      routeType: swapType,
+      v2PoolsUnsanitized,
+      routingConfig,
+      chainId: this.chainId,
+    });
+    const poolsRaw = poolAccessor.getAllPools();
+    // Drop any pools that contain tokens that can not be transferred according to the token validator.
+    const pools = await this.applyTokenValidatorToPools(
+      poolsRaw,
+      (
+        token: Currency,
+        tokenValidation: TokenValidationResult | undefined
+      ): boolean => {
+        // If there is no available validation result we assume the token is fine.
+        if (!tokenValidation) {
+          return false;
+        }
+
+        // Only filters out *intermediate* pools that involve tokens that we detect
+        // cant be transferred. This prevents us trying to route through tokens that may
+        // not be transferrable, but allows users to still swap those tokens if they
+        // specify.
+        if (
+          tokenValidation == TokenValidationResult.STF &&
+          (token.equals(tokenIn) || token.equals(tokenOut))
+        ) {
+          return false;
+        }
+
+        return tokenValidation == TokenValidationResult.STF;
+      }
+    );
+
+    // Given all our candidate pools, compute all the possible ways to route from tokenIn to tokenOut.
+    const { maxSwapsPerPath } = routingConfig;
+    const routes = computeAllV2Routes(
+      tokenIn,
+      tokenOut,
+      pools as Pair[],
+      maxSwapsPerPath
+    );
+
+    if (routes.length == 0) {
+      return { routesWithValidQuotes: [], candidatePools };
+    }
+
+    // For all our routes, and all the fractional amounts, fetch quotes on-chain.
+    const quoteFn =
+      swapType == TradeType.EXACT_INPUT
+        ? this.v2QuoteProvider.getQuotesManyExactIn.bind(this.v2QuoteProvider)
+        : this.v2QuoteProvider.getQuotesManyExactOut.bind(this.v2QuoteProvider);
+
+    const beforeQuotes = Date.now();
+
+    log.info(
+      `Getting quotes for V2 for ${routes.length} routes with ${amounts.length} amounts per route.`
+    );
+    const { routesWithQuotes } = await quoteFn(amounts, routes);
+
+    const gasModel = await this.v2GasModelFactory.buildGasModel(
+      this.chainId,
+      gasPriceWei,
+      this.v2PoolProvider,
+      quoteToken
+    );
+
+    const routesWithValidQuotes = [];
+
+    for (const routeWithQuote of routesWithQuotes) {
+      const [route, quotes] = routeWithQuote;
+
+      for (let i = 0; i < quotes.length; i++) {
+        const percent = percents[i]!;
+        const amountQuote = quotes[i]!;
+        const { quote, amount } = amountQuote;
+
+        if (!quote) {
+          log.debug(
+            {
+              route: routeToString(route),
+              amountQuote,
+            },
+            'Dropping a null V2 quote for route.'
+          );
+          continue;
+        }
+
+        const routeWithValidQuote = new V2RouteWithValidQuote({
+          route,
+          rawQuote: quote,
+          amount,
+          percent,
+          gasModel,
+          quoteToken,
+          tradeType: swapType,
+          v2PoolProvider: this.v2PoolProvider,
+          platform: ButterProtocol.HIVESWAP,
+        });
+
+        routesWithValidQuotes.push(routeWithValidQuote);
+      }
+    }
+    return { routesWithValidQuotes, candidatePools };
+  }
+
   private async getV3Quotes(
     tokenIn: Token,
     tokenOut: Token,
     amounts: CurrencyAmount[],
     percents: number[],
     quoteToken: Token,
-    gasModel: IGasModel<V3RouteWithValidQuote>,
+    gasPriceWei: BigNumber,
     swapType: TradeType,
     routingConfig: AlphaRouterConfig,
     allPoolsUnsanitized: RawV3SubgraphPool[]
@@ -1104,6 +1407,14 @@ export class AlphaRouter
     candidatePools: CandidatePoolsBySelectionCriteria;
   }> {
     log.info('Starting to get V3 quotes');
+    const gasModel = await this.v3GasModelFactory.buildGasModel(
+      this.chainId,
+      gasPriceWei,
+      this.v3PoolProvider,
+      quoteToken,
+      this.l2GasDataProvider
+    );
+
     // Fetch all the pools that we will consider routing via. There are thousands
     // of pools, so we filter them to a set of candidate pools that we expect will
     // result in good prices.
@@ -1236,7 +1547,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v3PoolProvider: this.v3PoolProvider,
-          platform: BarterProtocol.UNI_V3,
+          platform: ButterProtocol.UNI_V3,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1380,7 +1691,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.v2PoolProvider,
-          platform: BarterProtocol.UNI_V2,
+          platform: ButterProtocol.UNI_V2,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1530,7 +1841,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.quickV2PoolProvider,
-          platform: BarterProtocol.QUICKSWAP,
+          platform: ButterProtocol.QUICKSWAP,
         });
         routesWithValidQuotes.push(routeWithValidQuote);
       }
@@ -1677,7 +1988,7 @@ export class AlphaRouter
           quoteToken,
           tradeType: swapType,
           v2PoolProvider: this.sushiV2PoolProvider,
-          platform: BarterProtocol.SUSHISWAP,
+          platform: ButterProtocol.SUSHISWAP,
         });
 
         routesWithValidQuotes.push(routeWithValidQuote);
@@ -1795,12 +2106,12 @@ export class AlphaRouter
     let hasV2Route = false;
     for (const routeAmount of routeAmounts) {
       if (
-        routeAmount.protocol.toString() === BarterProtocol.UNI_V3.toString()
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V3.toString()
       ) {
         hasV3Route = true;
       }
       if (
-        routeAmount.protocol.toString() === BarterProtocol.UNI_V2.toString()
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V2.toString()
       ) {
         hasV2Route = true;
       }

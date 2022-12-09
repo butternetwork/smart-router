@@ -1,7 +1,6 @@
-import { ChainId } from '@davidwgrossman/quickswap-sdk';
 import _ from 'lodash';
 import { IERC20Metadata__factory } from '../../../types/v3';
-import { log } from '../../../util';
+import { ChainId, log } from '../../../util';
 import { Token } from '../../../util/token';
 import { IMulticallProvider } from './../../multicall-provider';
 import { ProviderConfig } from './../../provider';
@@ -32,9 +31,118 @@ export type TokenAccessor = {
   getAllTokens: () => Token[];
 };
 
+//NEAR tokens
+export const USDT_NEAR = new Token(
+  ChainId.NEAR,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+);
+
+export const USDC_NEAR = new Token(
+  ChainId.NEAR,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
+export const WNEAR_NEAR = new Token(
+  ChainId.NEAR,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'WNEAR',
+  'wrap.near'
+);
+
+//BSC tokens
+export const USDT_BNB = new Token(
+  56,
+  '0x55d398326f99059fF775485246999027B3197955',
+  18,
+  'USDT.e',
+  'USDT.e'
+);
+
+export const USDC_BNB = new Token(
+  56,
+  '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  18,
+  'USDC',
+  'USDC'
+);
+
+export const WBNB_BNB = new Token(
+  56,
+  '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  18,
+  'WBNB',
+  'WBNB'
+);
+
+//MAP tokens
+
+export const ETH_MAP = new Token(
+  22776,
+  '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
+  18,
+  'Mapped Wrapped Ether',
+  'ETH'
+);
+
+export const WMAP_MAP = new Token(
+  22776,
+  '0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23',
+  18,
+  'WMAP',
+  'Wrapped MAP'
+);
+
+export const USDC_MAP = new Token(
+  22776,
+  '0x9f722b2cb30093f766221fd0d37964949ed66918',
+  18,
+  'Mapped USD Coin',
+  'USDC'
+);
+
+export const GLD_MAP = new Token(
+  212,
+  '0xdeebb41da493606119c9dcc89069ca51753e9000',
+  18,
+  'GLD',
+  'Gold'
+);
+
+export const KUN_MAP = new Token(
+  212,
+  '0x144e00194a0641dec63dfd0bfe0063ae74794304',
+  18,
+  'KUN',
+  'Gold'
+);
+
+//ETH tokens
+export const USDC = new Token(
+  1,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'USDC',
+  'USD//C'
+);
+
+export const USDT = new Token(
+  1,
+  '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  6,
+  'USDT',
+  'Tether USD'
+);
+
 //MATIC tokens
 export const WMATIC_MATIC = new Token(
-  ChainId.MATIC,
+  ChainId.POLYGON,
   '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
   18,
   'WMATIC',
@@ -42,7 +150,7 @@ export const WMATIC_MATIC = new Token(
 );
 
 export const WETH_MATIC = new Token(
-  ChainId.MATIC,
+  1313161555,
   '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
   18,
   'WETH',
@@ -50,47 +158,22 @@ export const WETH_MATIC = new Token(
 );
 
 export const USDC_MATIC = new Token(
-  ChainId.MATIC,
+  ChainId.POLYGON,
   '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
   6,
   'USDC',
   'USD//C'
 );
 export const USDT_MATIC = new Token(
-  ChainId.MATIC,
+  ChainId.POLYGON,
   '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
   6,
   'USDT',
   'Tether'
 );
 export const DAI_MATIC = new Token(
-  ChainId.MATIC,
+  ChainId.POLYGON,
   '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-  18,
-  'DAI',
-  'Dai Stablecoin'
-);
-
-//MATIC mumbai tokens
-export const WMATIC_MATIC_TESTNET = new Token(
-  ChainId.MUMBAI,
-  '0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889',
-  18,
-  'WMATIC',
-  'Wrapped MATIC'
-);
-
-export const USDC_MATIC_TESTNET = new Token(
-  ChainId.MUMBAI,
-  '0xe11a86849d99f524cac3e7a0ec1241828e332c62',
-  6,
-  'USDC',
-  'USD//C'
-);
-
-export const DAI_MATIC_TESTNET = new Token(
-  ChainId.MUMBAI,
-  '0x001b3b4d0f3714ca98ba10f6042daebf0b1b7b6f',
   18,
   'DAI',
   'Dai Stablecoin'

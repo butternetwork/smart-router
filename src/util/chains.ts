@@ -1,4 +1,12 @@
 import { Currency, Ether, NativeCurrency, Token } from '@uniswap/sdk-core';
+import { ethers } from 'ethers';
+import { ButterProtocol } from './protocol';
+import {
+  BSC_MAINNET_URL,
+  ETH_MAINNET_URL,
+  MAP_MAINNET_URL,
+  POLYGON_MAINNET_URL,
+} from './urls';
 export enum ChainId {
   MAINNET = 1,
   ROPSTEN = 3,
@@ -12,6 +20,8 @@ export enum ChainId {
   POLYGON = 137,
   POLYGON_MUMBAI = 80001,
   BSC = 56,
+  NEAR = 1313161554,
+  MAP = 22776,
 }
 
 export const V2_SUPPORTED = [
@@ -53,6 +63,10 @@ export const ID_TO_CHAIN_ID = (id: number): ChainId => {
       return ChainId.POLYGON;
     case 80001:
       return ChainId.POLYGON_MUMBAI;
+    case 1313161554:
+      return ChainId.NEAR;
+    case 22776: //22776
+      return ChainId.MAP;
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -72,6 +86,8 @@ export enum ChainName {
   POLYGON = 'polygon-mainnet',
   POLYGON_MUMBAI = 'polygon-mumbai',
   BSC_MAINNET = 'binance-mainnet',
+  NEAR = 'near-mainnet',
+  MAP = 'map-mainnet',
 }
 
 export enum NativeCurrencyName {
@@ -120,6 +136,10 @@ export const ID_TO_NETWORK_NAME = (id: number): ChainName => {
       return ChainName.POLYGON_MUMBAI;
     case 56:
       return ChainName.BSC_MAINNET;
+    case 1313161554:
+      return ChainName.NEAR;
+    case ChainId.MAP:
+      return ChainName.MAP;
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -243,6 +263,20 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     'WBNB',
     'Wrapped BNB'
   ),
+  [ChainId.NEAR]: new Token(
+    ChainId.NEAR,
+    '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+    24,
+    'Wrapped NEAR fungible token',
+    'wNEAR'
+  ),
+  [ChainId.MAP]: new Token(
+    22776,
+    '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
+    18,
+    'WMAP',
+    'Wrapped MAP'
+  ),
 };
 
 function isMatic(
@@ -297,4 +331,57 @@ export function nativeOnChain(chainId: number): NativeCurrency {
       ? new MaticNativeCurrency(chainId)
       : ExtendedEther.onChain(chainId))
   );
+}
+
+export function getChainProvider(chainId: number) {
+  let provider: ethers.providers.JsonRpcProvider | undefined;
+  let protocols: ButterProtocol[] = [];
+  switch (chainId) {
+    case ChainId.MAINNET:
+      provider = new ethers.providers.JsonRpcProvider(ETH_MAINNET_URL, chainId);
+      protocols = [
+        ButterProtocol.UNI_V2,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+      ];
+      break;
+    case ChainId.BSC:
+      provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
+      protocols = [ButterProtocol.PANCAKESWAP];
+      break;
+    case ChainId.POLYGON:
+      provider = new ethers.providers.JsonRpcProvider(
+        POLYGON_MAINNET_URL,
+        chainId
+      );
+      protocols = [
+        ButterProtocol.QUICKSWAP,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
+      ];
+      break;
+    case ChainId.MAP:
+      provider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, chainId);
+      protocols = [ButterProtocol.HIVESWAP];
+      break;
+    case ChainId.NEAR:
+      protocols = [ButterProtocol.REF];
+      break;
+    default:
+      throw 'the chain is not supported for now';
+  }
+  return { provider, protocols };
+}
+
+export function IS_SUPPORT_CHAIN(id: string) {
+  switch (id) {
+    case '1':
+    case '137':
+    case '56':
+    case '22776':
+    case '5566818579631833088':
+      break;
+    default:
+      throw new Error(`Unsupported chain id: ${id}`);
+  }
 }

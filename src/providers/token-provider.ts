@@ -1,7 +1,7 @@
 import { Token } from '@uniswap/sdk-core';
 import _ from 'lodash';
 import { IERC20Metadata__factory } from '../types/v3';
-import { ChainId, log } from '../util';
+import { ChainId, log, ZERO_ADDRESS } from '../util';
 import { IMulticallProvider } from './multicall-provider';
 import { ProviderConfig } from './provider';
 
@@ -338,6 +338,14 @@ export const DAI_POLYGON = new Token(
   'Dai Stablecoin'
 );
 
+export const USDT_MATIC = new Token(
+  ChainId.POLYGON,
+  '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+  6,
+  'USDT',
+  'Tether'
+);
+
 //polygon mumbai tokens
 export const WMATIC_POLYGON_MUMBAI = new Token(
   ChainId.POLYGON_MUMBAI,
@@ -369,6 +377,89 @@ export const WETH_POLYGON_MUMBAI = new Token(
   18,
   'WETH',
   'Wrapped Ether'
+);
+
+//MAP tokens
+export const ETH_MAP = new Token(
+  ChainId.MAP,
+  '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
+  18,
+  'Mapped Wrapped Ether',
+  'ETH'
+);
+
+export const WMAP_MAP = new Token(
+  ChainId.MAP,
+  '0x13cb04d4a5dfb6398fc5ab005a6c84337256ee23',
+  18,
+  'WMAP',
+  'Wrapped MAP'
+);
+
+export const USDC_MAP = new Token(
+  ChainId.MAP,
+  '0x9f722b2cb30093f766221fd0d37964949ed66918',
+  18,
+  'Mapped USD Coin',
+  'USDC'
+);
+
+//BSC tokens
+export const WBNB_BNB = new Token(
+  ChainId.BSC,
+  '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  18,
+  'WBNB',
+  'Wrapped BNB'
+);
+
+export const BUSD_BNB = new Token(
+  ChainId.BSC,
+  '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+  18,
+  'BUSD',
+  'BUSD Token'
+);
+
+export const USDT_BNB = new Token(
+  ChainId.BSC,
+  '0x55d398326f99059fF775485246999027B3197955',
+  18,
+  'USDT',
+  'Tether USD'
+);
+
+export const USDC_BNB = new Token(
+  ChainId.BSC,
+  '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  18,
+  'USDC',
+  'USD Coin'
+);
+
+//NEAR tokens
+export const USDT_NEAR = new Token(
+  ChainId.NEAR,
+  ZERO_ADDRESS,
+  6,
+  'USDT.e',
+  'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
+);
+
+export const USDC_NEAR = new Token(
+  ChainId.NEAR,
+  ZERO_ADDRESS,
+  6,
+  'USDC',
+  'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
+);
+
+export const WNEAR_NEAR = new Token(
+  ChainId.NEAR,
+  ZERO_ADDRESS,
+  6,
+  'WNEAR',
+  'wrap.near'
 );
 
 export class TokenProvider implements ITokenProvider {
@@ -464,3 +555,36 @@ export class TokenProvider implements ITokenProvider {
     };
   }
 }
+
+export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
+
+export const GET_TOKEN_ICON = (address: string): string => {
+  switch (address) {
+    case WBNB_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/bnb.png';
+    case WNEAR_NEAR.name:
+      return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
+    case USDC_POLYGON.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_MAP.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_NEAR.name:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case WMATIC_POLYGON.address:
+      return 'https://files.mapprotocol.io/bridge/polygon.png';
+    case WMAP_MAP.address:
+      return 'https://files.maplabs.io/bridge/map.png';
+    case BUSD_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/busd.png';
+    case USDT_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
+    case USDT_NEAR.name:
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
+    case USDT_MATIC.address:
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
+    default:
+      return '';
+  }
+};

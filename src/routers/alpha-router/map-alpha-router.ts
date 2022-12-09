@@ -1,27 +1,35 @@
-import { Pair } from '@pancakeswap/sdk';
+import { ChainId as QChainId } from '@davidwgrossman/quickswap-sdk';
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
-import { Position } from '@uniswap/v3-sdk';
+import { TokenList } from '@uniswap/token-lists';
+import { Pair } from '@uniswap/v2-sdk';
+import {
+  MethodParameters,
+  Pool,
+  Position,
+  SqrtPriceMath,
+  TickMath,
+} from '@uniswap/v3-sdk';
 import { default as retry } from 'async-retry';
 import { BigNumber, providers } from 'ethers';
+import JSBI from 'jsbi';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
-import {
-  pancakeTokensToUniTokens,
-  pancakeTokenToUniToken,
-  pancakeToUniCurrencyAmount,
-  toPancakeCurrencyAmountArr,
-  toPancakeRouteArr,
-  toUniPairArr,
-} from '../../adapter/pancake-adapter';
+import { V3HeuristicGasModelFactory } from '.';
 import {
   CachingGasStationProvider,
   CachingTokenProviderWithFallback,
+  CachingV3PoolProvider,
+  EIP1559GasPriceProvider,
+  ETHGasStationInfoProvider,
   ISwapRouterProvider,
-  ITokenProvider,
+  IV2QuoteProvider,
   LegacyGasPriceProvider,
   NodeJSCache,
-  TokenProvider,
+  OnChainGasPriceProvider,
+  SwapRouterProvider,
+  UniswapMulticallProvider,
+  V2QuoteProvider,
 } from '../../providers';
 import {
   CachingTokenListProvider,
@@ -32,31 +40,50 @@ import {
   IGasPriceProvider,
 } from '../../providers/gas-price-provider';
 import { IV2PoolProvider } from '../../providers/interfaces/IPoolProvider';
-import { RawBNBV2SubgraphPool } from '../../providers/interfaces/ISubgraphProvider';
-import { BSCMulticallProvider } from '../../providers/multicall-bsc-provider';
-import { PancakeV2PoolProvider } from '../../providers/pancakeswap/v2/pool-provider';
+import { RawETHV2SubgraphPool } from '../../providers/interfaces/ISubgraphProvider';
+import { QuickV2PoolProvider } from '../../providers/quickswap/v2/pool-provider';
 import {
-  IPancakeV2QuoteProvider,
-  PancakeV2QuoteProvider,
-} from '../../providers/pancakeswap/v2/quote-provider';
+  IQuickV2QuoteProvider,
+  QuickV2QuoteProvider,
+} from '../../providers/quickswap/v2/quote-provider';
+import { SushiV2PoolProvider } from '../../providers/sushiswap/v2/pool-provider';
+import {
+  ISushiV2QuoteProvider,
+  SushiV2QuoteProvider,
+} from '../../providers/sushiswap/v2/quote-provider';
+import { ITokenProvider, TokenProvider } from '../../providers/token-provider';
 import {
   ITokenValidatorProvider,
   TokenValidationResult,
+  TokenValidatorProvider,
 } from '../../providers/token-validator-provider';
+import { V2PoolProvider } from '../../providers/uniswap/v2/pool-provider';
 import {
+  ArbitrumGasData,
+  ArbitrumGasDataProvider,
   IL2GasDataProvider,
   OptimismGasData,
+  OptimismGasDataProvider,
 } from '../../providers/uniswap/v3/gas-data-provider';
-import { poolToString, routeToString } from '../../util';
+import {
+  IV3PoolProvider,
+  V3PoolProvider,
+} from '../../providers/uniswap/v3/pool-provider';
+import {
+  IV3QuoteProvider,
+  V3QuoteProvider,
+} from '../../providers/uniswap/v3/quote-provider';
 import { CurrencyAmount } from '../../util/amounts';
-import { ChainId, ID_TO_NETWORK_NAME } from '../../util/chains';
+import { ChainId, ID_TO_CHAIN_ID, ID_TO_NETWORK_NAME } from '../../util/chains';
 import { log } from '../../util/log';
 import { metric, MetricLoggerUnit } from '../../util/metric';
 import {
-  getBSCPoolsFromOneProtocol,
-  getBSCPoolsFromServer,
+  getETHPoolsFromServer,
+  getMapPoolsFromOneProtocol,
 } from '../../util/pool';
 import { ButterProtocol } from '../../util/protocol';
+import { poolToString, routeToString } from '../../util/routes';
+import { UNSUPPORTED_TOKENS } from '../../util/unsupported-tokens';
 import {
   IRouter,
   ISwapToRatio,
@@ -64,20 +91,37 @@ import {
   SwapAndAddOptions,
   SwapOptions,
   SwapRoute,
-  SwapToRatioResponse,
 } from '../router';
+import {
+  DEFAULT_ROUTING_CONFIG_BY_CHAIN,
+  ETH_GAS_STATION_API_URL,
+} from './config';
 import {
   RouteWithValidQuote,
   V2RouteWithValidQuote,
 } from './entities/route-with-valid-quote';
 import { getBestSwapRoute } from './functions/best-swap-route';
 import { computeAllV2Routes } from './functions/compute-all-routes';
-import { CandidatePoolsBySelectionCriteria } from './functions/get-candidate-pools';
-import { getPancakeV2CandidatePools } from './functions/get-pancake-candidate-pools';
-import { IV2GasModelFactory } from './gas-models/gas-model';
-import { PancakeV2HeuristicGasModelFactory } from './gas-models/pancakeswap/pancake-v2-heuristic-gas-model';
-
-export type BSCAlphaRouterParams = {
+import {
+  CandidatePoolsBySelectionCriteria,
+  getV2CandidatePools,
+  getV3CandidatePools as getV3CandidatePools,
+  PoolId,
+} from './functions/get-candidate-pools';
+import { IV2GasModelFactory, IV3GasModelFactory } from './gas-models/gas-model';
+import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
+import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
+import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
+import {
+  _getBestRouteAndOutput,
+  _getUsdRate,
+} from './functions/get-curve-best-router';
+import axios from 'axios';
+import {
+  MAP_MULTICALL_ADDRESS,
+  UNISWAP_MULTICALL_ADDRESS,
+} from '../../util/addresses';
+export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
    */
@@ -90,17 +134,21 @@ export type BSCAlphaRouterParams = {
    * The provider to use for making multicalls. Used for getting on-chain data
    * like pools, tokens, quotes in batch.
    */
-  multicall2Provider?: BSCMulticallProvider;
-
+  multicall2Provider?: UniswapMulticallProvider;
   /**
    * The provider for getting data about V2 pools.
    */
-  pancakeV2PoolProvider?: IV2PoolProvider;
-
-  pancakeV2QuoteProvider?: IPancakeV2QuoteProvider;
+  v2PoolProvider?: IV2PoolProvider;
   /**
-   * The provider for getting data about Tokens.
+   * The provider for getting V3 quotes.
    */
+  v2QuoteProvider?: IV2QuoteProvider;
+  /**
+   * A factory for generating a gas model that is used when estimating the gas used by
+   * V2 routes.
+   */
+  v2GasModelFactory?: IV2GasModelFactory;
+
   tokenProvider?: ITokenProvider;
   /**
    * The provider for getting the current gas price to use when account for gas in the
@@ -108,20 +156,16 @@ export type BSCAlphaRouterParams = {
    */
   gasPriceProvider?: IGasPriceProvider;
   /**
-   *
+   * A token list that specifies Token that should be blocked from routing through.
+   * Defaults to Uniswap's unsupported token list.
    */
-  pancakeV2GasModelFactory?: IV2GasModelFactory;
+  blockedTokenListProvider?: ITokenListProvider;
 
   /**
    * Calls lens function on SwapRouter02 to determine ERC20 approval types for
    * LP position tokens.
    */
   swapRouterProvider?: ISwapRouterProvider;
-
-  /**
-   * Calls the optimism gas oracle contract to fetch constants for calculating the l1 security fee.
-   */
-  optimismGasDataProvider?: IL2GasDataProvider<OptimismGasData>;
 
   /**
    * A token validator for detecting fee-on-transfer tokens or tokens that can't be transferred.
@@ -223,59 +267,61 @@ export type AlphaRouterConfig = {
   distributionPercent: number;
 };
 
-export class BSCAlphaRouter
+export class MapAlphaRouter
   implements
     IRouter<AlphaRouterConfig>,
     ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
 {
   protected chainId: ChainId;
   protected provider: providers.BaseProvider;
-  protected multicall2Provider: BSCMulticallProvider;
-  protected pancakeV2PoolProvider: IV2PoolProvider;
-  protected pancakeV2QuoteProvider: IPancakeV2QuoteProvider;
+  protected multicall2Provider: UniswapMulticallProvider;
+  protected v2PoolProvider: IV2PoolProvider;
+  protected v2QuoteProvider: IV2QuoteProvider;
   protected tokenProvider: ITokenProvider;
+  protected gasPriceProvider: IGasPriceProvider;
+  protected swapRouterProvider: ISwapRouterProvider;
+  protected v2GasModelFactory: IV2GasModelFactory;
   protected tokenValidatorProvider?: ITokenValidatorProvider;
   protected blockedTokenListProvider?: ITokenListProvider;
-  protected gasPriceProvider: IGasPriceProvider;
-  protected pancakeV2GasModelFactory: IV2GasModelFactory;
+  protected l2GasDataProvider?:
+    | IL2GasDataProvider<OptimismGasData>
+    | IL2GasDataProvider<ArbitrumGasData>;
 
   constructor({
     chainId,
     provider,
     multicall2Provider,
-    pancakeV2PoolProvider,
-    pancakeV2QuoteProvider,
+    v2PoolProvider,
+    v2QuoteProvider,
     tokenProvider,
+    blockedTokenListProvider,
     gasPriceProvider,
-    pancakeV2GasModelFactory,
-  }: BSCAlphaRouterParams) {
+    v2GasModelFactory,
+    swapRouterProvider,
+    tokenValidatorProvider,
+  }: AlphaRouterParams) {
     this.chainId = chainId;
     this.provider = provider;
     this.multicall2Provider =
-      multicall2Provider ?? new BSCMulticallProvider(56, provider, 375_000);
-    this.pancakeV2PoolProvider =
-      pancakeV2PoolProvider ??
-      new PancakeV2PoolProvider(56, this.multicall2Provider);
-
-    this.pancakeV2QuoteProvider =
-      pancakeV2QuoteProvider ?? new PancakeV2QuoteProvider();
-
-    const chainName = ID_TO_NETWORK_NAME(chainId);
-
-    if (this.provider instanceof providers.JsonRpcProvider) {
-      this.gasPriceProvider =
-        gasPriceProvider ??
-        new CachingGasStationProvider(
-          chainId,
-          new LegacyGasPriceProvider(this.provider),
-          new NodeJSCache<GasPrice>(
-            new NodeCache({ stdTTL: 15, useClones: false })
-          )
-        );
-    } else {
-      throw new Error('only json rpc provider is supported');
-    }
-
+      multicall2Provider ??
+      new UniswapMulticallProvider(
+        chainId,
+        provider,
+        375_000,
+        MAP_MULTICALL_ADDRESS
+      );
+    this.v2PoolProvider =
+      v2PoolProvider ?? new V2PoolProvider(chainId, this.multicall2Provider);
+    this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
+    this.v2GasModelFactory =
+      v2GasModelFactory ?? new V2HeuristicGasModelFactory();
+    this.blockedTokenListProvider =
+      blockedTokenListProvider ??
+      new CachingTokenListProvider(
+        chainId,
+        UNSUPPORTED_TOKENS as TokenList,
+        new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false }))
+      );
     this.tokenProvider =
       tokenProvider ??
       new CachingTokenProviderWithFallback(
@@ -286,22 +332,47 @@ export class BSCAlphaRouter
           DEFAULT_TOKEN_LIST,
           new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false }))
         ),
-        new TokenProvider(56, this.multicall2Provider)
+        new TokenProvider(chainId, this.multicall2Provider)
       );
-    this.pancakeV2GasModelFactory =
-      pancakeV2GasModelFactory ?? new PancakeV2HeuristicGasModelFactory();
+    this.gasPriceProvider =
+      gasPriceProvider ??
+      new CachingGasStationProvider(
+        chainId,
+        this.provider instanceof providers.JsonRpcProvider
+          ? new OnChainGasPriceProvider(
+              chainId,
+              new EIP1559GasPriceProvider(this.provider),
+              new LegacyGasPriceProvider(this.provider)
+            )
+          : new ETHGasStationInfoProvider(ETH_GAS_STATION_API_URL),
+        new NodeJSCache<GasPrice>(
+          new NodeCache({ stdTTL: 15, useClones: false })
+        )
+      );
+    this.swapRouterProvider =
+      swapRouterProvider ?? new SwapRouterProvider(this.multicall2Provider);
+
+    if (tokenValidatorProvider) {
+      this.tokenValidatorProvider = tokenValidatorProvider;
+    } else if (this.chainId == ChainId.MAINNET) {
+      this.tokenValidatorProvider = new TokenValidatorProvider(
+        this.chainId,
+        this.multicall2Provider,
+        new NodeJSCache(new NodeCache({ stdTTL: 30000, useClones: false }))
+      );
+    }
   }
 
-  routeToRatio(
+  public async routeToRatio(
     token0Balance: CurrencyAmount,
     token1Balance: CurrencyAmount,
     position: Position,
     swapAndAddConfig: SwapAndAddConfig,
     swapAndAddOptions?: SwapAndAddOptions,
-    routingConfig?: AlphaRouterConfig
-  ): Promise<SwapToRatioResponse> {
-    throw new Error('Method not implemented.');
-  }
+    routingConfig: Partial<AlphaRouterConfig> = DEFAULT_ROUTING_CONFIG_BY_CHAIN(
+      this.chainId
+    )
+  ): Promise<any> {}
 
   /**
    * @inheritdoc IRouter
@@ -326,29 +397,7 @@ export class BSCAlphaRouter
 
     const routingConfig: AlphaRouterConfig = _.merge(
       {},
-      {
-        v2PoolSelection: {
-          topN: 3,
-          topNDirectSwaps: 1,
-          topNTokenInOut: 5,
-          topNSecondHop: 2,
-          topNWithEachBaseToken: 2,
-          topNWithBaseToken: 6,
-        },
-        v3PoolSelection: {
-          topN: 2,
-          topNDirectSwaps: 2,
-          topNTokenInOut: 3,
-          topNSecondHop: 1,
-          topNWithEachBaseToken: 3,
-          topNWithBaseToken: 5,
-        },
-        maxSwapsPerPath: 3,
-        minSplits: 1,
-        maxSplits: 7,
-        distributionPercent: 5,
-        forceCrossProtocol: false,
-      },
+      DEFAULT_ROUTING_CONFIG_BY_CHAIN(this.chainId),
       partialRoutingConfig,
       { blockNumber }
     );
@@ -372,8 +421,9 @@ export class BSCAlphaRouter
 
     // Get an estimate of the gas price to use when estimating gas cost of different routes.
     const beforeGas = Date.now();
-    const { gasPriceWei } = await this.gasPriceProvider.getGasPrice();
-
+    const gasData = await axios.get('https://api.curve.fi/api/getGas');
+    const gasPriceWei = BigNumber.from(gasData.data.data.gas.standard);
+    //const gasPriceWei = await this.gasPriceProvider.getGasPrice();
     metric.putMetric(
       'GasPriceLoad',
       Date.now() - beforeGas,
@@ -389,24 +439,18 @@ export class BSCAlphaRouter
 
     const protocolsSet = new Set(protocols ?? []);
 
-    const allPoolsUnsanitizedJsonStr = await getBSCPoolsFromServer(
+    const allPoolsUnsanitizedJsonStr = await getETHPoolsFromServer(
       protocolsSet,
       this.chainId
     );
 
-    if (protocolsSet.has(ButterProtocol.PANCAKESWAP)) {
-      let pancakePoolsUnsanitized: RawBNBV2SubgraphPool[] =
-        getBSCPoolsFromOneProtocol(
-          allPoolsUnsanitizedJsonStr,
-          ButterProtocol.PANCAKESWAP
-        );
-
-      if (pancakePoolsUnsanitized === undefined) {
-        console.error('pancake pool not found on server');
-        pancakePoolsUnsanitized = [];
-      }
+    if (protocolsSet.has(ButterProtocol.HIVESWAP)) {
+      let PoolsUnsanitized: RawETHV2SubgraphPool[] = getMapPoolsFromOneProtocol(
+        allPoolsUnsanitizedJsonStr,
+        ButterProtocol.HIVESWAP
+      );
       quotePromises.push(
-        this.getPancakeQuotes(
+        this.getMapQuotes(
           tokenIn,
           tokenOut,
           amounts,
@@ -415,11 +459,13 @@ export class BSCAlphaRouter
           gasPriceWei,
           tradeType,
           routingConfig,
-          pancakePoolsUnsanitized
+          PoolsUnsanitized
         )
       );
     }
+
     const routesWithValidQuotesByProtocol = await Promise.all(quotePromises);
+
     let allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
     let allCandidatePools: CandidatePoolsBySelectionCriteria[] = [];
     for (const {
@@ -432,6 +478,7 @@ export class BSCAlphaRouter
       ];
       allCandidatePools = [...allCandidatePools, candidatePools];
     }
+
     if (allRoutesWithValidQuotes.length == 0) {
       log.info({ allRoutesWithValidQuotes }, 'Received no valid quotes');
       return null;
@@ -460,6 +507,22 @@ export class BSCAlphaRouter
       estimatedGasUsedUSD,
     } = swapRouteRaw;
 
+    let methodParameters: MethodParameters | undefined;
+
+    metric.putMetric(
+      'FindBestSwapRoute',
+      Date.now() - beforeBestSwap,
+      MetricLoggerUnit.Milliseconds
+    );
+
+    metric.putMetric(
+      `QuoteFoundForChain${this.chainId}`,
+      1,
+      MetricLoggerUnit.Count
+    );
+
+    this.emitPoolSelectionMetrics(swapRouteRaw, allCandidatePools);
+
     return {
       quote,
       quoteGasAdjusted,
@@ -468,11 +531,55 @@ export class BSCAlphaRouter
       estimatedGasUsedUSD,
       gasPriceWei,
       route: routeAmounts,
+      methodParameters,
       blockNumber: BigNumber.from(await blockNumber),
     };
   }
 
-  private async getPancakeQuotes(
+  private async applyTokenValidatorToPools<T extends Pool | Pair>(
+    pools: T[],
+    isInvalidFn: (
+      token: Currency,
+      tokenValidation: TokenValidationResult | undefined
+    ) => boolean
+  ): Promise<T[]> {
+    if (!this.tokenValidatorProvider) {
+      return pools;
+    }
+
+    log.info(`Running token validator on ${pools.length} pools`);
+
+    const tokens = _.flatMap(pools, (pool) => [pool.token0, pool.token1]);
+
+    const tokenValidationResults =
+      await this.tokenValidatorProvider.validateTokens(tokens);
+
+    const poolsFiltered = _.filter(pools, (pool: T) => {
+      const token0Validation = tokenValidationResults.getValidationByToken(
+        pool.token0
+      );
+      const token1Validation = tokenValidationResults.getValidationByToken(
+        pool.token1
+      );
+
+      const token0Invalid = isInvalidFn(pool.token0, token0Validation);
+      const token1Invalid = isInvalidFn(pool.token1, token1Validation);
+
+      if (token0Invalid || token1Invalid) {
+        log.info(
+          `Dropping pool ${poolToString(pool)} because token is invalid. ${
+            pool.token0.symbol
+          }: ${token0Validation}, ${pool.token1.symbol}: ${token1Validation}`
+        );
+      }
+
+      return !token0Invalid && !token1Invalid;
+    });
+
+    return poolsFiltered;
+  }
+
+  private async getMapQuotes(
     tokenIn: Token,
     tokenOut: Token,
     amounts: CurrencyAmount[],
@@ -481,29 +588,22 @@ export class BSCAlphaRouter
     gasPriceWei: BigNumber,
     swapType: TradeType,
     routingConfig: AlphaRouterConfig,
-    allPoolsUnsanitized: RawBNBV2SubgraphPool[]
+    v2PoolsUnsanitized: RawETHV2SubgraphPool[]
   ): Promise<{
     routesWithValidQuotes: V2RouteWithValidQuote[];
     candidatePools: CandidatePoolsBySelectionCriteria;
   }> {
-    log.info('Starting to get V2 quotes');
-    // Fetch all the pools that we will consider routing via. There are thousands
-    // of pools, so we filter them to a set of candidate pools that we expect will
-    // result in good prices.
-    let start = Date.now();
-
-    const { poolAccessor, candidatePools } = await getPancakeV2CandidatePools({
+    const { poolAccessor, candidatePools } = await getV2CandidatePools({
       tokenIn,
       tokenOut,
       tokenProvider: this.tokenProvider,
       blockedTokenListProvider: this.blockedTokenListProvider,
-      poolProvider: this.pancakeV2PoolProvider,
+      poolProvider: this.v2PoolProvider,
       routeType: swapType,
-      allPoolsUnsanitized,
+      v2PoolsUnsanitized,
       routingConfig,
       chainId: this.chainId,
     });
-
     const poolsRaw = poolAccessor.getAllPools();
     // Drop any pools that contain tokens that can not be transferred according to the token validator.
     const pools = await this.applyTokenValidatorToPools(
@@ -537,9 +637,10 @@ export class BSCAlphaRouter
     const routes = computeAllV2Routes(
       tokenIn,
       tokenOut,
-      toUniPairArr(pools),
+      pools as Pair[],
       maxSwapsPerPath
     );
+
     if (routes.length == 0) {
       return { routesWithValidQuotes: [], candidatePools };
     }
@@ -547,51 +648,33 @@ export class BSCAlphaRouter
     // For all our routes, and all the fractional amounts, fetch quotes on-chain.
     const quoteFn =
       swapType == TradeType.EXACT_INPUT
-        ? this.pancakeV2QuoteProvider.getQuotesManyExactIn.bind(
-            this.pancakeV2QuoteProvider
-          )
-        : this.pancakeV2QuoteProvider.getQuotesManyExactOut.bind(
-            this.pancakeV2QuoteProvider
-          );
+        ? this.v2QuoteProvider.getQuotesManyExactIn.bind(this.v2QuoteProvider)
+        : this.v2QuoteProvider.getQuotesManyExactOut.bind(this.v2QuoteProvider);
 
     const beforeQuotes = Date.now();
+
     log.info(
       `Getting quotes for V2 for ${routes.length} routes with ${amounts.length} amounts per route.`
     );
+    const { routesWithQuotes } = await quoteFn(amounts, routes);
 
-    const { routesWithQuotes } = await quoteFn(
-      toPancakeCurrencyAmountArr(amounts),
-      toPancakeRouteArr(routes)
-    );
-    start = Date.now();
-    const gasModel = await this.pancakeV2GasModelFactory.buildGasModel(
+    const gasModel = await this.v2GasModelFactory.buildGasModel(
       this.chainId,
       gasPriceWei,
-      this.pancakeV2PoolProvider,
+      this.v2PoolProvider,
       quoteToken
     );
 
-    metric.putMetric(
-      'V2QuotesLoad',
-      Date.now() - beforeQuotes,
-      MetricLoggerUnit.Milliseconds
-    );
-
-    metric.putMetric(
-      'V2QuotesFetched',
-      _(routesWithQuotes)
-        .map(([, quotes]) => quotes.length)
-        .sum(),
-      MetricLoggerUnit.Count
-    );
-
     const routesWithValidQuotes = [];
+
     for (const routeWithQuote of routesWithQuotes) {
       const [route, quotes] = routeWithQuote;
+
       for (let i = 0; i < quotes.length; i++) {
         const percent = percents[i]!;
         const amountQuote = quotes[i]!;
         const { quote, amount } = amountQuote;
+
         if (!quote) {
           log.debug(
             {
@@ -602,26 +685,25 @@ export class BSCAlphaRouter
           );
           continue;
         }
-        const uAmount = pancakeToUniCurrencyAmount(amount);
-        const adjustedQuoteForPancakeswap = quote.mul(
-          BigNumber.from(10).pow(quoteToken.decimals)
-        ) as BigNumber;
+
         const routeWithValidQuote = new V2RouteWithValidQuote({
           route,
-          rawQuote: adjustedQuoteForPancakeswap,
-          amount: uAmount,
+          rawQuote: quote,
+          amount,
           percent,
           gasModel,
           quoteToken,
           tradeType: swapType,
-          v2PoolProvider: this.pancakeV2PoolProvider,
-          platform: ButterProtocol.PANCAKESWAP,
+          v2PoolProvider: this.v2PoolProvider,
+          platform: ButterProtocol.HIVESWAP,
         });
+
         routesWithValidQuotes.push(routeWithValidQuote);
       }
     }
     return { routesWithValidQuotes, candidatePools };
   }
+
   // Note multiplications here can result in a loss of precision in the amounts (e.g. taking 50% of 101)
   // This is reconcilled at the end of the algorithm by adding any lost precision to one of
   // the splits in the route.
@@ -641,53 +723,146 @@ export class BSCAlphaRouter
     return [percents, amounts];
   }
 
-  // private async buildSwapAndAddMethodParameters(
-  //   trade: Trade<Currency, Currency, TradeType>,
-  //   swapAndAddOptions: SwapAndAddOptions,
-  //   swapAndAddParameters: SwapAndAddParameters
-  // ): Promise<MethodParameters> {
-  //   const {
-  //     swapOptions: { recipient, slippageTolerance, deadline, inputTokenPermit },
-  //     addLiquidityOptions: addLiquidityConfig,
-  //   } = swapAndAddOptions;
+  private emitPoolSelectionMetrics(
+    swapRouteRaw: {
+      quote: CurrencyAmount;
+      quoteGasAdjusted: CurrencyAmount;
+      routes: RouteWithValidQuote[];
+      estimatedGasUsed: BigNumber;
+    },
+    allPoolsBySelection: CandidatePoolsBySelectionCriteria[]
+  ) {
+    const poolAddressesUsed = new Set<string>();
+    const { routes: routeAmounts } = swapRouteRaw;
+    _(routeAmounts)
+      .flatMap((routeAmount) => {
+        const { poolAddresses } = routeAmount;
+        return poolAddresses;
+      })
+      .forEach((address: string) => {
+        poolAddressesUsed.add(address.toLowerCase());
+      });
 
-  //   const preLiquidityPosition = swapAndAddParameters.preLiquidityPosition;
-  //   const finalBalanceTokenIn =
-  //     swapAndAddParameters.initialBalanceTokenIn.subtract(trade.inputAmount);
-  //   const finalBalanceTokenOut =
-  //     swapAndAddParameters.initialBalanceTokenOut.add(trade.outputAmount);
-  //   const approvalTypes = await this.swapRouterProvider.getApprovalType(
-  //     finalBalanceTokenIn,
-  //     finalBalanceTokenOut
-  //   );
-  //   const zeroForOne = finalBalanceTokenIn.currency.wrapped.sortsBefore(
-  //     finalBalanceTokenOut.currency.wrapped
-  //   );
-  //   return SwapRouter.swapAndAddCallParameters(
-  //     trade,
-  //     {
-  //       recipient,
-  //       slippageTolerance,
-  //       deadlineOrPreviousBlockhash: deadline,
-  //       inputTokenPermit,
-  //     },
-  //     Position.fromAmounts({
-  //       pool: preLiquidityPosition.pool,
-  //       tickLower: preLiquidityPosition.tickLower,
-  //       tickUpper: preLiquidityPosition.tickUpper,
-  //       amount0: zeroForOne
-  //         ? finalBalanceTokenIn.quotient.toString()
-  //         : finalBalanceTokenOut.quotient.toString(),
-  //       amount1: zeroForOne
-  //         ? finalBalanceTokenOut.quotient.toString()
-  //         : finalBalanceTokenIn.quotient.toString(),
-  //       useFullPrecision: false,
-  //     }),
-  //     addLiquidityConfig,
-  //     approvalTypes.approvalTokenIn,
-  //     approvalTypes.approvalTokenOut
-  //   );
-  // }
+    for (const poolsBySelection of allPoolsBySelection) {
+      const { protocol } = poolsBySelection;
+      _.forIn(
+        poolsBySelection.selections,
+        (pools: PoolId[], topNSelection: string) => {
+          const topNUsed =
+            _.findLastIndex(pools, (pool) =>
+              poolAddressesUsed.has(pool.id.toLowerCase())
+            ) + 1;
+          metric.putMetric(
+            _.capitalize(`${protocol}${topNSelection}`),
+            topNUsed,
+            MetricLoggerUnit.Count
+          );
+        }
+      );
+    }
+
+    let hasV3Route = false;
+    let hasV2Route = false;
+    for (const routeAmount of routeAmounts) {
+      if (
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V3.toString()
+      ) {
+        hasV3Route = true;
+      }
+      if (
+        routeAmount.protocol.toString() === ButterProtocol.UNI_V2.toString()
+      ) {
+        hasV2Route = true;
+      }
+    }
+
+    if (hasV3Route && hasV2Route) {
+      metric.putMetric(`V3AndV2SplitRoute`, 1, MetricLoggerUnit.Count);
+      metric.putMetric(
+        `V3AndV2SplitRouteForChain${this.chainId}`,
+        1,
+        MetricLoggerUnit.Count
+      );
+    } else if (hasV3Route) {
+      if (routeAmounts.length > 1) {
+        metric.putMetric(`V3SplitRoute`, 1, MetricLoggerUnit.Count);
+        metric.putMetric(
+          `V3SplitRouteForChain${this.chainId}`,
+          1,
+          MetricLoggerUnit.Count
+        );
+      } else {
+        metric.putMetric(`V3Route`, 1, MetricLoggerUnit.Count);
+        metric.putMetric(
+          `V3RouteForChain${this.chainId}`,
+          1,
+          MetricLoggerUnit.Count
+        );
+      }
+    } else if (hasV2Route) {
+      if (routeAmounts.length > 1) {
+        metric.putMetric(`V2SplitRoute`, 1, MetricLoggerUnit.Count);
+        metric.putMetric(
+          `V2SplitRouteForChain${this.chainId}`,
+          1,
+          MetricLoggerUnit.Count
+        );
+      } else {
+        metric.putMetric(`V2Route`, 1, MetricLoggerUnit.Count);
+        metric.putMetric(
+          `V2RouteForChain${this.chainId}`,
+          1,
+          MetricLoggerUnit.Count
+        );
+      }
+    }
+  }
+
+  private calculateOptimalRatio(
+    position: Position,
+    sqrtRatioX96: JSBI,
+    zeroForOne: boolean
+  ): Fraction {
+    const upperSqrtRatioX96 = TickMath.getSqrtRatioAtTick(position.tickUpper);
+    const lowerSqrtRatioX96 = TickMath.getSqrtRatioAtTick(position.tickLower);
+
+    // returns Fraction(0, 1) for any out of range position regardless of zeroForOne. Implication: function
+    // cannot be used to determine the trading direction of out of range positions.
+    if (
+      JSBI.greaterThan(sqrtRatioX96, upperSqrtRatioX96) ||
+      JSBI.lessThan(sqrtRatioX96, lowerSqrtRatioX96)
+    ) {
+      return new Fraction(0, 1);
+    }
+
+    const precision = JSBI.BigInt('1' + '0'.repeat(18));
+    let optimalRatio = new Fraction(
+      SqrtPriceMath.getAmount0Delta(
+        sqrtRatioX96,
+        upperSqrtRatioX96,
+        precision,
+        true
+      ),
+      SqrtPriceMath.getAmount1Delta(
+        sqrtRatioX96,
+        lowerSqrtRatioX96,
+        precision,
+        true
+      )
+    );
+    if (!zeroForOne) optimalRatio = optimalRatio.invert();
+    return optimalRatio;
+  }
+
+  private absoluteValue(fraction: Fraction): Fraction {
+    const numeratorAbs = JSBI.lessThan(fraction.numerator, JSBI.BigInt(0))
+      ? JSBI.unaryMinus(fraction.numerator)
+      : fraction.numerator;
+    const denominatorAbs = JSBI.lessThan(fraction.denominator, JSBI.BigInt(0))
+      ? JSBI.unaryMinus(fraction.denominator)
+      : fraction.denominator;
+    return new Fraction(numeratorAbs, denominatorAbs);
+  }
 
   private getBlockNumberPromise(): number | Promise<number> {
     return retry(
@@ -703,55 +878,5 @@ export class BSCAlphaRouter
         maxTimeout: 1000,
       }
     );
-  }
-  private async applyTokenValidatorToPools<T extends Pair>(
-    pools: T[],
-    isInvalidFn: (
-      token: Currency,
-      tokenValidation: TokenValidationResult | undefined
-    ) => boolean
-  ): Promise<T[]> {
-    if (!this.tokenValidatorProvider) {
-      return pools;
-    }
-
-    log.info(`Running token validator on ${pools.length} pools`);
-
-    const tokens = _.flatMap(pools, (pool) => [pool.token0, pool.token1]);
-
-    const tokenValidationResults =
-      await this.tokenValidatorProvider.validateTokens(
-        pancakeTokensToUniTokens(tokens)
-      );
-
-    const poolsFiltered = _.filter(pools, (pool: T) => {
-      const token0Validation = tokenValidationResults.getValidationByToken(
-        pancakeTokenToUniToken(pool.token0)
-      );
-      const token1Validation = tokenValidationResults.getValidationByToken(
-        pancakeTokenToUniToken(pool.token1)
-      );
-
-      const token0Invalid = isInvalidFn(
-        pancakeTokenToUniToken(pool.token0),
-        token0Validation
-      );
-      const token1Invalid = isInvalidFn(
-        pancakeTokenToUniToken(pool.token1),
-        token1Validation
-      );
-
-      if (token0Invalid || token1Invalid) {
-        log.info(
-          `Dropping pool ${poolToString(pool)} because token is invalid. ${
-            pool.token0.symbol
-          }: ${token0Validation}, ${pool.token1.symbol}: ${token1Validation}`
-        );
-      }
-
-      return !token0Invalid && !token1Invalid;
-    });
-
-    return poolsFiltered;
   }
 }

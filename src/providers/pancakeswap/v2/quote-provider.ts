@@ -75,7 +75,7 @@ export class PancakeV2QuoteProvider implements IPancakeV2QuoteProvider {
       for (const amount of amounts) {
         try {
           if (tradeType == TradeType.EXACT_INPUT) {
-            let outputAmount = wrappedAmount(amount, 137);
+            let outputAmount = wrappedAmount(amount, 56);
 
             for (const pair of route.pairs) {
               const [outputAmountNew] = pair.getOutputAmount(outputAmount);
@@ -87,7 +87,7 @@ export class PancakeV2QuoteProvider implements IPancakeV2QuoteProvider {
               quote: BigNumber.from(outputAmount.quotient.toString()),
             });
           } else {
-            let inputAmount = wrappedAmount(amount, 137);
+            let inputAmount = wrappedAmount(amount, 56);
 
             for (let i = route.pairs.length - 1; i >= 0; i--) {
               const pair = route.pairs[i]!;

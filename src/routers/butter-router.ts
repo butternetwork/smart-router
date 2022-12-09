@@ -1,17 +1,20 @@
 import { Token, TradeType } from '@uniswap/sdk-core';
 import { ethers, providers } from 'ethers';
 import JSBI from 'jsbi';
-import { AlphaRouter, AlphaRouterConfig } from '../routers';
+import { AlphaRouter, AlphaRouterConfig } from '.';
+import { ChainId } from '../util';
 import { CurrencyAmount } from '../util/amounts';
 import { TradeType as VTradeType } from '../util/constants';
-import { BarterProtocol } from '../util/protocol';
+import { ButterProtocol } from '../util/protocol';
 import { BSCAlphaRouter } from './alpha-router/bsc-alpha-router';
+import { MapAlphaRouter } from './alpha-router/map-alpha-router';
+import { NearRouter } from './alpha-router/near-alpha-router';
 import { SwapOptions, SwapRoute } from './router';
 
 export async function getBestRoute(
   chainId: number,
   provider: providers.BaseProvider,
-  protocols: BarterProtocol[],
+  protocols: ButterProtocol[],
   swapAmountHumanReadable: string,
   tokenInAddress: string,
   tokenInDecimal: number,
@@ -23,16 +26,36 @@ export async function getBestRoute(
   tokenOutSymbol?: string,
   tokenOutName?: string
 ): Promise<SwapRoute | null> {
-  const router =
-    chainId === 56
-      ? new BSCAlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        })
-      : new AlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        });
+  let router;
+  switch (chainId) {
+    case ChainId.MAINNET:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
+    case ChainId.BSC:
+      router = new BSCAlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
+    case ChainId.MAP:
+      router = new MapAlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
+    case ChainId.NEAR:
+      router = new NearRouter(chainId);
+      break;
+    default:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
+  }
 
   const tokenIn = new Token(
     chainId,
