@@ -6,5 +6,5 @@ export enum ButterProtocol {
   PANCAKESWAP = 'PANCAKESWAP',
   CURVE = 'CURVE',
   REF = 'REF',
-  HIVESWAP = 'HIVESWAP'
+  HIVESWAP = 'HIVESWAP',
 }

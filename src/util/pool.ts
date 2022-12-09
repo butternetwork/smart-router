@@ -153,7 +153,7 @@ export function getETHV2PoolsFromOneProtocol(
     case ButterProtocol.SUSHISWAP:
       return allPools.sushiswap;
     case ButterProtocol.QUICKSWAP:
-      return allPools.quickswap; 
+      return allPools.quickswap;
     default:
       throw new Error(`protocol ${protocol} not supported yet on eth`);
   }
@@ -166,7 +166,7 @@ export function getMapPoolsFromOneProtocol(
   const allPools = JSON.parse(allPoolsUnsanitizedJsonStr);
   switch (protocol) {
     case ButterProtocol.HIVESWAP:
-      return allPools.hiveswap;  
+      return allPools.hiveswap;
     default:
       throw new Error(`protocol ${protocol} not supported yet on map`);
   }

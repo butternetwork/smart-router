@@ -13,8 +13,8 @@ import {
 } from '../../interfaces/IPoolProvider';
 import { IMulticallProvider, Result } from '../../multicall-provider';
 import { ProviderConfig } from '../../provider';
-import { getCreate2Address } from '@ethersproject/address'
-import { pack, keccak256 } from '@ethersproject/solidity'
+import { getCreate2Address } from '@ethersproject/address';
+import { pack, keccak256 } from '@ethersproject/solidity';
 import { INIT_CODE_HASH } from '../../../util/constants';
 
 export type V2PoolRetryOptions = AsyncRetry.Options;
@@ -152,7 +152,11 @@ export class V2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    const poolAddress = computePairAddress({factoryAddress:MAP_FACTORY_ADDRESS,tokenA:token0, tokenB:token1})//Pair.getAddress(token0, token1);
+    const poolAddress = computePairAddress({
+      factoryAddress: MAP_FACTORY_ADDRESS,
+      tokenA: token0,
+      tokenB: token1,
+    }); //Pair.getAddress(token0, token1);
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 
@@ -185,16 +189,21 @@ export class V2PoolProvider implements IV2PoolProvider {
 export const computePairAddress = ({
   factoryAddress,
   tokenA,
-  tokenB
+  tokenB,
 }: {
-  factoryAddress: string
-  tokenA: Token
-  tokenB: Token
+  factoryAddress: string;
+  tokenA: Token;
+  tokenB: Token;
 }): string => {
-  const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA] // does safety checks
+  const [token0, token1] = tokenA.sortsBefore(tokenB)
+    ? [tokenA, tokenB]
+    : [tokenB, tokenA]; // does safety checks
   return getCreate2Address(
     factoryAddress,
-    keccak256(['bytes'], [pack(['address', 'address'], [token0.address, token1.address])]),
+    keccak256(
+      ['bytes'],
+      [pack(['address', 'address'], [token0.address, token1.address])]
+    ),
     INIT_CODE_HASH
-  )
-}
+  );
+};

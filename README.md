@@ -1,29 +1,35 @@
 # Butter Smart Router
+
 finding the best cross-chain swap route.
 
 # Butter Smart Auto Router Usage
+
 ## Function Call
+
 ```
 getBestRoute(
 	chainId: number,					// chainId. e.g. Polygon: 137
 	provider: providers.BaseProvider,	// provider
 	protocols: ButterProtocol[],		// protocol included
 	swapAmountHumanReadable: string,	// swap amount
-	tokenInAddress: string,				// tokenInAddress: 
+	tokenInAddress: string,				// tokenInAddress:
 	tokenInDecimal: number,				// tokenInDecimal
-	tokenOutAddress: string,			// tokenOutAddress: 
+	tokenOutAddress: string,			// tokenOutAddress:
 	tokenOutDecimal: number,			// tokenOutDecimal
 	tradeType: VTradeType,				// EXACT_IN or EXACT_OUT
 	tokenInSymbol?: string,				// optional
-	tokenInName?: string,				// optional			
+	tokenInName?: string,				// optional
 	tokenOutSymbol?: string,			// optional
 	tokenOutName?: string				// optional
 ): Promise<SwapRoute | null>
 ```
 
 ## Parameters
+
 ### protocols: ButterProtocol[]
+
 Array of protocol need to considered in swap， see ([here](https://github.com/ButterTeam/Butter-smart-router/blob/master/src/util/protocol.ts))
+
 ```
 export  enum  ButterProtocol {
 	UNI_V2 = 'V2',
@@ -34,6 +40,7 @@ export  enum  ButterProtocol {
 ```
 
 ### tradeType: VTradeType
+
 ```
 export  enum  TradeType {
 	EXACT_INPUT = 0,	// regular direction，tokenIn -> tokenOut
@@ -42,18 +49,24 @@ export  enum  TradeType {
 ```
 
 ## return parameter
+
 ### SwapRoutes see([definition](https://github.com/butternetwork/butter-smart-router/blob/master/src/routers/router.ts#L25))
 
 ## Example
+
 ### swap 8000000 usdt to usdc on polygon
+
 code: [test-script.ts](https://github.com/butternetwork/butter-smart-router/blob/master/src/test-scripts/auto-router.ts) <br>
-run script: 
+run script:
+
 ```
 npm install
 npm run build
 ts-node --files src/test-scripts/auto-router.ts
-``` 
+```
+
 output example:
+
 ```
 UNISWAP-V3 2800000 = USDT -- 0.05% [0x3F5228d0e7D75467366be7De2c31D0d098bA2C23] --> USDC = 2797757.642167)}
 QUICKSWAP 2000000 = USDT -- [0x1659B07B0b4A297e13C01284B36D4494c1A22275] --> WETH -- [0x9806b4FA9821031369AE074d991835F5865d0983] --> USDC = 1611261)}

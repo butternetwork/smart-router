@@ -1,11 +1,22 @@
-import { estimateSwap, EstimateSwapView, fetchAllPools, ftGetTokenMetadata, getExpectedOutputFromSwapTodos, getStablePools, init_env, Pool as RefPool, StablePool, SwapOptions as RefSwapOptions } from "@ref-finance/ref-sdk";
+import {
+  estimateSwap,
+  EstimateSwapView,
+  fetchAllPools,
+  ftGetTokenMetadata,
+  getExpectedOutputFromSwapTodos,
+  getStablePools,
+  init_env,
+  Pool as RefPool,
+  StablePool,
+  SwapOptions as RefSwapOptions,
+} from '@ref-finance/ref-sdk';
 import { ChainId as QChainId } from '@davidwgrossman/quickswap-sdk';
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
 import { TokenList } from '@uniswap/token-lists';
 import { Pair } from '@uniswap/v2-sdk';
-import { curve } from "@curvefi/api/lib/curve"
-import { IRoute } from "@curvefi/api/lib/interfaces";
+import { curve } from '@curvefi/api/lib/curve';
+import { IRoute } from '@curvefi/api/lib/interfaces';
 import {
   MethodParameters,
   Pool,
@@ -148,9 +159,15 @@ import {
 import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
 import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
-import { _getBestRouteAndOutput, _getUsdRate } from './functions/get-curve-best-router';
-import axios from "axios";
-import { MAP_MULTICALL_ADDRESS, UNISWAP_MULTICALL_ADDRESS } from "../../util/addresses";
+import {
+  _getBestRouteAndOutput,
+  _getUsdRate,
+} from './functions/get-curve-best-router';
+import axios from 'axios';
+import {
+  MAP_MULTICALL_ADDRESS,
+  UNISWAP_MULTICALL_ADDRESS,
+} from '../../util/addresses';
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -348,8 +365,8 @@ export type AlphaRouterConfig = {
 
 export class AlphaRouter
   implements
-  IRouter<AlphaRouterConfig>,
-  ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
+    IRouter<AlphaRouterConfig>,
+    ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
 {
   protected chainId: ChainId;
   protected provider: providers.BaseProvider;
@@ -400,14 +417,24 @@ export class AlphaRouter
   }: AlphaRouterParams) {
     this.chainId = chainId;
     this.provider = provider;
-    if(chainId == ChainId.MAP){
+    if (chainId == ChainId.MAP) {
       this.multicall2Provider =
-      multicall2Provider ??
-      new UniswapMulticallProvider(chainId, provider, 375_000, MAP_MULTICALL_ADDRESS);
-    }else{
+        multicall2Provider ??
+        new UniswapMulticallProvider(
+          chainId,
+          provider,
+          375_000,
+          MAP_MULTICALL_ADDRESS
+        );
+    } else {
       this.multicall2Provider =
-      multicall2Provider ??
-      new UniswapMulticallProvider(chainId, provider, 375_000, UNISWAP_MULTICALL_ADDRESS);
+        multicall2Provider ??
+        new UniswapMulticallProvider(
+          chainId,
+          provider,
+          375_000,
+          UNISWAP_MULTICALL_ADDRESS
+        );
     }
     this.v3PoolProvider =
       v3PoolProvider ??
@@ -549,10 +576,10 @@ export class AlphaRouter
         chainId,
         this.provider instanceof providers.JsonRpcProvider
           ? new OnChainGasPriceProvider(
-            chainId,
-            new EIP1559GasPriceProvider(this.provider),
-            new LegacyGasPriceProvider(this.provider)
-          )
+              chainId,
+              new EIP1559GasPriceProvider(this.provider),
+              new LegacyGasPriceProvider(this.provider)
+            )
           : new ETHGasStationInfoProvider(ETH_GAS_STATION_API_URL),
         new NodeJSCache<GasPrice>(
           new NodeCache({ stdTTL: 15, useClones: false })
@@ -972,8 +999,7 @@ export class AlphaRouter
       );
     }
     if (protocolsSet.has(ButterProtocol.HIVESWAP)) {
-      let PoolsUnsanitized: RawETHV2SubgraphPool[] =
-      getMapPoolsFromOneProtocol(
+      let PoolsUnsanitized: RawETHV2SubgraphPool[] = getMapPoolsFromOneProtocol(
         allPoolsUnsanitizedJsonStr,
         ButterProtocol.HIVESWAP
       );
@@ -1004,7 +1030,7 @@ export class AlphaRouter
           percents,
           quoteToken,
           gasPriceWei,
-          tradeType,
+          tradeType
         )
       );
     }
@@ -1023,7 +1049,9 @@ export class AlphaRouter
       allCandidatePools = [...allCandidatePools, candidatePools];
     }
 
-    const routesWithValidQuotesByCurveProtocol = await Promise.all(quoteCurvePromises);
+    const routesWithValidQuotesByCurveProtocol = await Promise.all(
+      quoteCurvePromises
+    );
     for (const {
       routesWithValidQuotes,
     } of routesWithValidQuotesByCurveProtocol) {
@@ -1045,7 +1073,7 @@ export class AlphaRouter
       allRoutesWithValidQuotes,
       tradeType,
       this.chainId,
-      routingConfig,
+      routingConfig
     );
 
     if (!swapRouteRaw) {
@@ -1135,7 +1163,8 @@ export class AlphaRouter
 
       if (token0Invalid || token1Invalid) {
         log.info(
-          `Dropping pool ${poolToString(pool)} because token is invalid. ${pool.token0.symbol
+          `Dropping pool ${poolToString(pool)} because token is invalid. ${
+            pool.token0.symbol
           }: ${token0Validation}, ${pool.token1.symbol}: ${token1Validation}`
         );
       }
@@ -1153,7 +1182,7 @@ export class AlphaRouter
     percents: number[],
     quoteToken: Token,
     gasPriceWei: BigNumber,
-    swapType: TradeType,
+    swapType: TradeType
   ): Promise<{
     routesWithValidQuotes: CurveRouteWithValidQuote[];
   }> {
@@ -1169,22 +1198,30 @@ export class AlphaRouter
 
     let quotePromises: Promise<IRoute>[] = [];
 
-    let quotes: IRoute[] = []
+    let quotes: IRoute[] = [];
 
-    const routesWithValidQuotes = []
+    const routesWithValidQuotes = [];
 
     for (let i = 0; i < amounts.length; i++) {
       const amount = amounts[i]!;
-      quotePromises.push(_getBestRouteAndOutput(tokenIn.address, tokenIn.decimals, tokenOut.address, tokenOut.decimals, amount.toFixed(2)))
+      quotePromises.push(
+        _getBestRouteAndOutput(
+          tokenIn.address,
+          tokenIn.decimals,
+          tokenOut.address,
+          tokenOut.decimals,
+          amount.toFixed(2)
+        )
+      );
       if ((i + 1) % 5 == 0 || i == amounts.length - 1) {
         const result = await Promise.all(quotePromises);
         for (let j = 0; j < result.length; j++) {
           if (result[j]) {
-            quotes.push(result[j]!)
+            quotes.push(result[j]!);
           }
         }
-        console.log("Analysis curve routes:", percents[i], "%")
-        quotePromises = []
+        console.log('Analysis curve routes:', percents[i], '%');
+        quotePromises = [];
       }
     }
 
@@ -1192,19 +1229,26 @@ export class AlphaRouter
       return { routesWithValidQuotes: [] };
     }
 
-    let tokenOutPrice
-    let ethPrice
+    let tokenOutPrice;
+    let ethPrice;
     try {
-      tokenOutPrice = await _getUsdRate(tokenOut.address)
-      ethPrice = await _getUsdRate("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+      tokenOutPrice = await _getUsdRate(tokenOut.address);
+      ethPrice = await _getUsdRate(
+        '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+      );
     } catch {
-      throw ("fail to get token price")
+      throw 'fail to get token price';
     }
 
     for (let i = 0; i < amounts.length; i++) {
       const percent = percents[i]!;
       const amount = amounts[i]!;
-      const curveRoute = new CurveRoute(quotes[i]!.steps, quotes[i]!._output, quotes[i]!.outputUsd, quotes[i]!.txCostUsd)
+      const curveRoute = new CurveRoute(
+        quotes[i]!.steps,
+        quotes[i]!._output,
+        quotes[i]!.outputUsd,
+        quotes[i]!.txCostUsd
+      );
       const routeWithValidQuote = new CurveRouteWithValidQuote({
         chainId: this.chainId,
         amount: amount,
@@ -1730,11 +1774,11 @@ export class AlphaRouter
     const quoteFn =
       swapType == TradeType.EXACT_INPUT
         ? this.quickV2QuoteProvider.getQuotesManyExactIn.bind(
-          this.quickV2QuoteProvider
-        )
+            this.quickV2QuoteProvider
+          )
         : this.quickV2QuoteProvider.getQuotesManyExactOut.bind(
-          this.quickV2QuoteProvider
-        );
+            this.quickV2QuoteProvider
+          );
 
     const beforeQuotes = Date.now();
     log.info(
@@ -1879,11 +1923,11 @@ export class AlphaRouter
     const quoteFn =
       swapType == TradeType.EXACT_INPUT
         ? this.sushiV2QuoteProvider.getQuotesManyExactIn.bind(
-          this.sushiV2QuoteProvider
-        )
+            this.sushiV2QuoteProvider
+          )
         : this.sushiV2QuoteProvider.getQuotesManyExactOut.bind(
-          this.sushiV2QuoteProvider
-        );
+            this.sushiV2QuoteProvider
+          );
 
     const beforeQuotes = Date.now();
     log.info(

@@ -1,4 +1,3 @@
-
 import _ from 'lodash';
 import { IERC20Metadata__factory } from '../../../types/v3';
 import { ChainId, log } from '../../../util';
@@ -32,8 +31,6 @@ export type TokenAccessor = {
   getAllTokens: () => Token[];
 };
 
-
-
 //NEAR tokens
 export const USDT_NEAR = new Token(
   ChainId.NEAR,
@@ -66,7 +63,6 @@ export const USDT_BNB = new Token(
   18,
   'USDT.e',
   'USDT.e'
-
 );
 
 export const USDC_BNB = new Token(

@@ -444,7 +444,6 @@ export const USDT_NEAR = new Token(
   6,
   'USDT.e',
   'dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near'
-
 );
 
 export const USDC_NEAR = new Token(
@@ -467,7 +466,7 @@ export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
     protected multicall2Provider: IMulticallProvider
-  ) { }
+  ) {}
 
   public async getTokens(
     _addresses: string[],
@@ -535,8 +534,10 @@ export class TokenProvider implements ITokenProvider {
       }
 
       log.info(
-        `Got token symbol and decimals for ${Object.values(addressToToken).length
-        } out of ${addresses.length} tokens on-chain ${providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
+        `Got token symbol and decimals for ${
+          Object.values(addressToToken).length
+        } out of ${addresses.length} tokens on-chain ${
+          providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
         }`
       );
     }
@@ -557,33 +558,33 @@ export class TokenProvider implements ITokenProvider {
 
 export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 
-export const GET_TOKEN_ICON = (address: string):string=> {
+export const GET_TOKEN_ICON = (address: string): string => {
   switch (address) {
-    case WBNB_BNB.address: 
-      return "https://files.mapprotocol.io/bridge/bnb.png" 
+    case WBNB_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/bnb.png';
     case WNEAR_NEAR.name:
-      return "https://cryptologos.cc/logos/near-protocol-near-logo.png"
-    case USDC_POLYGON.address: 
-      return "https://files.mapprotocol.io/bridge/usdc.png"
-    case USDC_MAP.address: 
-      return "https://files.mapprotocol.io/bridge/usdc.png"
+      return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
+    case USDC_POLYGON.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_MAP.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
     case USDC_BNB.address:
-      return "https://files.mapprotocol.io/bridge/usdc.png"  
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
     case USDC_NEAR.name:
-      return "https://files.mapprotocol.io/bridge/usdc.png"
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
     case WMATIC_POLYGON.address:
-      return "https://files.mapprotocol.io/bridge/polygon.png"
+      return 'https://files.mapprotocol.io/bridge/polygon.png';
     case WMAP_MAP.address:
-      return "https://files.maplabs.io/bridge/map.png"
+      return 'https://files.maplabs.io/bridge/map.png';
     case BUSD_BNB.address:
-      return 'https://files.mapprotocol.io/bridge/busd.png'
+      return 'https://files.mapprotocol.io/bridge/busd.png';
     case USDT_BNB.address:
-      return 'https://files.mapprotocol.io/bridge/usdt.png'
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
     case USDT_NEAR.name:
-      return 'https://files.mapprotocol.io/bridge/usdt.png'
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
     case USDT_MATIC.address:
-      return 'https://files.mapprotocol.io/bridge/usdt.png'
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
     default:
-      return ''
+      return '';
   }
-}
+};

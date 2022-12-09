@@ -33,28 +33,28 @@ export async function getBestRoute(
         chainId: chainId,
         provider: provider,
       });
-      break
+      break;
     case ChainId.BSC:
       router = new BSCAlphaRouter({
         chainId: chainId,
         provider: provider,
-      })
-      break
+      });
+      break;
     case ChainId.MAP:
       router = new MapAlphaRouter({
         chainId: chainId,
         provider: provider,
       });
-      break
+      break;
     case ChainId.NEAR:
-      router = new NearRouter(chainId)
-      break
+      router = new NearRouter(chainId);
+      break;
     default:
       router = new AlphaRouter({
         chainId: chainId,
         provider: provider,
       });
-      break
+      break;
   }
 
   const tokenIn = new Token(

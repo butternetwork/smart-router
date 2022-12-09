@@ -5,7 +5,13 @@ import TokenRegisterMetadata from '../abis/TokenRegister.json';
 import { Eth } from 'web3-eth';
 import { Contract } from 'web3-eth-contract';
 import { ChainId } from './chains';
-import { USDC_MAP, USDC_BNB, USDC_MAINNET, USDC_POLYGON, USDC_NEAR } from '../providers/token-provider';
+import {
+  USDC_MAP,
+  USDC_BNB,
+  USDC_MAINNET,
+  USDC_POLYGON,
+  USDC_NEAR,
+} from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 
 interface ButterFee {
@@ -21,7 +27,7 @@ interface VaultBalance {
 type ButterProviderType = Signer | Provider | Eth;
 type ButterContractType = ethers.Contract | Contract;
 
-const TOKEN_REGISTER_ADDRESS = '0xc81Fe3f111d44b5469B9179D3b40B99A2527cF7A'
+const TOKEN_REGISTER_ADDRESS = '0xc81Fe3f111d44b5469B9179D3b40B99A2527cF7A';
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export async function getBridgeFee(
@@ -30,10 +36,7 @@ export async function getBridgeFee(
   amount: string,
   rpcProvider: ethers.providers.JsonRpcProvider
 ): Promise<ButterFee> {
-  const tokenRegister = new TokenRegister(
-    TOKEN_REGISTER_ADDRESS,
-    rpcProvider
-  );
+  const tokenRegister = new TokenRegister(TOKEN_REGISTER_ADDRESS, rpcProvider);
   let feeAmount = '';
   if (IS_MAP(srcToken.chainId)) {
     const tokenAddress = srcToken.isNative
@@ -76,11 +79,7 @@ export async function getVaultBalance(
   toChainId: number,
   rpcProvider: ethers.providers.JsonRpcProvider
 ): Promise<VaultBalance> {
-
-  const tokenRegister = new TokenRegister(
-    TOKEN_REGISTER_ADDRESS,
-    rpcProvider
-  );
+  const tokenRegister = new TokenRegister(TOKEN_REGISTER_ADDRESS, rpcProvider);
 
   if (fromToken.isNative) {
     fromToken = fromToken.wrapped;
@@ -110,7 +109,10 @@ export async function getVaultBalance(
     }
   }
   return Promise.resolve({
-    token: getTokenByAddressAndChainId(toChainTokenAddress, toChainId.toString()),
+    token: getTokenByAddressAndChainId(
+      toChainTokenAddress,
+      toChainId.toString()
+    ),
     balance: tokenBalance.toString(),
   });
 }
@@ -120,7 +122,7 @@ export async function getTokenCandidates(
   toChainId: string,
   provider: ethers.providers.JsonRpcProvider
 ): Promise<Token[]> {
-  return Promise.resolve([USDC_MAP])
+  return Promise.resolve([USDC_MAP]);
 }
 
 export async function getTargetToken(
@@ -137,29 +139,29 @@ export async function getTargetToken(
   //   throw new Error('token does not exist');
   // }
   // return getTokenByAddressAndChainId(tokenAddress, targetChainId);
-  return USDC_MAP
+  return USDC_MAP;
 }
 
 export function toTargetToken(chainId: number, token: Token) {
-  let targetToken: Token
+  let targetToken: Token;
   switch (chainId) {
     case ChainId.MAINNET:
-      targetToken = USDC_MAINNET
-      break
+      targetToken = USDC_MAINNET;
+      break;
     case ChainId.BSC:
-      targetToken = USDC_BNB
-      break
+      targetToken = USDC_BNB;
+      break;
     case ChainId.POLYGON:
-      targetToken = USDC_POLYGON
-      break
+      targetToken = USDC_POLYGON;
+      break;
     case ChainId.NEAR:
-      targetToken = USDC_NEAR
-      break
+      targetToken = USDC_NEAR;
+      break;
     default:
-      throw ('There is no such token in the chain')
+      throw 'There is no such token in the chain';
   }
 
-  return targetToken
+  return targetToken;
 }
 
 const IS_MAP = (id: number): boolean => {
@@ -248,7 +250,7 @@ class TokenRegister {
 
   async getRelayChainToken(
     fromChain: string,
-    fromToken: Token,
+    fromToken: Token
   ): Promise<string> {
     // if (fromToken.isNative) {
     //   fromToken = fromToken.wrapped;
@@ -391,13 +393,13 @@ function getTokenByAddressAndChainId(
 
 //Waiting for data to be injected
 const ID_TO_ALL_TOKEN = (id: string): Token[] => {
-  //test token 
+  //test token
   const MAP_TEST_MOST = new Token(
     212,
     '0xc74bc33a95a62D90672aEFAf4bA784285903cf09',
     18,
     'MOST',
-    'MOST Token',
+    'MOST Token'
   );
 
   const BSC_TEST_MOST = new Token(
@@ -410,13 +412,13 @@ const ID_TO_ALL_TOKEN = (id: string): Token[] => {
 
   switch (id) {
     case '212':
-      return [ MAP_TEST_MOST ];
+      return [MAP_TEST_MOST];
     case '34434':
       return [];
     case '5566818579631833089':
       return [];
     case '97':
-      return [ BSC_TEST_MOST ];
+      return [BSC_TEST_MOST];
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
