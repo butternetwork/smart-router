@@ -166,6 +166,7 @@ import {
 import axios from 'axios';
 import {
   MAP_MULTICALL_ADDRESS,
+  MATIC_TEST_MULTICALL_ADDRESS,
   UNISWAP_MULTICALL_ADDRESS,
 } from '../../util/addresses';
 export type AlphaRouterParams = {
@@ -533,11 +534,19 @@ export class AlphaRouter
     }
     this.v2PoolProvider =
       v2PoolProvider ?? new V2PoolProvider(chainId, this.multicall2Provider);
-    this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
+    
+      this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
 
-    this.quickV2PoolProvider =
+    if(chainId == ChainId.POLYGON_MUMBAI){
+      this.quickV2PoolProvider =
+      quickV2PoolProvider ??
+      new QuickV2PoolProvider(QChainId.MUMBAI, this.multicall2Provider);
+    } else{
+      this.quickV2PoolProvider =
       quickV2PoolProvider ??
       new QuickV2PoolProvider(QChainId.MATIC, this.multicall2Provider);
+    }
+
     this.quickV2QuoteProvider =
       quickV2QuoteProvider ?? new QuickV2QuoteProvider();
 

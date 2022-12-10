@@ -12,6 +12,7 @@ import {
   USDC_POLYGON,
   USDC_NEAR,
   BUSD_BSCT,
+  PUSD_POLYGON_MUMBAI,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 
@@ -157,6 +158,9 @@ export function toTargetToken(chainId: number, token: Token) {
       break;  
     case ChainId.POLYGON:
       targetToken = USDC_POLYGON;
+      break;
+    case ChainId.POLYGON_MUMBAI:
+      targetToken = PUSD_POLYGON_MUMBAI;
       break;
     case ChainId.NEAR:
       targetToken = USDC_NEAR;

@@ -7,6 +7,7 @@ import {
   ETH_MAINNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
+  POLYGON_MUMBAI_URL,
 } from './urls';
 export enum ChainId {
   MAINNET = 1,
@@ -24,6 +25,7 @@ export enum ChainId {
   BSC_TEST = 97,
   NEAR = 1313161554,
   MAP = 22776,
+  //MAP_TEST = 212
 }
 
 export const V2_SUPPORTED = [
@@ -373,6 +375,10 @@ export function getChainProvider(chainId: number) {
         ButterProtocol.SUSHISWAP,
       ];
       break;
+    case ChainId.POLYGON_MUMBAI:
+      provider = new ethers.providers.JsonRpcProvider(POLYGON_MUMBAI_URL, chainId);
+      protocols = [ButterProtocol.QUICKSWAP];
+      break;
     case ChainId.MAP:
       provider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, chainId);
       protocols = [ButterProtocol.HIVESWAP];
@@ -393,6 +399,7 @@ export function IS_SUPPORT_CHAIN(id: string) {
     case '56':
     case '97':
     case '22776':
+    case '80001':
     case '5566818579631833088':
       break;
     default:

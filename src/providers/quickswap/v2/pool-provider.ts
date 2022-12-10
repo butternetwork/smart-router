@@ -79,7 +79,7 @@ export class QuickV2PoolProvider implements IV2PoolProvider {
     );
 
     const reservesResults = await this.getPoolsData<IReserves>(
-      sortedPoolAddresses,
+      ["0xcD8AB4d65960031694ad94ffd8718Aa7c26aFa6f"],
       'getReserves',
       providerConfig
     );

@@ -11,3 +11,5 @@ export const POLYGON_MAINNET_URL =
   'https://polygon-mainnet.infura.io/v3/26b081ad80d646ad97c4a7bdb436a372';
 
 export const BSC_TESTNET_URL = 'https://data-seed-prebsc-1-s1.binance.org:8545'
+
+export const POLYGON_MUMBAI_URL = 'https://rpc-mumbai.maticvigil.com/';

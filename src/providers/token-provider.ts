@@ -379,6 +379,23 @@ export const WETH_POLYGON_MUMBAI = new Token(
   'Wrapped Ether'
 );
 
+export const PMOS_POLYGON_MUMBAI = new Token(
+  ChainId.POLYGON_MUMBAI,
+  '0xe1D8eAB4e616156E11e1c59D1a0E0EFeD66f4cfa',
+  18,
+  'PMOS',
+  'PolygonMos'
+);
+
+export const PUSD_POLYGON_MUMBAI = new Token(
+  ChainId.POLYGON_MUMBAI,
+  '0x1E01CF4503808Fb30F17806035A87cf5A5217727',
+  18,
+  'PUSD',
+  'PolygonUSD'
+);
+
+
 //MAP tokens
 export const ETH_MAP = new Token(
   ChainId.MAP,
@@ -402,6 +419,14 @@ export const USDC_MAP = new Token(
   18,
   'Mapped USD Coin',
   'USDC'
+);
+
+export const mUSDC_MAP = new Token(
+  212,
+  '0x5F91a91DBa041073858E1e2236605C4Db2F5488C',
+  18,
+  'mUSDC',
+  'map usdc'
 );
 
 //BSC tokens
@@ -475,8 +500,8 @@ export const BUSD_BSCT = new Token(
   ChainId.BSC_TEST,
   '0x3F1E91BFC874625f4ee6EF6D8668E79291882373',
   18,
-  'USDC',//BUSD
-  'USDC'//BUSD
+  'BUSD',//BUSD
+  'BUSD'//BUSD
 );
 
 export const WBNB_BSCT = new Token(

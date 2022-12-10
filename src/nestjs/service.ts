@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
+  mUSDC_MAP,
   USDC_MAP,
   WMAP_MAP,
 } from '../providers/token-provider';
@@ -157,7 +158,7 @@ export class RouterService {
       ChainBId,
       RouterType.TARGET_CHAIN
     );
-    const mapRouter: swapData[] = directSwap(USDC_MAP,srcAmountOut.toString())
+    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString())
 
     return {
       srcChain: srcRouter,

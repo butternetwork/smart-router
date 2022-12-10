@@ -46,6 +46,18 @@ export async function getBestRoute(
           provider: provider,
         });
         break;
+    case ChainId.POLYGON:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
+    case ChainId.POLYGON_MUMBAI:
+        router = new AlphaRouter({
+          chainId: chainId,
+          provider: provider,
+        });
+        break;
     case ChainId.MAP:
       router = new MapAlphaRouter({
         chainId: chainId,
