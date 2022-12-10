@@ -192,6 +192,7 @@ export class NearRouter
     if (protocolsSet.has(ButterProtocol.REF)) {
       quoteRefPromises.push(
         this.getRefQuotes(
+          this.chainId,
           tokenIn,
           tokenOut,
           amounts,
@@ -259,6 +260,7 @@ export class NearRouter
   }
 
   private async getRefQuotes(
+    chainId: number,
     token0: Token,
     token1: Token,
     amounts: CurrencyAmount[],
@@ -269,13 +271,22 @@ export class NearRouter
   ): Promise<{
     routesWithValidQuotes: RefRouteWithValidQuote[];
   }> {
-    init_env('mainnet');
+
+    if(chainId == 1313161554){
+
+      init_env('mainnet');
+    }else if(chainId == 1313161555){
+
+      init_env('testnet');
+    }else{
+      throw new Error("the chainId isn't supported on near")
+    }
 
     let token0Name: string;
     let token1Name: string;
     if (token0.name && token1.name) {
-      token0Name = token0.name;
-      token1Name = token1.name;
+      token0Name = "usdc.ashbarty.testnet";
+      token1Name = "usdt.ashbarty.testnet";
     } else {
       throw 'ref-router Quotes error: token id is null';
     }

@@ -36,12 +36,13 @@ async function main() {
   const amount = '9957';
 
   // await findBestRouter(ChainId.BSC,WBNB_BNB,USDC_BNB,amount);
-   await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
+   await findBestRouter(1313161555,USDC_NEAR,WNEAR_NEAR,amount)
   // await findBestRouter(ChainId.MAP,WMAP_MAP,USDC_MAP,amount)
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
-   await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
 }
 
 async function findBestRouter(
@@ -94,6 +95,9 @@ async function findBestRouter(
     case ChainId.NEAR: //near
       protocols = [ButterProtocol.REF];
       break;
+    case 1313161555: //near
+      protocols = [ButterProtocol.REF];
+      break;  
     default:
       protocols = [
         ButterProtocol.UNI_V2,
