@@ -67,7 +67,7 @@ export async function getBestRoute(
     case ChainId.NEAR:
       router = new NearRouter(chainId);
       break;
-    case 1313161555:
+    case ChainId.NEAR_TEST:
       router = new NearRouter(chainId);
       break;
     default:

@@ -38,7 +38,7 @@ async function main() {
   // await findBestRouter(ChainId.BSC,WBNB_BNB,USDC_BNB,amount);
   // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
-   await findBestRouter(1313161555,USDC_NEAR,WNEAR_NEAR,amount)
+   await findBestRouter(ChainId.NEAR_TEST,USDC_NEAR,WNEAR_NEAR,amount)
   // await findBestRouter(ChainId.MAP,WMAP_MAP,USDC_MAP,amount)
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
@@ -95,7 +95,7 @@ async function findBestRouter(
     case ChainId.NEAR: //near
       protocols = [ButterProtocol.REF];
       break;
-    case 1313161555: //near
+    case ChainId.NEAR_TEST: //near
       protocols = [ButterProtocol.REF];
       break;  
     default:
@@ -128,7 +128,7 @@ async function findBestRouter(
     return [0, 0, []];
   }
 
-  if (chainId == ChainId.NEAR) {
+  if (chainId == ChainId.NEAR || chainId == ChainId.NEAR_TEST) {
     for (let route of swapRoute.route) {
       total += Number(route.output.toExact());
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());

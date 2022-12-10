@@ -1,4 +1,5 @@
 import { Token } from '@uniswap/sdk-core';
+import { WRAP_NEART } from '../../providers/quickswap/util/token-provider';
 import {
   DAI_MAINNET,
   ITokenProvider,
@@ -46,6 +47,7 @@ export const BASES_TO_CHECK_TRADES_AGAINST = (
     [ChainId.BSC_TEST]: [WBNB_BSCT],
     [ChainId.BSC]: [WBNB_BNB],
     [ChainId.NEAR]: [WNEAR_NEAR],
+    [ChainId.NEAR_TEST]: [WRAP_NEART],
     [ChainId.MAP]: [WMAP_MAP],
   };
 };

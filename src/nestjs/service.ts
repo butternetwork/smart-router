@@ -114,12 +114,30 @@ export class RouterService {
         tokenInSymbol,
         tokenInAddr
       );
-    } else {
+    } else if (fromChainId == '5566818579631833089') {
+      ChainAId = ChainId.NEAR_TEST;
+      tokenIn = new Token(
+        ChainAId,
+        ZERO_ADDRESS,
+        tokenADecimals,
+        tokenInSymbol,
+        tokenInAddr
+      ) 
+    }else {
       ChainAId = Number(fromChainId);
       tokenIn = new Token(ChainAId, tokenInAddr, tokenADecimals, tokenInSymbol);
     }
     if (toChainId == '5566818579631833088') {
       ChainBId = ChainId.NEAR;
+      tokenOut = new Token(
+        ChainBId,
+        NULL_ADDRESS,
+        tokenBDecimals,
+        tokenOutSymbol,
+        tokenOutAddr
+      );
+    } else if (toChainId == '5566818579631833089') {
+      ChainBId = ChainId.NEAR_TEST;
       tokenOut = new Token(
         ChainBId,
         NULL_ADDRESS,
@@ -260,10 +278,10 @@ async function chainRouter(
 
   let icon_key1 = bestPair.pair[0].address;
   let icon_key2 = bestPair.pair[1].address;
-  if (bestPair.pair[0].chainId == ChainId.NEAR) {
+  if (bestPair.pair[0].chainId == ChainId.NEAR || bestPair.pair[0].chainId == ChainId.NEAR_TEST) {
     icon_key1 = bestPair.pair[0].name!;
   }
-  if (bestPair.pair[1].chainId == ChainId.NEAR) {
+  if (bestPair.pair[1].chainId == ChainId.NEAR || bestPair.pair[1].chainId == ChainId.NEAR_TEST) {
     icon_key2 = bestPair.pair[1].name!;
   }
 
@@ -296,7 +314,7 @@ function formatData(
   let swapPath: swapData[] = [];
 
   for (let i = 0; i < bestRouter.length; i++) {
-    if (chainId == ChainId.NEAR) {
+    if (chainId == ChainId.NEAR ||chainId == ChainId.NEAR_TEST ) {
       const refRouter = bestRouter[i]!;
       if (refRouter instanceof RefRouteWithValidQuote) {
         for (let r of refRouter.swapData!) {
@@ -316,9 +334,13 @@ function formatData(
             },
           });
         }
-
+        
+        let _chainId = '5566818579631833088'
+        if(chainId == ChainId.NEAR_TEST){
+          _chainId = '5566818579631833089'
+        }
         swapPath.push({
-          chainId: chainId.toString(),
+          chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
           amountOut: refRouter.output.toExact(),
           path: pairs,

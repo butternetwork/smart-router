@@ -24,6 +24,7 @@ export enum ChainId {
   BSC = 56,
   BSC_TEST = 97,
   NEAR = 1313161554,
+  NEAR_TEST = 1313161555,
   MAP = 22776,
   //MAP_TEST = 212
 }
@@ -281,6 +282,13 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     'Wrapped NEAR fungible token',
     'wNEAR'
   ),
+  [ChainId.NEAR_TEST]: new Token(
+    ChainId.NEAR_TEST,
+    '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+    24,
+    'Wrapped NEAR fungible token',
+    'wNEAR'
+  ),
   [ChainId.MAP]: new Token(
     22776,
     '0x05ab928d446d8ce6761e368c8e7be03c3168a9ec',
@@ -386,6 +394,9 @@ export function getChainProvider(chainId: number) {
     case ChainId.NEAR:
       protocols = [ButterProtocol.REF];
       break;
+    case ChainId.NEAR_TEST:
+      protocols = [ButterProtocol.REF];
+      break;
     default:
       throw new Error('the chain is not supported for now');
   }
@@ -401,6 +412,7 @@ export function IS_SUPPORT_CHAIN(id: string) {
     case '22776':
     case '80001':
     case '5566818579631833088':
+    case '5566818579631833089':
       break;
     default:
       throw new Error(`Unsupported chain id: ${id}`);

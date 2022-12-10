@@ -272,12 +272,10 @@ export class NearRouter
     routesWithValidQuotes: RefRouteWithValidQuote[];
   }> {
 
-    if(chainId == 1313161554){
-
+    if(chainId == ChainId.NEAR){
       init_env('mainnet');
-    }else if(chainId == 1313161555){
-
-      init_env('testnet');
+    }else if(chainId == ChainId.NEAR_TEST){
+      init_env('testnet');//ChainId.NEAR_TEST
     }else{
       throw new Error("the chainId isn't supported on near")
     }
@@ -285,8 +283,8 @@ export class NearRouter
     let token0Name: string;
     let token1Name: string;
     if (token0.name && token1.name) {
-      token0Name = "usdc.ashbarty.testnet";
-      token1Name = "usdt.ashbarty.testnet";
+      token0Name = token0.name;
+      token1Name = token1.name;
     } else {
       throw 'ref-router Quotes error: token id is null';
     }

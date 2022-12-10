@@ -13,6 +13,7 @@ import {
   USDC_NEAR,
   BUSD_BSCT,
   PUSD_POLYGON_MUMBAI,
+  AURORA_NEART,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 
@@ -164,6 +165,9 @@ export function toTargetToken(chainId: number, token: Token) {
       break;
     case ChainId.NEAR:
       targetToken = USDC_NEAR;
+      break;
+    case ChainId.NEAR_TEST:
+      targetToken = AURORA_NEART;
       break;
     default:
       throw new Error('There is no such token in the chain');

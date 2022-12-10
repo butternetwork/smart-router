@@ -11,6 +11,7 @@ import {
   USDC_NEAR,
   USDT_NEAR,
   WMAP_MAP,
+  WRAP_NEART,
 } from '../../../providers/quickswap/util/token-provider';
 import {
   BMOS_BSCT,
@@ -79,6 +80,7 @@ export const usdGasTokensByChain: { [chainId in ChainId]: Token[] } = {
   [ChainId.BSC]: [BUSD_BNB, USDT_BNB, USDC_BNB],
   [ChainId.BSC_TEST]: [BUSD_BSCT,BMOS_BSCT],
   [ChainId.NEAR]: [USDT_NEAR, USDC_NEAR],
+  [ChainId.NEAR_TEST]: [WRAP_NEART],
   [ChainId.MAP]: [USDC_MAP],
 };
 

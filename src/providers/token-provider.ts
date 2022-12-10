@@ -487,7 +487,25 @@ export const WNEAR_NEAR = new Token(
   'wrap.near'
 );
 
-//
+//NEAR TESTNET
+
+export const WRAP_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'USDC',
+  'wrap.testnet'
+);
+
+export const AURORA_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'WNEAR',
+  'aurora.fakes.testnet'
+);
+
+//BSC TESTNET 
 export const BMOS_BSCT = new Token(
   ChainId.BSC_TEST,
   '0x593F6F6748dc203DFa636c299EeA6a39C0734EEd',
