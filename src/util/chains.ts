@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import { ButterProtocol } from './protocol';
 import {
   BSC_MAINNET_URL,
+  BSC_TESTNET_URL,
   ETH_MAINNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
@@ -357,6 +358,10 @@ export function getChainProvider(chainId: number) {
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
       protocols = [ButterProtocol.PANCAKESWAP];
       break;
+    case ChainId.BSC_TEST:
+      provider = new ethers.providers.JsonRpcProvider(BSC_TESTNET_URL, chainId);
+      protocols = [ButterProtocol.PANCAKESWAP];
+      break;
     case ChainId.POLYGON:
       provider = new ethers.providers.JsonRpcProvider(
         POLYGON_MAINNET_URL,
@@ -376,7 +381,7 @@ export function getChainProvider(chainId: number) {
       protocols = [ButterProtocol.REF];
       break;
     default:
-      throw 'the chain is not supported for now';
+      throw new Error('the chain is not supported for now');
   }
   return { provider, protocols };
 }

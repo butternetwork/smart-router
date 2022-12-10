@@ -11,6 +11,7 @@ import {
   USDC_MAINNET,
   USDC_POLYGON,
   USDC_NEAR,
+  BUSD_BSCT,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 
@@ -151,6 +152,9 @@ export function toTargetToken(chainId: number, token: Token) {
     case ChainId.BSC:
       targetToken = USDC_BNB;
       break;
+    case ChainId.BSC_TEST:
+      targetToken = BUSD_BSCT;
+      break;  
     case ChainId.POLYGON:
       targetToken = USDC_POLYGON;
       break;
@@ -158,7 +162,7 @@ export function toTargetToken(chainId: number, token: Token) {
       targetToken = USDC_NEAR;
       break;
     default:
-      throw 'There is no such token in the chain';
+      throw new Error('There is no such token in the chain');
   }
 
   return targetToken;

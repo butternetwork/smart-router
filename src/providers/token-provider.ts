@@ -475,8 +475,8 @@ export const BUSD_BSCT = new Token(
   ChainId.BSC_TEST,
   '0x3F1E91BFC874625f4ee6EF6D8668E79291882373',
   18,
-  'BUSD',
-  'BUSD'
+  'USDC',//BUSD
+  'USDC'//BUSD
 );
 
 export const WBNB_BSCT = new Token(
