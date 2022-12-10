@@ -252,8 +252,15 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
       pancakeUsdTokens,
       (usdToken) => [usdToken, WRAPPED_NATIVE_CURRENCY[chainId]!]
     );
+    // console.log("debug")
+    // console.log("")
+    // console.log("")
+    // console.log("")
     const poolAccessor = await poolProvider.getPools(usdPools);
     const poolsRaw = poolAccessor.getAllPools();
+    // console.log("===========================")
+    // console.log("poolsRaw",poolsRaw)
+
     const pools = _.filter(
       poolsRaw,
       (pool) => pool.reserve0.greaterThan(0) && pool.reserve1.greaterThan(0)

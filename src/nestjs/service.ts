@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { name } from '@sushiswap/sdk';
 import { ethers } from 'ethers';
 import {
   BRIDGE_SUPPORTED_TOKEN,
@@ -17,8 +18,7 @@ import {
   ChainId,
   getChainProvider,
   IS_SUPPORT_CHAIN,
-  routeAmountToString,
-  ROUTER_INDEX,
+  NULL_ADDRESS,
   ZERO_ADDRESS,
 } from '../util';
 import { TradeType } from '../util/constants';
@@ -27,7 +27,8 @@ import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
 
 type sortObj = {
-  index: Token;
+  key: number,
+  pair:[Token,Token];
   value: number;
 };
 
@@ -39,6 +40,7 @@ type swapData = {
   tokenIn: token;
   tokenOut: token;
   path: {
+    id:string,
     tokenIn: {
       address: string;
       name: string;
@@ -119,7 +121,7 @@ export class RouterService {
       ChainBId = ChainId.NEAR;
       tokenOut = new Token(
         ChainBId,
-        ZERO_ADDRESS,
+        NULL_ADDRESS,
         tokenBDecimals,
         tokenOutSymbol,
         tokenOutAddr
@@ -155,29 +157,7 @@ export class RouterService {
       ChainBId,
       RouterType.TARGET_CHAIN
     );
-    const mapRouter: swapData[] = [
-      {
-        chainId: ChainId.MAP.toString(),
-        dexName: ButterProtocol.HIVESWAP,
-        amountIn: '',
-        amountOut: '',
-        tokenIn: {
-          address: USDC_MAP.address,
-          name: USDC_MAP.name!,
-          decimals: USDC_MAP.decimals,
-          symbol: USDC_MAP.symbol!,
-          icon: GET_TOKEN_ICON(USDC_MAP.address),
-        },
-        tokenOut: {
-          address: USDC_MAP.address,
-          name: USDC_MAP.name!,
-          decimals: USDC_MAP.decimals,
-          symbol: USDC_MAP.symbol!,
-          icon: GET_TOKEN_ICON(USDC_MAP.address),
-        },
-        path: [],
-      },
-    ];
+    const mapRouter: swapData[] = directSwap(USDC_MAP,srcAmountOut.toString())
 
     return {
       srcChain: srcRouter,
@@ -186,6 +166,7 @@ export class RouterService {
     };
   }
 }
+
 
 async function findBestRouter(
   chainId: number,
@@ -196,40 +177,22 @@ async function findBestRouter(
   const config = getChainProvider(chainId);
   let swapRoute;
 
-  if (chainId != ChainId.NEAR) {
-    swapRoute = await getBestRoute(
-      chainId,
-      config.provider!,
-      config.protocols,
-      amount,
-      tokenIn.address,
-      tokenIn.decimals,
-      tokenOut.address,
-      tokenOut.decimals,
-      TradeType.EXACT_INPUT,
-      tokenIn.symbol,
-      tokenIn.name,
-      tokenOut.symbol,
-      tokenOut.name
-    );
-  } else {
-    swapRoute = await getBestRoute(
-      chainId,
-      config.provider!,
-      config.protocols,
-      amount,
-      tokenIn.address,
-      tokenIn.decimals,
-      tokenOut.address,
-      tokenOut.decimals,
-      TradeType.EXACT_INPUT,
-      tokenIn.symbol,
-      tokenIn.name,
-      tokenOut.symbol,
-      tokenOut.name
-    );
-  }
-
+  swapRoute = await getBestRoute(
+    chainId,
+    config.provider!,
+    config.protocols,
+    amount,
+    tokenIn.address,
+    tokenIn.decimals,
+    tokenOut.address,
+    tokenOut.decimals,
+    TradeType.EXACT_INPUT,
+    tokenIn.symbol,
+    tokenIn.name,
+    tokenOut.symbol,
+    tokenOut.name
+  );
+  
   let total = 0;
   let gasCostInUSD = 0;
 
@@ -245,6 +208,7 @@ async function findBestRouter(
   return [total, gasCostInUSD, swapRoute.route];
 }
 
+
 async function chainRouter(
   swapToken: Token,
   amount: number,
@@ -255,6 +219,8 @@ async function chainRouter(
   const TokenList = BRIDGE_SUPPORTED_TOKEN; //await getTokenCandidates('212',chainId.toString(),rpcProvider)
   let tmp: sortObj[] = [];
   let RouterMap = new Map();
+  let index = 0
+
   for (let token of TokenList) {
     let tokenIn: Token = swapToken;
     let tokenOut: Token = toTargetToken(chainId, token);
@@ -262,6 +228,13 @@ async function chainRouter(
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
     }
+   
+    if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
+      console.log("print me")
+      console.log(tokenIn.address , tokenOut.address , tokenIn.name , tokenOut.name)
+      return directSwap(tokenIn,amount.toString())
+    }
+    console.log(tokenIn.address , tokenOut.address , tokenIn.name , tokenOut.name)
 
     let [total, gas, router] = await findBestRouter(
       chainId,
@@ -270,51 +243,50 @@ async function chainRouter(
       amount.toFixed(tokenIn.decimals)
     );
     tmp.push({
-      index: token,
+      key: index, 
+      pair: [tokenIn,tokenOut],
       value: total - gas,
     });
-    RouterMap.set(token, router);
+    RouterMap.set(index, router);
+    index++;
   }
 
   tmp.sort((a, b) => (a.value > b.value ? 1 : b.value > a.value ? -1 : 0));
 
-  const key: Token = tmp[tmp.length - 1]!.index;
-  const bestRouter: RouteWithValidQuote[] = RouterMap.get(key);
+  const bestPair:sortObj  = tmp[tmp.length - 1]!;
+  const bestRouter: RouteWithValidQuote[] = RouterMap.get(bestPair.key);
 
   if (bestRouter == null) {
     return [];
   }
 
-  let icon_key1 = swapToken.address;
-  let icon_key2 = key.address;
-  if (swapToken.chainId == ChainId.NEAR) {
-    icon_key1 = swapToken.name!;
+  let icon_key1 = bestPair.pair[0].address;
+  let icon_key2 = bestPair.pair[1].address;
+  if (bestPair.pair[0].chainId == ChainId.NEAR) {
+    icon_key1 = bestPair.pair[0].name!;
   }
-  if (key.chainId == ChainId.NEAR) {
-    icon_key2 = key.name!;
+  if (bestPair.pair[1].chainId == ChainId.NEAR) {
+    icon_key2 = bestPair.pair[1].name!;
   }
 
   const token1: token = {
-    address: swapToken.address,
-    name: swapToken.name!,
-    decimals: swapToken.decimals!,
-    symbol: swapToken.symbol!,
+    address: bestPair.pair[0].address,
+    name: bestPair.pair[0].name!,
+    decimals: bestPair.pair[0].decimals!,
+    symbol: bestPair.pair[0].symbol!,
     icon: GET_TOKEN_ICON(icon_key1),
   };
   const token2: token = {
-    address: key.address,
-    name: key.name!,
-    decimals: key.decimals!,
-    symbol: key.symbol!,
+    address: bestPair.pair[1].address,
+    name: bestPair.pair[1].name!,
+    decimals: bestPair.pair[1].decimals!,
+    symbol: bestPair.pair[1].symbol!,
     icon: GET_TOKEN_ICON(icon_key2),
   };
 
-  if (routerType == RouterType.TARGET_CHAIN) {
-    return formatData(bestRouter, token2, token1, chainId);
-  }
-
   return formatData(bestRouter, token1, token2, chainId);
 }
+
 
 function formatData(
   bestRouter: RouteWithValidQuote[],
@@ -331,6 +303,7 @@ function formatData(
       if (refRouter instanceof RefRouteWithValidQuote) {
         for (let r of refRouter.swapData!) {
           pairs.push({
+            id:r.poolId.toString(),
             tokenIn: {
               address: r.tokenIn,
               name: r.tokenInName,
@@ -361,6 +334,7 @@ function formatData(
     } else {
       for (let j = 0; j < bestRouter[i]!.poolAddresses.length; j++) {
         pairs.push({
+          id:bestRouter[i]!.poolAddresses[j]!,
           tokenIn: {
             name: bestRouter[i]!.tokenPath[j]?.name!,
             symbol: bestRouter[i]!.tokenPath[j]?.symbol!,
@@ -391,4 +365,40 @@ function formatData(
   }
 
   return swapPath;
+}
+
+
+
+function directSwap(token:Token,amount:string):swapData[]{   
+
+  let icon_key = token.address;
+  if (token.chainId == ChainId.NEAR) {
+    icon_key = token.name!;
+  }
+
+  const router: swapData[] = [
+    {
+      chainId: token.chainId.toString(),
+      dexName: "",
+      amountIn: amount,
+      amountOut: amount,
+      tokenIn: {
+        address: token.address,
+        name: token.name!,
+        decimals: token.decimals,
+        symbol: token.symbol!,
+        icon: GET_TOKEN_ICON(icon_key),
+      },
+      tokenOut: {
+        address: token.address,
+        name: token.name!,
+        decimals: token.decimals,
+        symbol: token.symbol!,
+        icon: GET_TOKEN_ICON(icon_key),
+      },
+      path: [],
+    },
+  ];
+
+  return router
 }

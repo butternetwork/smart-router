@@ -338,7 +338,7 @@ export const DAI_POLYGON = new Token(
   'Dai Stablecoin'
 );
 
-export const USDT_MATIC = new Token(
+export const USDT_POLYGON = new Token(
   ChainId.POLYGON,
   '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
   6,
@@ -462,6 +462,31 @@ export const WNEAR_NEAR = new Token(
   'wrap.near'
 );
 
+//
+export const BMOS_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0x593F6F6748dc203DFa636c299EeA6a39C0734EEd',
+  18,
+  'BMOS',
+  'BMOS'
+);
+
+export const BUSD_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0x3F1E91BFC874625f4ee6EF6D8668E79291882373',
+  18,
+  'BUSD',
+  'BUSD'
+);
+
+export const WBNB_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
+  18,
+  'WBNB',
+  'Wrapped BNB'
+);
+
 export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
@@ -582,7 +607,7 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://files.mapprotocol.io/bridge/usdt.png';
     case USDT_NEAR.name:
       return 'https://files.mapprotocol.io/bridge/usdt.png';
-    case USDT_MATIC.address:
+    case USDT_POLYGON.address:
       return 'https://files.mapprotocol.io/bridge/usdt.png';
     default:
       return '';

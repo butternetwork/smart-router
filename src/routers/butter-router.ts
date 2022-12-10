@@ -40,6 +40,12 @@ export async function getBestRoute(
         provider: provider,
       });
       break;
+    case ChainId.BSC_TEST:
+        router = new BSCAlphaRouter({
+          chainId: chainId,
+          provider: provider,
+        });
+        break;
     case ChainId.MAP:
       router = new MapAlphaRouter({
         chainId: chainId,

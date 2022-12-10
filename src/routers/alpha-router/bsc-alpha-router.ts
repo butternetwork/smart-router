@@ -49,7 +49,7 @@ import {
 } from '../../providers/uniswap/v3/gas-data-provider';
 import { poolToString, routeToString } from '../../util';
 import { CurrencyAmount } from '../../util/amounts';
-import { ChainId, ID_TO_NETWORK_NAME } from '../../util/chains';
+import { ChainId } from '../../util/chains';
 import { log } from '../../util/log';
 import { metric, MetricLoggerUnit } from '../../util/metric';
 import {
@@ -252,15 +252,13 @@ export class BSCAlphaRouter
     this.chainId = chainId;
     this.provider = provider;
     this.multicall2Provider =
-      multicall2Provider ?? new BSCMulticallProvider(56, provider, 375_000);
+      multicall2Provider ?? new BSCMulticallProvider(chainId, provider, 375_000);
     this.pancakeV2PoolProvider =
       pancakeV2PoolProvider ??
-      new PancakeV2PoolProvider(56, this.multicall2Provider);
+      new PancakeV2PoolProvider(chainId, this.multicall2Provider);
 
     this.pancakeV2QuoteProvider =
       pancakeV2QuoteProvider ?? new PancakeV2QuoteProvider();
-
-    const chainName = ID_TO_NETWORK_NAME(chainId);
 
     if (this.provider instanceof providers.JsonRpcProvider) {
       this.gasPriceProvider =
@@ -286,7 +284,7 @@ export class BSCAlphaRouter
           DEFAULT_TOKEN_LIST,
           new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false }))
         ),
-        new TokenProvider(56, this.multicall2Provider)
+        new TokenProvider(chainId, this.multicall2Provider)
       );
     this.pancakeV2GasModelFactory =
       pancakeV2GasModelFactory ?? new PancakeV2HeuristicGasModelFactory();
@@ -490,7 +488,6 @@ export class BSCAlphaRouter
     // Fetch all the pools that we will consider routing via. There are thousands
     // of pools, so we filter them to a set of candidate pools that we expect will
     // result in good prices.
-    let start = Date.now();
 
     const { poolAccessor, candidatePools } = await getPancakeV2CandidatePools({
       tokenIn,
@@ -563,7 +560,7 @@ export class BSCAlphaRouter
       toPancakeCurrencyAmountArr(amounts),
       toPancakeRouteArr(routes)
     );
-    start = Date.now();
+
     const gasModel = await this.pancakeV2GasModelFactory.buildGasModel(
       this.chainId,
       gasPriceWei,

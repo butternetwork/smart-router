@@ -20,6 +20,7 @@ export enum ChainId {
   POLYGON = 137,
   POLYGON_MUMBAI = 80001,
   BSC = 56,
+  BSC_TEST = 97,
   NEAR = 1313161554,
   MAP = 22776,
 }
@@ -259,6 +260,13 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
   [ChainId.BSC]: new Token(
     ChainId.BSC,
     '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+    18,
+    'WBNB',
+    'Wrapped BNB'
+  ),
+  [ChainId.BSC_TEST]: new Token(
+    ChainId.BSC_TEST,
+    '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
     18,
     'WBNB',
     'Wrapped BNB'

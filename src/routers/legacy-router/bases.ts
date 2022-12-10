@@ -1,13 +1,16 @@
 import { Token } from '@uniswap/sdk-core';
-import { WBNB_BNB } from '../../providers/pancakeswap/util/token-provider';
 import {
   DAI_MAINNET,
   ITokenProvider,
   USDC_MAINNET,
   USDT_MAINNET,
   WBTC_MAINNET,
+  WMAP_MAP,
+  WBNB_BNB,
   WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
+  WNEAR_NEAR,
+  WBNB_BSCT,
 } from '../../providers/token-provider';
 import { ChainId, WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
 
@@ -40,25 +43,10 @@ export const BASES_TO_CHECK_TRADES_AGAINST = (
     ],
     [ChainId.POLYGON]: [WMATIC_POLYGON],
     [ChainId.POLYGON_MUMBAI]: [WMATIC_POLYGON_MUMBAI],
+    [ChainId.BSC_TEST]: [WBNB_BSCT],
     [ChainId.BSC]: [WBNB_BNB],
-    [ChainId.NEAR]: [
-      new Token(
-        ChainId.NEAR,
-        '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
-        24,
-        'Wrapped NEAR fungible token',
-        'wNEAR'
-      ),
-    ],
-    [ChainId.MAP]: [
-      new Token(
-        ChainId.MAP,
-        '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
-        24,
-        'Wrapped NEAR fungible token',
-        'wNEAR'
-      ),
-    ],
+    [ChainId.NEAR]: [WNEAR_NEAR],
+    [ChainId.MAP]: [WMAP_MAP],
   };
 };
 

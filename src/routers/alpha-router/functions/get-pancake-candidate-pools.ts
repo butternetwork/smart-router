@@ -204,7 +204,7 @@ export async function getPancakeV2CandidatePools({
 
   addToAddressSet(topByDirectSwapPool);
 
-  const wbnbAddress = WRAPPED_NATIVE_CURRENCY[56]!.address;
+  const wbnbAddress = WRAPPED_NATIVE_CURRENCY[chainId]!.address;
 
   // Main reason we need this is for gas estimates, only needed if token out is not ETH.
   // We don't check the seen address set because if we've already added pools for getting ETH quotes

@@ -1,4 +1,5 @@
-import { ChainId, Pair, TokenAmount } from '@pancakeswap/sdk';
+import { Pair, TokenAmount } from '@pancakeswap/sdk';
+import { ChainId } from '../../../util/chains';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import _ from 'lodash';
 import { uniTokenToPancakeToken } from '../../../adapter/pancake-adapter';
@@ -13,13 +14,17 @@ import {
 } from '../../interfaces/IPoolProvider';
 import { IMulticallProvider, Result } from '../../multicall-provider';
 import { ProviderConfig } from '../../provider';
+import { getCreate2Address } from 'ethers/lib/utils';
+import { pack, keccak256 } from '@ethersproject/solidity';
+import { BSC_TESTNET_INIT_CODE_HASH } from '../../../util/constants';
+import { BSC_TEST_FACTORY_ADDRESS } from '../../../util/addresses';
 
 export type V2PoolRetryOptions = AsyncRetry.Options;
 
 export class PancakeV2PoolProvider implements IV2PoolProvider {
   // Computing pool addresses is slow as it requires hashing, encoding etc.
   // Addresses never change so can always be cached.
-  private POOL_ADDRESS_CACHE: { [key: string]: string } = {};
+  public POOL_ADDRESS_CACHE: { [key: string]: string } = {};
 
   /**
    * Creates an instance of V2PoolProvider.
@@ -44,7 +49,7 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
     const poolAddressSet: Set<string> = new Set<string>();
     const sortedTokenPairs: Array<[Token, Token]> = [];
     const sortedPoolAddresses: string[] = [];
-
+console.log("call me")
     for (let tokenPair of tokenPairs) {
       const [tokenA, tokenB] = tokenPair;
       const { poolAddress, token0, token1 } = this.getPoolAddress(
@@ -121,7 +126,8 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
     const poolStrs = _.map(Object.values(poolAddressToPool), poolToString);
 
     log.debug({ poolStrs }, `Found ${poolStrs.length} valid pools`);
-
+// console.log("poolAddressToPool",poolAddressToPool)
+// console.log("Object.values(poolAddressToPool)",Object.values(poolAddressToPool))
     return {
       getPool: (tokenA: Token, tokenB: Token): Pair | undefined => {
         const { poolAddress } = this.getPoolAddress(tokenA, tokenB);
@@ -149,10 +155,21 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    const poolAddress = Pair.getAddress(
-      uniTokenToPancakeToken(token0),
-      uniTokenToPancakeToken(token1)
-    );
+    let poolAddress :string
+    if(tokenA.chainId == ChainId.BSC){
+      poolAddress = Pair.getAddress(
+        uniTokenToPancakeToken(token0),
+        uniTokenToPancakeToken(token1)
+      );
+    }else if(tokenA.chainId == ChainId.BSC_TEST){
+      poolAddress = computePairAddress({
+        factoryAddress:BSC_TEST_FACTORY_ADDRESS,
+        tokenA:token0,
+        tokenB:token1
+      });
+    }else{
+      throw(new Error(`unknown token chianId ${tokenA.chainId}`))
+    }
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 
@@ -181,3 +198,25 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
     return results;
   }
 }
+
+const computePairAddress = ({
+  factoryAddress,
+  tokenA,
+  tokenB,
+}: {
+  factoryAddress: string;
+  tokenA: Token;
+  tokenB: Token;
+}): string => {
+  const [token0, token1] = tokenA.sortsBefore(tokenB)
+    ? [tokenA, tokenB]
+    : [tokenB, tokenA]; // does safety checks
+  return getCreate2Address(
+    factoryAddress,
+    keccak256(
+      ['bytes'],
+      [pack(['address', 'address'], [token0.address, token1.address])]
+    ),
+    BSC_TESTNET_INIT_CODE_HASH
+  );
+};

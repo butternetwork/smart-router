@@ -44,6 +44,7 @@ const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   [ChainId.POLYGON]: [],
   [ChainId.POLYGON_MUMBAI]: [],
   [ChainId.BSC]: [],
+  [ChainId.BSC_TEST]: [],
   [ChainId.NEAR]: [],
   [ChainId.MAP]: [],
 };
