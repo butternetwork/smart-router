@@ -386,6 +386,7 @@ export function IS_SUPPORT_CHAIN(id: string) {
     case '1':
     case '137':
     case '56':
+    case '97':
     case '22776':
     case '5566818579631833088':
       break;

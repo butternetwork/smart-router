@@ -230,11 +230,8 @@ async function chainRouter(
     }
    
     if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
-      console.log("print me")
-      console.log(tokenIn.address , tokenOut.address , tokenIn.name , tokenOut.name)
       return directSwap(tokenIn,amount.toString())
     }
-    console.log(tokenIn.address , tokenOut.address , tokenIn.name , tokenOut.name)
 
     let [total, gas, router] = await findBestRouter(
       chainId,

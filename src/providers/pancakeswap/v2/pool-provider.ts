@@ -18,6 +18,8 @@ import { getCreate2Address } from 'ethers/lib/utils';
 import { pack, keccak256 } from '@ethersproject/solidity';
 import { BSC_TESTNET_INIT_CODE_HASH } from '../../../util/constants';
 import { BSC_TEST_FACTORY_ADDRESS } from '../../../util/addresses';
+import { Pair as BscTestPair, computeBscTestPairAddress } from '../util/pair';
+import { CurrencyAmount } from '../../../util';
 
 export type V2PoolRetryOptions = AsyncRetry.Options;
 
@@ -49,7 +51,7 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
     const poolAddressSet: Set<string> = new Set<string>();
     const sortedTokenPairs: Array<[Token, Token]> = [];
     const sortedPoolAddresses: string[] = [];
-console.log("call me")
+
     for (let tokenPair of tokenPairs) {
       const [tokenA, tokenB] = tokenPair;
       const { poolAddress, token0, token1 } = this.getPoolAddress(
@@ -84,7 +86,7 @@ console.log("call me")
       }`
     );
 
-    const poolAddressToPool: { [poolAddress: string]: Pair } = {};
+    const poolAddressToPool: { [poolAddress: string]: Pair|BscTestPair } = {};
 
     const invalidPools: [Token, Token][] = [];
 
@@ -101,10 +103,20 @@ console.log("call me")
       const [token0, token1] = sortedTokenPairs[i]!;
       const { reserve0, reserve1 } = reservesResult.result;
 
-      const pool = new Pair(
-        new TokenAmount(uniTokenToPancakeToken(token0), reserve0.toString()),
-        new TokenAmount(uniTokenToPancakeToken(token1), reserve1.toString())
-      );
+      let pool
+      if(this.chainId == ChainId.BSC){
+        pool = new Pair(
+          new TokenAmount(uniTokenToPancakeToken(token0), reserve0.toString()),
+          new TokenAmount(uniTokenToPancakeToken(token1), reserve1.toString())
+        );
+      }else if(this.chainId == ChainId.BSC_TEST){
+        pool = new BscTestPair(
+          CurrencyAmount.fromRawAmount(token0, reserve0.toString()),
+          CurrencyAmount.fromRawAmount(token1, reserve1.toString())
+        );
+      }else{
+        throw new Error(`unknown token chainId ${this.chainId}`)
+      }
 
       const poolAddress = sortedPoolAddresses[i]!;
 
@@ -126,16 +138,15 @@ console.log("call me")
     const poolStrs = _.map(Object.values(poolAddressToPool), poolToString);
 
     log.debug({ poolStrs }, `Found ${poolStrs.length} valid pools`);
-// console.log("poolAddressToPool",poolAddressToPool)
-// console.log("Object.values(poolAddressToPool)",Object.values(poolAddressToPool))
+
     return {
-      getPool: (tokenA: Token, tokenB: Token): Pair | undefined => {
+      getPool: (tokenA: Token, tokenB: Token): Pair | BscTestPair | undefined => {
         const { poolAddress } = this.getPoolAddress(tokenA, tokenB);
         return poolAddressToPool[poolAddress];
       },
-      getPoolByAddress: (address: string): Pair | undefined =>
+      getPoolByAddress: (address: string): Pair| BscTestPair  | undefined =>
         poolAddressToPool[address],
-      getAllPools: (): Pair[] => Object.values(poolAddressToPool),
+      getAllPools: (): any[] => Object.values(poolAddressToPool),
     };
   }
 
@@ -162,7 +173,7 @@ console.log("call me")
         uniTokenToPancakeToken(token1)
       );
     }else if(tokenA.chainId == ChainId.BSC_TEST){
-      poolAddress = computePairAddress({
+      poolAddress = computeBscTestPairAddress({
         factoryAddress:BSC_TEST_FACTORY_ADDRESS,
         tokenA:token0,
         tokenB:token1
@@ -198,25 +209,3 @@ console.log("call me")
     return results;
   }
 }
-
-const computePairAddress = ({
-  factoryAddress,
-  tokenA,
-  tokenB,
-}: {
-  factoryAddress: string;
-  tokenA: Token;
-  tokenB: Token;
-}): string => {
-  const [token0, token1] = tokenA.sortsBefore(tokenB)
-    ? [tokenA, tokenB]
-    : [tokenB, tokenA]; // does safety checks
-  return getCreate2Address(
-    factoryAddress,
-    keccak256(
-      ['bytes'],
-      [pack(['address', 'address'], [token0.address, token1.address])]
-    ),
-    BSC_TESTNET_INIT_CODE_HASH
-  );
-};
