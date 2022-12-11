@@ -163,6 +163,7 @@ export class RouterService {
       RouterType.SRC_CHAIN
     );
     let srcAmountOut = 0;
+    let subFee = srcAmountOut
     for (let p of srcRouter) {
       srcAmountOut = calculate(srcAmountOut,Number(p.amountOut),"add");
     }
@@ -172,7 +173,7 @@ export class RouterService {
       let fromToken = new Token(Number(fromChainId),tmp.address,tmp.decimals,tmp.symbol,tmp.name)
       let amount = srcAmountOut * Math.pow(10,tmp.decimals)
       let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toString(),rpcProvider,'212') // chainId
-      srcAmountOut = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
+      subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
     }else{
       throw new Error("there isn't the best router in src Chain")
     }
@@ -180,11 +181,11 @@ export class RouterService {
 
     const targetRouter = await chainRouter(
       tokenOut,
-      srcAmountOut,
+      subFee,
       ChainBId,
       RouterType.TARGET_CHAIN
     );
-    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString())
+    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString(),subFee.toString())
 
     return {
       srcChain: srcRouter,
@@ -257,7 +258,7 @@ async function chainRouter(
     }
 
     if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
-      return directSwap(tokenIn,amount.toString())
+      return directSwap(tokenIn,amount.toString(),amount.toString())
     }
 
     let [total, gas, router] = await findBestRouter(
@@ -395,7 +396,7 @@ function formatData(
   return swapPath;
 }
 
-function directSwap(token:Token,amount:string):swapData[]{   
+function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{   
 
   let icon_key = token.address;
   if (token.chainId == ChainId.NEAR) {
@@ -406,8 +407,8 @@ function directSwap(token:Token,amount:string):swapData[]{
     {
       chainId: token.chainId.toString(),
       dexName: "",
-      amountIn: amount,
-      amountOut: amount,
+      amountIn: amountIn,
+      amountOut: amountOut,
       tokenIn: {
         address: token.address,
         name: token.name!,

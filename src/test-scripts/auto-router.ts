@@ -43,15 +43,13 @@ async function main() {
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
   
-   await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
-  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 }
 
 async function findBestRouter(
