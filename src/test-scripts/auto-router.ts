@@ -17,7 +17,8 @@ import {
   BUSD_BSCT,
   PMOS_POLYGON_MUMBAI,
   PUSD_POLYGON_MUMBAI,
-  WBNB_BSCT
+  WBNB_BSCT,
+  WMATIC_POLYGON_MUMBAI
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -43,13 +44,15 @@ async function main() {
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
   
-  // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
-  // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
-  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
+  await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,amount)
+  await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+   await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 }
 
 async function findBestRouter(
@@ -67,8 +70,8 @@ async function findBestRouter(
     case ChainId.MAINNET:
       provider = new ethers.providers.JsonRpcProvider(ETH_MAINNET_URL, 1);
       protocols = [
-        //ButterProtocol.UNI_V2,
-        ButterProtocol.UNI_V3,
+        ButterProtocol.UNI_V2,
+        //ButterProtocol.UNI_V3,
         //ButterProtocol.SUSHISWAP,
         //ButterProtocol.CURVE,
       ];

@@ -159,3 +159,15 @@ export function wrappedCurrency(currency: Currency, chainId: ChainId): Token {
   if (currency === ETHER) return WETH[chainId];
   invariant(false, 'CURRENCY');
 }
+
+export function wrappedCurrency2(currency: Currency, chainId: ChainId,address:string): Token {
+  if (currency instanceof Token) return currency;
+  if (currency === ETHER) return WETH[chainId];
+  return new Token(
+    chainId,
+    address,
+    currency.decimals,
+    currency.symbol,
+    currency.name
+  )
+}

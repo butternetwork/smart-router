@@ -1,5 +1,5 @@
 import { Token } from '@uniswap/sdk-core';
-import { Pair } from '@uniswap/v2-sdk';
+import { INIT_CODE_HASH, Pair } from '@uniswap/v2-sdk';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import _ from 'lodash';
 import { IUniswapV2Pair__factory } from '../../../types/v2';
@@ -15,7 +15,7 @@ import { IMulticallProvider, Result } from '../../multicall-provider';
 import { ProviderConfig } from '../../provider';
 import { getCreate2Address } from '@ethersproject/address';
 import { pack, keccak256 } from '@ethersproject/solidity';
-import { INIT_CODE_HASH } from '../../../util/constants';
+
 
 export type V2PoolRetryOptions = AsyncRetry.Options;
 
