@@ -4,6 +4,7 @@ import _ from 'lodash';
 import {
   pancakeTokenToUniToken,
   pancakeToUniCurrencyAmount,
+  pancakeToUniCurrencyAmount2,
   uniTokenToPancakeToken,
 } from '../../../../adapter/pancake-adapter';
 import { IV2PoolProvider } from '../../../../providers/interfaces/IPoolProvider';
@@ -83,7 +84,7 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
           return {
             gasEstimate: gasUse,
             gasCostInToken: pancakeToUniCurrencyAmount(gasCostInEth),
-            gasCostInUSD: pancakeToUniCurrencyAmount(gasCostInTermsOfUSD),
+            gasCostInUSD: pancakeToUniCurrencyAmount2(token.address,chainId,gasCostInTermsOfUSD),
           };
         },
       };

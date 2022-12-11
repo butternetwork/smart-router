@@ -1838,12 +1838,10 @@ export class AlphaRouter
           continue;
         }
         const uAmount = quickToUniCurrencyAmount(amount);
-        const adjustedQuoteForQuickswap = quote.mul(
-          BigNumber.from(10).pow(quoteToken.decimals)
-        ) as BigNumber;
+
         const routeWithValidQuote = new V2RouteWithValidQuote({
           route,
-          rawQuote: adjustedQuoteForQuickswap,
+          rawQuote: quote,
           amount: uAmount,
           percent,
           gasModel,

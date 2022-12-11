@@ -10,7 +10,7 @@ import {
   WETH,
 } from '@pancakeswap/sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import invariant from 'tiny-invariant';
 import { PancakeV2Route } from '../../../routers/router';
 import { log } from '../../../util/log';
@@ -81,10 +81,11 @@ export class PancakeV2QuoteProvider implements IPancakeV2QuoteProvider {
               const [outputAmountNew] = pair.getOutputAmount(outputAmount);
               outputAmount = outputAmountNew;
             }
-
+            
+            let tmp = utils.parseUnits(outputAmount.toExact(),outputAmount.currency.decimals)
             amountQuotes.push({
               amount,
-              quote: BigNumber.from(outputAmount.quotient.toString()),
+              quote: BigNumber.from(tmp),
             });
           } else {
             let inputAmount = wrappedAmount(amount, 56);
@@ -156,4 +157,16 @@ export function wrappedCurrency(currency: Currency, chainId: ChainId): Token {
   if (currency instanceof Token) return currency;
   if (currency === ETHER) return WETH[chainId];
   invariant(false, 'CURRENCY');
+}
+
+export function wrappedCurrency2(currency: Currency, chainId: ChainId,address:string): Token {
+  if (currency instanceof Token) return currency;
+  if (currency === ETHER) return WETH[chainId];
+  return new Token(
+    chainId,
+    address,
+    currency.decimals,
+    currency.symbol,
+    currency.name
+  )
 }

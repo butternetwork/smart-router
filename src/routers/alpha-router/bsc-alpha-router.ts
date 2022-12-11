@@ -600,12 +600,9 @@ export class BSCAlphaRouter
           continue;
         }
         const uAmount = pancakeToUniCurrencyAmount(amount);
-        const adjustedQuoteForPancakeswap = quote.mul(
-          BigNumber.from(10).pow(quoteToken.decimals)
-        ) as BigNumber;
         const routeWithValidQuote = new V2RouteWithValidQuote({
           route,
-          rawQuote: adjustedQuoteForPancakeswap,
+          rawQuote: quote,
           amount: uAmount,
           percent,
           gasModel,

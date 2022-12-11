@@ -17,6 +17,7 @@ import {
 import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
+  CurrencyAmount,
   getChainProvider,
   IS_SUPPORT_CHAIN,
   NULL_ADDRESS,
@@ -163,12 +164,19 @@ export class RouterService {
     );
     let srcAmountOut = 0;
     for (let p of srcRouter) {
-      srcAmountOut += Number(p.amountOut);
+      srcAmountOut = calculate(srcAmountOut,Number(p.amountOut),"add");
     }
-    // let t = new Token(Number(fromChainId),srcRouter.contractPrams.targetToken,18)
-    // toTargetToken(Number(fromChainId),t)
-    // let bridgeFee = await getBridgeFee(BRIDGE_SUPPORTED_TOKEN[0]!,'212',srcAmountOut.toString(),rpcProvider) // chainId
-    // srcAmountOut -= Number(bridgeFee)
+
+    if (srcRouter!=null){
+      let tmp = srcRouter[0]!.tokenOut
+      let fromToken = new Token(Number(fromChainId),tmp.address,tmp.decimals,tmp.symbol,tmp.name)
+      let amount = srcAmountOut * Math.pow(10,tmp.decimals)
+      let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toString(),rpcProvider,'212') // chainId
+      srcAmountOut = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
+    }else{
+      throw new Error("there isn't the best router in src Chain")
+    }
+
 
     const targetRouter = await chainRouter(
       tokenOut,
@@ -247,7 +255,7 @@ async function chainRouter(
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
     }
-    
+
     if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
       return directSwap(tokenIn,amount.toString())
     }
@@ -261,7 +269,7 @@ async function chainRouter(
     tmp.push({
       key: index, 
       pair: [tokenIn,tokenOut],
-      value: total - gas,
+      value: total,
     });
     RouterMap.set(index, router);
     index++;
@@ -373,7 +381,7 @@ function formatData(
       swapPath.push({
         chainId: chainId.toString(),
         amountIn: bestRouter[i]!.amount.toExact(),
-        amountOut: bestRouter[i]!.quote.toExact(),
+        amountOut: bestRouter[i]!.output.toExact(),
         path: pairs,
         dexName: bestRouter[i]!.platform,
         tokenIn: tokenIn,
@@ -386,8 +394,6 @@ function formatData(
 
   return swapPath;
 }
-
-
 
 function directSwap(token:Token,amount:string):swapData[]{   
 
@@ -422,3 +428,27 @@ function directSwap(token:Token,amount:string):swapData[]{
 
   return router
 }
+
+function calculate (num1: number, num2: number, op: string):any {
+  let a: number | string, b: number | string, len1: number, len2: number;
+  try {
+    len1 = num1.toString().split(".")[1]!.length;
+  } catch (error) {
+    len1 = 0;
+  }
+  try {
+    len2 = num2.toString().split(".")[1]!.length;
+  } catch (error) {
+    len2 = 0;
+  }
+  a = num1.toString().split(".").join("");
+  b = num2.toString().split(".").join("");
+  let c = Math.pow(10, Math.abs(len1 - len2));
+  len1 > len2 && (b = Number(b) * c);
+  len1 < len2 && (a = Number(a) * c);
+  let d = Math.pow(10, Math.max(len1, len2));
+  if (op === "add") return (Number(a) + Number(b)) / d;
+  if (op === "sub") return (Number(a) - Number(b)) / d;
+  if (op === "mul") return (Number(a) * Number(b)) / Math.pow(10, Math.max(len1, len2) * 2);
+  if (op === "div") return Number(a) / Number(b);
+};

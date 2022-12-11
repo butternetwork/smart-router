@@ -10,7 +10,7 @@ import {
   WETH,
 } from '@davidwgrossman/quickswap-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import invariant from 'tiny-invariant';
 import { QuickV2Route } from '../../../routers/router';
 import { log } from '../../../util/log';
@@ -82,9 +82,11 @@ export class QuickV2QuoteProvider implements IQuickV2QuoteProvider {
               outputAmount = outputAmountNew;
             }
 
+            let tmp = utils.parseUnits(outputAmount.toExact(),outputAmount.currency.decimals)
+
             amountQuotes.push({
               amount,
-              quote: BigNumber.from(outputAmount.quotient.toString()),
+              quote: BigNumber.from(tmp),
             });
           } else {
             let inputAmount = wrappedAmount(amount, 137);

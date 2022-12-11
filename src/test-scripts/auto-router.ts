@@ -16,7 +16,8 @@ import {
   BMOS_BSCT,
   BUSD_BSCT,
   PMOS_POLYGON_MUMBAI,
-  PUSD_POLYGON_MUMBAI
+  PUSD_POLYGON_MUMBAI,
+  WBNB_BSCT
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -33,16 +34,24 @@ import { Token } from '../util/token';
 import { BSC_MAINNET_URL, BSC_TESTNET_URL, ETH_MAINNET_URL, MAP_MAINNET_URL, POLYGON_MAINNET_URL, POLYGON_MUMBAI_URL } from '../util/urls';
 
 async function main() {
-  const amount = '9957';
+  const amount = '10';
 
   // await findBestRouter(ChainId.BSC,WBNB_BNB,USDC_BNB,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
-   await findBestRouter(ChainId.NEAR_TEST,USDC_NEAR,WNEAR_NEAR,amount)
+  // await findBestRouter(ChainId.NEAR_TEST,USDC_NEAR,WNEAR_NEAR,amount)
   // await findBestRouter(ChainId.MAP,WMAP_MAP,USDC_MAP,amount)
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
-  // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  
+   await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
 }
 
 async function findBestRouter(
@@ -136,7 +145,7 @@ async function findBestRouter(
     }
   } else {
     for (let route of swapRoute.route) {
-      console.log(`${routeAmountToString(route)} = ${route.quote.toExact()})}`);
+      console.log(`${routeAmountToString(route)} = ${route.output.toExact()} | ${route.quote.toExact()})}`);
       total += Number(route.output.toExact());
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
     }
