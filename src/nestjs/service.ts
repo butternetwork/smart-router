@@ -220,7 +220,7 @@ async function chainRouter(
       chainId,
       tokenIn,
       tokenOut,
-      amount.toString()
+      amount.toFixed(tokenIn.decimals)
     );
     tmp.push({
       key: index, 
