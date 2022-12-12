@@ -107,11 +107,11 @@ export class RouterService {
 
     let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol,RouterType.SRC_CHAIN);
     let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol,RouterType.TARGET_CHAIN);
-
+    
 
     const srcRouter = await chainRouter(
       tokenIn,
-      Number(amount),
+      amount,
       tokenIn.chainId,
       RouterType.SRC_CHAIN
     );
@@ -136,7 +136,7 @@ export class RouterService {
 
     const targetRouter = await chainRouter(
       tokenOut,
-      subFee,
+      subFee.toString(),
       tokenOut.chainId,
       RouterType.TARGET_CHAIN
     );
@@ -159,7 +159,6 @@ async function findBestRouter(
 ): Promise<any> {
   const config = getChainProvider(chainId);
   let swapRoute;
-console.log("input",amount)
   swapRoute = await getBestRoute(
     chainId,
     config.provider!,
@@ -194,7 +193,7 @@ console.log("input",amount)
 
 async function chainRouter(
   swapToken: Token,
-  amount: number,
+  amount: string,
   chainId: number,
   routerType: number
 ): Promise<swapData[]> {
@@ -207,20 +206,23 @@ async function chainRouter(
   for (let token of TokenList) {
     let tokenIn: Token = swapToken;
     let tokenOut: Token = toTargetToken(chainId, token);
+    let swapAmount = amount
     if (routerType == RouterType.TARGET_CHAIN) {
+      swapAmount = Number(amount).toFixed(tokenIn.decimals)
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
     }
 
+
     if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
-      return directSwap(tokenIn,amount.toString(),amount.toString())
+      return directSwap(tokenIn,amount,amount)
     }
 
     let [total, gas, router] = await findBestRouter(
       chainId,
       tokenIn,
       tokenOut,
-      amount.toFixed(tokenIn.decimals)
+      swapAmount
     );
     tmp.push({
       key: index, 
