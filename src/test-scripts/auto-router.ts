@@ -47,7 +47,7 @@ async function main() {
   await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
   await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,amount)
   await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
-   await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
+  await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);

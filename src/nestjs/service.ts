@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { name } from '@sushiswap/sdk';
 import { ethers } from 'ethers';
+import { chain } from 'lodash';
 import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
   mUSDC_MAP,
   USDC_MAP,
+  WBNB_BSCT,
   WMAP_MAP,
+  WMATIC_POLYGON_MUMBAI,
 } from '../providers/token-provider';
 import {
   RefRoute,
@@ -79,6 +82,7 @@ enum RouterType {
 
 @Injectable()
 export class RouterService {
+
   async crossChainRouter(
     tokenInAddr: string,
     tokenInDecimals: number,
@@ -100,68 +104,18 @@ export class RouterService {
       'http://18.142.54.137:7445',
       212
     );
-    const tokenADecimals: number = Number(tokenInDecimals);
-    const tokenBDecimals: number = Number(tokenOutDecimals);
-    let ChainAId: number;
-    let ChainBId: number;
-    let tokenIn: Token;
-    let tokenOut: Token;
-    if (fromChainId == '5566818579631833088') {
-      ChainAId = ChainId.NEAR;
-      tokenIn = new Token(
-        ChainAId,
-        ZERO_ADDRESS,
-        tokenADecimals,
-        tokenInSymbol,
-        tokenInAddr
-      );
-    } else if (fromChainId == '5566818579631833089') {
-      ChainAId = ChainId.NEAR_TEST;
-      tokenIn = new Token(
-        ChainAId,
-        ZERO_ADDRESS,
-        tokenADecimals,
-        tokenInSymbol,
-        tokenInAddr
-      ) 
-    }else {
-      ChainAId = Number(fromChainId);
-      tokenIn = new Token(ChainAId, tokenInAddr, tokenADecimals, tokenInSymbol);
-    }
-    if (toChainId == '5566818579631833088') {
-      ChainBId = ChainId.NEAR;
-      tokenOut = new Token(
-        ChainBId,
-        NULL_ADDRESS,
-        tokenBDecimals,
-        tokenOutSymbol,
-        tokenOutAddr
-      );
-    } else if (toChainId == '5566818579631833089') {
-      ChainBId = ChainId.NEAR_TEST;
-      tokenOut = new Token(
-        ChainBId,
-        NULL_ADDRESS,
-        tokenBDecimals,
-        tokenOutSymbol,
-        tokenOutAddr
-      );
-    } else {
-      ChainBId = Number(toChainId);
-      tokenOut = new Token(
-        ChainBId,
-        tokenOutAddr,
-        tokenBDecimals,
-        tokenOutSymbol
-      );
-    }
+
+    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
+    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
+
 
     const srcRouter = await chainRouter(
       tokenIn,
       Number(amount),
-      ChainAId,
+      tokenIn.chainId,
       RouterType.SRC_CHAIN
     );
+
     let srcAmountOut = 0;
     let subFee = srcAmountOut
     for (let p of srcRouter) {
@@ -178,21 +132,22 @@ export class RouterService {
       throw new Error("there isn't the best router in src Chain")
     }
 
+    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString(),subFee.toString())
 
     const targetRouter = await chainRouter(
       tokenOut,
       subFee,
-      ChainBId,
+      tokenOut.chainId,
       RouterType.TARGET_CHAIN
     );
-    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString(),subFee.toString())
 
     return {
-      srcChain: srcRouter,
+      srcChain: formatReturn(srcRouter,tokenInAddr,RouterType.SRC_CHAIN),
       mapChain: mapRouter,
-      targetChain: targetRouter,
+      targetChain: formatReturn(targetRouter,tokenOutAddr,RouterType.TARGET_CHAIN),
     };
   }
+
 }
 
 
@@ -396,6 +351,7 @@ function formatData(
   return swapPath;
 }
 
+
 function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{   
 
   let icon_key = token.address;
@@ -430,6 +386,7 @@ function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{
   return router
 }
 
+
 function calculate (num1: number, num2: number, op: string):any {
   let a: number | string, b: number | string, len1: number, len2: number;
   try {
@@ -453,3 +410,79 @@ function calculate (num1: number, num2: number, op: string):any {
   if (op === "mul") return (Number(a) * Number(b)) / Math.pow(10, Math.max(len1, len2) * 2);
   if (op === "div") return Number(a) / Number(b);
 };
+
+
+function newToken(
+  _chainId:string,
+  _address:string,
+  _decimals:number,
+  _symbol:string
+):Token{
+  let token: Token;
+  let chainId: number = Number(_chainId);
+  const decimals: number = Number(_decimals);
+  if (_chainId == '5566818579631833088') {
+    chainId = ChainId.NEAR;
+    token = new Token(
+      chainId,
+      ZERO_ADDRESS,
+      decimals,
+      _symbol,
+      _address
+    );
+  } else if (_chainId == '5566818579631833089') {
+    chainId = ChainId.NEAR_TEST;
+    token = new Token(
+      chainId,
+      ZERO_ADDRESS,
+      decimals,
+      _symbol,
+      _address
+    ) 
+  }else {
+    let address = isWrapToken(_address,chainId)
+    chainId = Number(_chainId);
+    token = new Token(chainId, address, decimals, _symbol);
+  }
+  return token
+}
+
+
+function isWrapToken(address:string,chainId:number):string{
+  if (address == ZERO_ADDRESS){
+    switch (chainId){
+      case ChainId.BSC_TEST:
+        return WBNB_BSCT.address
+      case ChainId.POLYGON_MUMBAI: 
+        return WMATIC_POLYGON_MUMBAI.address 
+      default:
+        return address
+    }
+  }
+  return address
+}
+
+
+function formatReturn(params:swapData[],address:string,type:RouterType){
+
+  if(type == RouterType.SRC_CHAIN){
+
+    let data:swapData[] = params
+    for(let i=0;i<data.length;i++){
+        data[i]!.tokenIn.address = address
+    }
+    return data
+
+  }else if(type == RouterType.TARGET_CHAIN){
+
+    let data:swapData[] = params
+    for(let i=0;i<data.length;i++){
+        data[i]!.tokenOut.address = address
+    }
+    return data
+
+  }else {
+    throw new Error("Please check the returned data")
+  }
+
+}
