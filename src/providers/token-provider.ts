@@ -423,7 +423,7 @@ export const USDC_MAP = new Token(
 
 export const mUSDC_MAP = new Token(
   212,
-  '0x6Ac66dCBE1680aAC446B28BE5371Be869B5059cF',
+  '0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703',
   18,
   'mUSDC',
   'map usdc'
