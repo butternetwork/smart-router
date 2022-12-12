@@ -308,7 +308,6 @@ export class NearRouter
         tokenOut,
         amountIn: amounts[i]!.toExact(),
         simplePools,
-        options,
       });
       let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
       routes.push(swapTodos);

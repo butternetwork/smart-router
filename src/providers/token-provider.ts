@@ -501,10 +501,33 @@ export const AURORA_NEART = new Token(
   ChainId.NEAR_TEST,
   ZERO_ADDRESS,
   6,
-  'WNEAR',
+  'AURORA',
   'aurora.fakes.testnet'
 );
 
+export const REF_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'REF',
+  'ref.fakes.testnet'
+);
+
+export const TOKEN1_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'token1.map007',
+  'token1.map007.testnet'
+);
+
+export const TOKEN2_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'token2.map007',
+  'token2.map007.testnet'
+);
 //BSC TESTNET 
 export const BMOS_BSCT = new Token(
   ChainId.BSC_TEST,

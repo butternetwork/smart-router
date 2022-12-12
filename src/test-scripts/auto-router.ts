@@ -18,7 +18,10 @@ import {
   PMOS_POLYGON_MUMBAI,
   PUSD_POLYGON_MUMBAI,
   WBNB_BSCT,
-  WMATIC_POLYGON_MUMBAI
+  WMATIC_POLYGON_MUMBAI,
+  WRAP_NEART,
+  AURORA_NEART,
+  REF_NEART
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -27,6 +30,7 @@ import {
   ChainId,
   nearRouterToString,
   routeAmountToString,
+  ZERO_ADDRESS,
 } from '../util';
 import { TradeType } from '../util/constants';
 import { getBridgeFee } from '../util/mos';
@@ -35,7 +39,7 @@ import { Token } from '../util/token';
 import { BSC_MAINNET_URL, BSC_TESTNET_URL, ETH_MAINNET_URL, MAP_MAINNET_URL, POLYGON_MAINNET_URL, POLYGON_MUMBAI_URL } from '../util/urls';
 
 async function main() {
-  const amount = '10';
+  const amount = '1.1';
 
   // await findBestRouter(ChainId.BSC,WBNB_BNB,USDC_BNB,amount);
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
@@ -44,15 +48,20 @@ async function main() {
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
   
-  await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
-  await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,amount)
-  await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
-  await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
+  // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BMOS_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
-  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
+
+  // let token1 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token1","token1.map007.testnet")
+  // let token2 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token2.map007.testnet")
+
+  // await findBestRouter(ChainId.NEAR_TEST,token2,token1,amount);
+  //await findBestRouter(ChainId.NEAR_TEST,REF_NEART,WRAP_NEART,amount);
 }
 
 async function findBestRouter(
@@ -140,6 +149,7 @@ async function findBestRouter(
 
   if (chainId == ChainId.NEAR || chainId == ChainId.NEAR_TEST) {
     for (let route of swapRoute.route) {
+      console.log(route.output.toExact())
       total += Number(route.output.toExact());
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
       console.log(nearRouterToString(route, tokenIn.symbol, tokenOut.symbol));

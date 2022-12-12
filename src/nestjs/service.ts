@@ -105,8 +105,8 @@ export class RouterService {
       212
     );
 
-    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
-    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
+    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol,RouterType.SRC_CHAIN);
+    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol,RouterType.TARGET_CHAIN);
 
 
     const srcRouter = await chainRouter(
@@ -142,9 +142,9 @@ export class RouterService {
     );
 
     return {
-      srcChain: formatReturn(srcRouter,tokenInAddr,RouterType.SRC_CHAIN),
+      srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
       mapChain: mapRouter,
-      targetChain: formatReturn(targetRouter,tokenOutAddr,RouterType.TARGET_CHAIN),
+      targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
     };
   }
 
@@ -159,7 +159,7 @@ async function findBestRouter(
 ): Promise<any> {
   const config = getChainProvider(chainId);
   let swapRoute;
-
+console.log("input",amount)
   swapRoute = await getBestRoute(
     chainId,
     config.provider!,
@@ -220,7 +220,7 @@ async function chainRouter(
       chainId,
       tokenIn,
       tokenOut,
-      amount.toFixed(tokenIn.decimals)
+      amount.toString()
     );
     tmp.push({
       key: index, 
@@ -416,25 +416,34 @@ function newToken(
   _chainId:string,
   _address:string,
   _decimals:number,
-  _symbol:string
+  _symbol:string,
+  type:RouterType
 ):Token{
   let token: Token;
   let chainId: number = Number(_chainId);
   const decimals: number = Number(_decimals);
   if (_chainId == '5566818579631833088') {
     chainId = ChainId.NEAR;
+    let address = ZERO_ADDRESS
+    if(type == RouterType.TARGET_CHAIN){
+      address = NULL_ADDRESS
+    }
     token = new Token(
       chainId,
-      ZERO_ADDRESS,
+      address,
       decimals,
       _symbol,
       _address
     );
   } else if (_chainId == '5566818579631833089') {
     chainId = ChainId.NEAR_TEST;
+    let address = ZERO_ADDRESS
+    if(type == RouterType.TARGET_CHAIN){
+      address = NULL_ADDRESS
+    }
     token = new Token(
       chainId,
-      ZERO_ADDRESS,
+      address,
       decimals,
       _symbol,
       _address
@@ -463,13 +472,20 @@ function isWrapToken(address:string,chainId:number):string{
 }
 
 
-function formatReturn(params:swapData[],address:string,type:RouterType){
+function formatReturn(params:swapData[],chainId:string,address:string,type:RouterType){
 
   if(type == RouterType.SRC_CHAIN){
 
     let data:swapData[] = params
     for(let i=0;i<data.length;i++){
+
+      data[i]!.chainId = chainId
+      if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
+        data[i]!.tokenIn.name = address
+      }else{
         data[i]!.tokenIn.address = address
+      }
+
     }
     return data
 
@@ -477,7 +493,14 @@ function formatReturn(params:swapData[],address:string,type:RouterType){
 
     let data:swapData[] = params
     for(let i=0;i<data.length;i++){
+
+      data[i]!.chainId = chainId
+      if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
+        data[i]!.tokenOut.name = address
+      }else{
         data[i]!.tokenOut.address = address
+      }
+
     }
     return data
 
