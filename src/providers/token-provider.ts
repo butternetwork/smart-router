@@ -494,7 +494,7 @@ export const WRAP_NEART = new Token(
   ChainId.NEAR_TEST,
   ZERO_ADDRESS,
   6,
-  'USDC',
+  'WRAP',
   'wrap.testnet'
 );
 
@@ -504,6 +504,14 @@ export const AURORA_NEART = new Token(
   6,
   'AURORA',
   'aurora.fakes.testnet'
+);
+
+export const USDC_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'USDC',
+  'usdc.map007.testnet'
 );
 
 export const REF_NEART = new Token(

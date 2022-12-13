@@ -1,5 +1,6 @@
 
-import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { ethers, utils } from 'ethers';
 import { BMOS_BSCT, BUSD_BSCT, mUSDC_MAPT, PMOS_POLYGON_MUMBAI, PUSD_POLYGON_MUMBAI, USDC_NEAR, WBNB_BSCT } from '../providers';
 import { _getUsdRate } from '../routers/alpha-router/functions/get-curve-best-router';
 import { CurrencyAmount } from '../util';
@@ -31,13 +32,14 @@ async function test1() {
 }
 
 async function test2() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    'https://testnet-rpc.maplabs.io'
-  );
+  // const provider = new ethers.providers.JsonRpcProvider(
+  //   'https://testnet-rpc.maplabs.io'
+  // );
 
-  console.log(await getBridgeFee(PUSD_POLYGON_MUMBAI, '97', '80', provider,'212'))
-  console.log(await getBridgeFee(BUSD_BSCT, '80001', '80', provider,'212'))
-
+  // console.log(await getBridgeFee(PUSD_POLYGON_MUMBAI, '97', '80', provider,'212'))
+  //console.log(await getBridgeFee(BUSD_BSCT, '80001', '80', provider,'212'))
+  console.log(ethers.utils.formatUnits("10",18))
+  console.log(ethers.utils.parseUnits("889.4855614461119",6).toString())
 }
 
 //test1()

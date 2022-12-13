@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
+import { utils } from 'near-api-js';
 import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
@@ -124,9 +125,10 @@ export class RouterService {
       if (srcRouter!=null){
         let tmp = srcRouter[0]!.tokenOut
         let fromToken = new Token(tokenIn.chainId,tmp.address,tmp.decimals,tmp.symbol,tmp.name)
-        let amount = srcAmountOut * Math.pow(10,tmp.decimals)
-        let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toString(),rpcProvider,mapChainId) // chainId
-        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
+        let amount = srcAmountOut * Math.pow(10,tmp.decimals)// ethers.utils.parseUnits(srcAmountOut.toString(),tmp.decimals).toString()
+        let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toFixed(0),rpcProvider,mapChainId)
+        let fee =  ethers.utils.formatEther(bridgeFee.amount)
+        subFee = calculate(srcAmountOut,Number(fee),"sub")
       }else{
         throw new Error("there isn't the best router in src Chain")
       }

@@ -21,7 +21,8 @@ import {
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
   AURORA_NEART,
-  REF_NEART
+  REF_NEART,
+  USDC_NEART
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -58,11 +59,12 @@ async function main() {
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 
-  // let token1 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token1","token1.map007.testnet")
-  // let token2 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token2.map007.testnet")
+  let token1 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token1","token1.map007.testnet")
+  let token2 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token7.map007.testnet")
 
-  // await findBestRouter(ChainId.NEAR_TEST,WRAP_NEART,token2,amount);
-  await findBestRouter(ChainId.NEAR_TEST,REF_NEART,WRAP_NEART,amount);
+  await findBestRouter(ChainId.NEAR_TEST,WRAP_NEART,USDC_NEART,amount);
+  await findBestRouter(ChainId.NEAR_TEST,USDC_NEART,WRAP_NEART,amount);
+  //await findBestRouter(ChainId.NEAR_TEST,REF_NEART,WRAP_NEART,amount);
 
   // let quoteToken =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token2.map007.testnet")
   // let num:BigNumber = BigNumber.from("1")

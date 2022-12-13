@@ -15,6 +15,7 @@ import {
   PUSD_POLYGON_MUMBAI,
   AURORA_NEART,
   TOKEN2_NEART,
+  USDC_NEART,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 import { chain } from 'lodash';
@@ -80,13 +81,6 @@ export async function getBridgeFee(
   providerChainId:string
 ): Promise<ButterFee> {
   let chainId = srcToken.chainId.toString()
-  if(chainId == ChainId.NEAR.toString()){
-    chainId = '5566818579631833088'
-  }
-
-  if(chainId == ChainId.NEAR_TEST.toString()){
-    chainId = '5566818579631833089'
-  }
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[providerChainId]!,
     provider
@@ -110,7 +104,6 @@ export async function getBridgeFee(
       chainId,
       srcToken
     );
-console.log(mapTokenAddress)
     const relayChainAmount = await tokenRegister.getRelayChainAmount(
       mapTokenAddress,
       chainId,
@@ -229,7 +222,7 @@ export function toTargetToken(chainId: number, token: Token) {
       targetToken = USDC_NEAR;
       break;
     case ChainId.NEAR_TEST:
-      targetToken = AURORA_NEART;
+      targetToken = USDC_NEART;
       break;
     default:
       throw new Error('There is no such token in the chain');
@@ -326,6 +319,24 @@ class TokenRegister {
     fromChain: string,
     fromToken: Token
   ): Promise<string> {
+    if(fromChain == ChainId.NEAR.toString()){
+      if (this.contract instanceof ethers.Contract) {
+        return await this.contract.getRelayChainToken(
+          fromChain,
+          getHexAddress(fromToken.name!, '5566818579631833088', false)
+        );
+      } else return '';
+    }
+  
+    if(fromChain == ChainId.NEAR_TEST.toString()){
+      if (this.contract instanceof ethers.Contract) {
+        return await this.contract.getRelayChainToken(
+          fromChain,
+          getHexAddress(fromToken.name!, '5566818579631833089', false)
+        );
+      } else return '';
+    }
+
     if (fromToken.isNative) {
       fromToken = fromToken.wrapped;
     }
