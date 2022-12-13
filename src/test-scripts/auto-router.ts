@@ -28,6 +28,7 @@ import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-
 import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
+  CurrencyAmount,
   nearRouterToString,
   routeAmountToString,
   ZERO_ADDRESS,
@@ -39,7 +40,7 @@ import { Token } from '../util/token';
 import { BSC_MAINNET_URL, BSC_TESTNET_URL, ETH_MAINNET_URL, MAP_MAINNET_URL, POLYGON_MAINNET_URL, POLYGON_MUMBAI_URL } from '../util/urls';
 
 async function main() {
-  const amount = '1.1';
+  const amount = '1000';
 
   // await findBestRouter(ChainId.BSC,WBNB_BNB,USDC_BNB,amount);
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
@@ -54,14 +55,21 @@ async function main() {
   // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
-  await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
+  // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 
   // let token1 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token1","token1.map007.testnet")
   // let token2 =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token2.map007.testnet")
 
-  // await findBestRouter(ChainId.NEAR_TEST,token2,token1,amount);
-  //await findBestRouter(ChainId.NEAR_TEST,REF_NEART,WRAP_NEART,amount);
+  // await findBestRouter(ChainId.NEAR_TEST,WRAP_NEART,token2,amount);
+  await findBestRouter(ChainId.NEAR_TEST,REF_NEART,WRAP_NEART,amount);
+
+  // let quoteToken =  new Token(ChainId.NEAR_TEST,ZERO_ADDRESS,6,"token2","token2.map007.testnet")
+  // let num:BigNumber = BigNumber.from("1")
+  // CurrencyAmount.fromRawAmount(
+  //   quoteToken,
+  //   num.toHexString()
+  // );
 }
 
 async function findBestRouter(
@@ -149,7 +157,6 @@ async function findBestRouter(
 
   if (chainId == ChainId.NEAR || chainId == ChainId.NEAR_TEST) {
     for (let route of swapRoute.route) {
-      console.log(route.output.toExact())
       total += Number(route.output.toExact());
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
       console.log(nearRouterToString(route, tokenIn.symbol, tokenOut.symbol));

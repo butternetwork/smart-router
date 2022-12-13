@@ -516,6 +516,7 @@ export type RefRouteWithValidQuoteParams = {
   rawQuote: BigNumber;
   percent: number;
   route: RefRoute;
+  expectedOutput:string;
   quoteToken: Token;
   gasPriceWei: BigNumber;
   tradeType: TradeType;
@@ -541,9 +542,9 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
   public gasCostInUSD: CurrencyAmount;
   public gasEstimate: BigNumber;
   public output: CurrencyAmount;
-
+  public expectedOutput: string;
   public toString(): string {
-    return '';
+    return this.expectedOutput;
   }
 
   constructor({
@@ -551,6 +552,7 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
     rawQuote,
     percent,
     route,
+    expectedOutput,
     gasPriceWei,
     quoteToken,
     tradeType,
@@ -562,6 +564,7 @@ export class RefRouteWithValidQuote implements IRefRouteWithValidQuote {
       quoteToken,
       rawQuote.mul(1000000).toHexString()
     );
+    this.expectedOutput = expectedOutput;
     this.percent = percent;
     this.route = route;
     this.quoteToken = quoteToken;

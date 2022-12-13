@@ -1,34 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { name } from '@sushiswap/sdk';
 import { ethers } from 'ethers';
-import { chain } from 'lodash';
 import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
-  mUSDC_MAP,
+  mUSDC_MAPT,
   USDC_MAP,
   WBNB_BSCT,
   WMAP_MAP,
   WMATIC_POLYGON_MUMBAI,
 } from '../providers/token-provider';
 import {
-  RefRoute,
   RefRouteWithValidQuote,
   RouteWithValidQuote,
-  SwapRoute,
 } from '../routers/';
 import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
-  CurrencyAmount,
   getChainProvider,
   IS_SUPPORT_CHAIN,
   NULL_ADDRESS,
   ZERO_ADDRESS,
 } from '../util';
 import { TradeType } from '../util/constants';
-import { getBridgeFee, getTargetToken, toTargetToken } from '../util/mos';
-import { ButterProtocol } from '../util/protocol';
+import { getBridgeFee, toTargetToken } from '../util/mos';
 import { Token } from '../util/token';
 
 type sortObj = {
@@ -70,15 +64,16 @@ type token = {
 };
 
 type allRouter = {
-  srcChain: swapData[];
-  mapChain: swapData[];
-  targetChain: swapData[];
+  srcChain?: swapData[];
+  mapChain?: swapData[];
+  targetChain?: swapData[];
 };
 
 enum RouterType {
   SRC_CHAIN = 0,
   TARGET_CHAIN = 1,
 }
+const mapChainId = '212'
 
 @Injectable()
 export class RouterService {
@@ -101,55 +96,77 @@ export class RouterService {
     }
 
     const rpcProvider = new ethers.providers.JsonRpcProvider(
-      'http://18.142.54.137:7445',
-      212
+      'https://testnet-rpc.maplabs.io',
     );
 
-    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol,RouterType.SRC_CHAIN);
-    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol,RouterType.TARGET_CHAIN);
+    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
+    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
     
-
-    const srcRouter = await chainRouter(
-      tokenIn,
-      amount,
-      tokenIn.chainId,
-      RouterType.SRC_CHAIN
-    );
-
     let srcAmountOut = 0;
-    let subFee = srcAmountOut
-    for (let p of srcRouter) {
-      srcAmountOut = calculate(srcAmountOut,Number(p.amountOut),"add");
-    }
+    let subFee = 0
 
-    if (srcRouter!=null){
-      let tmp = srcRouter[0]!.tokenOut
-      let fromToken = new Token(Number(fromChainId),tmp.address,tmp.decimals,tmp.symbol,tmp.name)
-      let amount = srcAmountOut * Math.pow(10,tmp.decimals)
-      let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toString(),rpcProvider,'212') // chainId
-      subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
+    let srcRouter:swapData[]
+    if(fromChainId == mapChainId){
+      let _amount = Number(amount) * Math.pow(10,tokenInDecimals)
+      let bridgeFee = await getBridgeFee(tokenIn,toChainId,_amount.toString(),rpcProvider,mapChainId) // chainId
+      subFee = calculate(Number(amount),Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals),"sub")
+      srcRouter = directSwap(mUSDC_MAPT,amount,subFee.toString())
     }else{
-      throw new Error("there isn't the best router in src Chain")
+      srcRouter = await chainRouter(
+        tokenIn,
+        amount,
+        tokenIn.chainId,
+        RouterType.SRC_CHAIN
+      );
+      for (let p of srcRouter) {
+        srcAmountOut = calculate(srcAmountOut,Number(p.amountOut),"add");
+      }
+      if (srcRouter!=null){
+        let tmp = srcRouter[0]!.tokenOut
+        let fromToken = new Token(tokenIn.chainId,tmp.address,tmp.decimals,tmp.symbol,tmp.name)
+        let amount = srcAmountOut * Math.pow(10,tmp.decimals)
+        let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toString(),rpcProvider,mapChainId) // chainId
+        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
+      }else{
+        throw new Error("there isn't the best router in src Chain")
+      }
     }
 
-    const mapRouter: swapData[] = directSwap(mUSDC_MAP,srcAmountOut.toString(),subFee.toString())
+    let mapRouter: swapData[] = directSwap(mUSDC_MAPT,srcAmountOut.toString(),subFee.toString())
 
-    const targetRouter = await chainRouter(
-      tokenOut,
-      subFee.toString(),
-      tokenOut.chainId,
-      RouterType.TARGET_CHAIN
-    );
+    let targetRouter:swapData[]
+    if(toChainId == mapChainId){
+      targetRouter = directSwap(mUSDC_MAPT,subFee.toString(),subFee.toString())
+    }else{
+      targetRouter = await chainRouter(
+        tokenOut,
+        subFee.toString(),
+        tokenOut.chainId,
+        RouterType.TARGET_CHAIN
+      );
+    }
 
-    return {
-      srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
-      mapChain: mapRouter,
-      targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
-    };
+    if(fromChainId == mapChainId){
+      return {
+        mapChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
+        targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
+      };
+    }else if(toChainId == mapChainId){
+      return {
+        srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
+        mapChain: mapRouter,
+      };
+    }else{
+      return {
+        srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
+        mapChain: mapRouter,
+        targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
+      };
+    }
+
   }
 
 }
-
 
 async function findBestRouter(
   chainId: number,
@@ -308,7 +325,7 @@ function formatData(
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
-          amountOut: refRouter.output.toExact(),
+          amountOut: refRouter.toString(),
           path: pairs,
           dexName: bestRouter[i]!.platform,
           tokenIn: tokenIn,
@@ -384,7 +401,6 @@ function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{
       path: [],
     },
   ];
-
   return router
 }
 
@@ -419,17 +435,13 @@ function newToken(
   _address:string,
   _decimals:number,
   _symbol:string,
-  type:RouterType
 ):Token{
   let token: Token;
   let chainId: number = Number(_chainId);
   const decimals: number = Number(_decimals);
   if (_chainId == '5566818579631833088') {
     chainId = ChainId.NEAR;
-    let address = ZERO_ADDRESS
-    if(type == RouterType.TARGET_CHAIN){
-      address = NULL_ADDRESS
-    }
+    let address = NULL_ADDRESS
     token = new Token(
       chainId,
       address,
@@ -439,10 +451,7 @@ function newToken(
     );
   } else if (_chainId == '5566818579631833089') {
     chainId = ChainId.NEAR_TEST;
-    let address = ZERO_ADDRESS
-    if(type == RouterType.TARGET_CHAIN){
-      address = NULL_ADDRESS
-    }
+    let address = NULL_ADDRESS
     token = new Token(
       chainId,
       address,

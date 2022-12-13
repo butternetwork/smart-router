@@ -39,6 +39,7 @@ import {
   _getUsdRate,
 } from './functions/get-curve-best-router';
 import axios from 'axios';
+import { string } from '@oclif/command/lib/flags';
 
 /**
  * Determines the pools that the algorithm will consider when finding the optimal swap.
@@ -301,7 +302,6 @@ export class NearRouter
     };
 
     let routes = [];
-    let outputs = [];
     for (let i = 0; i < amounts.length; i++) {
       let swapTodos: EstimateSwapView[] = await estimateSwap({
         tokenIn,
@@ -312,10 +312,9 @@ export class NearRouter
       });
       let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
       routes.push(swapTodos);
-      outputs.push(amountOut);
     }
 
-    if (outputs.length == 0) {
+    if (routes.length == 0) {
       return { routesWithValidQuotes: [] };
     }
 
@@ -328,6 +327,7 @@ export class NearRouter
       const routeWithValidQuote = new RefRouteWithValidQuote({
         amount: amount,
         rawQuote: BigNumber.from(quote.toFixed(0)),
+        expectedOutput:quote.toString(),
         percent: percent,
         route: refRoute,
         quoteToken: quoteToken,

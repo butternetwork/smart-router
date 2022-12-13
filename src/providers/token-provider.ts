@@ -421,7 +421,8 @@ export const USDC_MAP = new Token(
   'USDC'
 );
 
-export const mUSDC_MAP = new Token(
+//MAP Testnet
+export const mUSDC_MAPT = new Token(
   212,
   '0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703',
   18,

@@ -17,6 +17,7 @@ import {
   TOKEN2_NEART,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
+import { chain } from 'lodash';
 
 interface ButterFee {
   feeToken: Token;
@@ -78,13 +79,21 @@ export async function getBridgeFee(
   provider: ethers.providers.JsonRpcProvider,
   providerChainId:string
 ): Promise<ButterFee> {
+  let chainId = srcToken.chainId.toString()
+  if(chainId == ChainId.NEAR.toString()){
+    chainId = '5566818579631833088'
+  }
+
+  if(chainId == ChainId.NEAR_TEST.toString()){
+    chainId = '5566818579631833089'
+  }
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[providerChainId]!,
     provider
   );
   let feeAmount = '';
   let feeRate: ButterFeeRate = { lowest: '0', rate: '0', highest: '0' };
-  if (IS_MAP(srcToken.chainId)) {
+  if (IS_MAP(chainId)) {
     const tokenAddress = srcToken.isNative
       ? srcToken.wrapped.address
       : srcToken.address;
@@ -98,13 +107,13 @@ export async function getBridgeFee(
     feeAmount = _getFeeAmount(amount, feeRate);
   } else {
     const mapTokenAddress = await tokenRegister.getRelayChainToken(
-      srcToken.chainId.toString(),
+      chainId,
       srcToken
     );
-console.log("mapTokenAddress",mapTokenAddress)
+console.log(mapTokenAddress)
     const relayChainAmount = await tokenRegister.getRelayChainAmount(
       mapTokenAddress,
-      srcToken.chainId.toString(),
+      chainId,
       amount
     );
     const tokenFeeRate: ButterFeeRate = await tokenRegister.getFeeRate(
@@ -117,7 +126,6 @@ console.log("mapTokenAddress",mapTokenAddress)
 
     const feeAmountInMappingToken = _getFeeAmount(relayChainAmount, feeRate);
     const feeAmountBN = BigNumber.from(feeAmountInMappingToken);
-    console.log('fee amount in mapping token', feeAmountBN.toString());
     const ratio = BigNumber.from(amount).div(BigNumber.from(relayChainAmount));
     feeRate.lowest = BigNumber.from(feeRate.lowest).mul(ratio).toString();
     feeRate.highest = BigNumber.from(feeRate.highest).mul(ratio).toString();
@@ -141,7 +149,7 @@ export async function getVaultBalance(
   if (fromToken.isNative) {
     fromToken = fromToken.wrapped;
   }
-  const mapTokenAddress = IS_MAP(fromChainId)
+  const mapTokenAddress = IS_MAP(fromChainId.toString())
     ? fromToken.address
     : await tokenRegister.getRelayChainToken(fromChainId.toString(), fromToken);
   const vaultAddress = await tokenRegister.getVaultToken(mapTokenAddress);
@@ -153,7 +161,7 @@ export async function getVaultBalance(
 
   const tokenBalance = await vaultToken.getVaultBalance(toChainId.toString());
   let toChainTokenAddress = mapTokenAddress;
-  if (!IS_MAP(toChainId)) {
+  if (!IS_MAP(toChainId.toString())) {
     toChainTokenAddress = await tokenRegister.getToChainToken(
       mapTokenAddress,
       toChainId.toString()
@@ -230,10 +238,10 @@ export function toTargetToken(chainId: number, token: Token) {
   return targetToken;
 }
 
-const IS_MAP = (id: number): boolean => {
+const IS_MAP = (id: string): boolean => {
   switch (id) {
-    case 22776:
-    case 212:
+    case '22776':
+    case '212':
       return true;
     default:
       return false;
@@ -324,7 +332,7 @@ class TokenRegister {
     if (this.contract instanceof ethers.Contract) {
       return await this.contract.getRelayChainToken(
         fromChain,
-        getHexAddress(fromToken.address, fromToken.chainId.toString(), false)
+        getHexAddress(fromToken.address, fromChain, false)
       );
     } else return '';
   }
