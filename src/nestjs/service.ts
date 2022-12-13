@@ -136,7 +136,7 @@ export class RouterService {
 
     let targetRouter:swapData[]
     if(toChainId == mapChainId){
-      targetRouter = directSwap(mUSDC_MAPT,subFee.toString(),subFee.toString())
+      targetRouter = directSwap(mUSDC_MAPT,srcAmountOut.toString(),subFee.toString())
     }else{
       targetRouter = await chainRouter(
         tokenOut,
@@ -154,7 +154,7 @@ export class RouterService {
     }else if(toChainId == mapChainId){
       return {
         srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
-        mapChain: mapRouter,
+        mapChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
       };
     }else{
       return {
@@ -225,7 +225,10 @@ async function chainRouter(
     let tokenOut: Token = toTargetToken(chainId, token);
     let swapAmount = amount
     if (routerType == RouterType.TARGET_CHAIN) {
-      swapAmount = Number(amount).toFixed(tokenIn.decimals)
+      let len1 = amount.split(".")[1]!.length
+      if(len1>tokenIn.decimals){
+        swapAmount = Number(amount).toFixed(tokenIn.decimals)
+      }
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
     }
