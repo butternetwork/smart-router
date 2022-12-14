@@ -496,7 +496,7 @@ function formatReturn(params:swapData[],chainId:string,address:string,type:Route
 
       data[i]!.chainId = chainId
       if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
-        data[i]!.tokenIn.address = data[i]!.tokenIn.name
+        data[i]!.tokenIn.address = address
         data[i]!.tokenOut.address = data[i]!.tokenOut.name
       }else{
         data[i]!.tokenIn.address = address
@@ -513,7 +513,7 @@ function formatReturn(params:swapData[],chainId:string,address:string,type:Route
       data[i]!.chainId = chainId
       if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
         data[i]!.tokenIn.address = data[i]!.tokenIn.name
-        data[i]!.tokenOut.address = data[i]!.tokenOut.name
+        data[i]!.tokenOut.address = address
       }else{
         data[i]!.tokenOut.address = address
       }
