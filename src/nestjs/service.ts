@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
-import { utils } from 'near-api-js';
 import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
@@ -9,6 +8,7 @@ import {
   WBNB_BSCT,
   WMAP_MAP,
   WMATIC_POLYGON_MUMBAI,
+  WRAP_NEART,
 } from '../providers/token-provider';
 import {
   RefRouteWithValidQuote,
@@ -108,7 +108,7 @@ export class RouterService {
 
     let srcRouter:swapData[]
     if(fromChainId == mapChainId){
-      let _amount = Number(amount) * Math.pow(10,tokenInDecimals)
+      let _amount = ethers.utils.parseUnits(amount,tokenInDecimals)
       let bridgeFee = await getBridgeFee(tokenIn,toChainId,_amount.toString(),rpcProvider,mapChainId) // chainId
       subFee = calculate(Number(amount),Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals),"sub")
       srcRouter = directSwap(mUSDC_MAPT,amount,subFee.toString())
@@ -125,8 +125,8 @@ export class RouterService {
       if (srcRouter!=null){
         let tmp = srcRouter[0]!.tokenOut
         let fromToken = new Token(tokenIn.chainId,tmp.address,tmp.decimals,tmp.symbol,tmp.name)
-        let amount = srcAmountOut * Math.pow(10,tmp.decimals)// ethers.utils.parseUnits(srcAmountOut.toString(),tmp.decimals).toString()
-        let bridgeFee = await getBridgeFee(fromToken,toChainId,amount.toFixed(0),rpcProvider,mapChainId)
+        let _amount = srcAmountOut * Math.pow(10,tmp.decimals)// ethers.utils.parseUnits(srcAmountOut.toString(),tmp.decimals).toString()
+        let bridgeFee = await getBridgeFee(fromToken,toChainId,_amount.toFixed(0),rpcProvider,mapChainId)
         let fee =  ethers.utils.formatEther(bridgeFee.amount)
         subFee = calculate(srcAmountOut,Number(fee),"sub")
       }else{
@@ -193,7 +193,7 @@ async function findBestRouter(
     tokenOut.symbol,
     tokenOut.name
   );
-  
+
   let total = 0;
   let gasCostInUSD = 0;
 
@@ -227,12 +227,9 @@ async function chainRouter(
     let tokenOut: Token = toTargetToken(chainId, token);
     let swapAmount = amount
     if (routerType == RouterType.TARGET_CHAIN) {
-      let len1 = amount.split(".")[1]!.length
-      if(len1>tokenIn.decimals){
-        swapAmount = Number(amount).toFixed(tokenIn.decimals)
-      }
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
+      swapAmount = exceedDecimals(swapAmount,tokenIn.decimals)
     }
 
 
@@ -322,7 +319,7 @@ function formatData(
             },
           });
         }
-        
+
         let _chainId = '5566818579631833088'
         if(chainId == ChainId.NEAR_TEST){
           _chainId = '5566818579631833089'
@@ -330,7 +327,7 @@ function formatData(
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
-          amountOut: refRouter.toString(),
+          amountOut: exceedDecimals(refRouter.toString(),tokenOut.decimals),
           path: pairs,
           dexName: bestRouter[i]!.platform,
           tokenIn: tokenIn,
@@ -446,23 +443,23 @@ function newToken(
   const decimals: number = Number(_decimals);
   if (_chainId == '5566818579631833088') {
     chainId = ChainId.NEAR;
-    let address = NULL_ADDRESS
+    let address = isWrapToken(_address,chainId)
     token = new Token(
       chainId,
-      address,
+      NULL_ADDRESS,
       decimals,
       _symbol,
-      _address
+      address
     );
   } else if (_chainId == '5566818579631833089') {
     chainId = ChainId.NEAR_TEST;
-    let address = NULL_ADDRESS
+    let address = isWrapToken(_address,chainId)
     token = new Token(
       chainId,
-      address,
+      NULL_ADDRESS,
       decimals,
       _symbol,
-      _address
+      address
     ) 
   }else {
     let address = isWrapToken(_address,chainId)
@@ -480,6 +477,8 @@ function isWrapToken(address:string,chainId:number):string{
         return WBNB_BSCT.address
       case ChainId.POLYGON_MUMBAI: 
         return WMATIC_POLYGON_MUMBAI.address 
+      case ChainId.NEAR_TEST: 
+        return WRAP_NEART.name! 
       default:
         return address
     }
@@ -526,4 +525,12 @@ function formatReturn(params:swapData[],chainId:string,address:string,type:Route
     throw new Error("Please check the returned data")
   }
 
+}
+
+function exceedDecimals(num:string,decimal:number):string{
+  let len = num.split(".")[1]!.length
+  if(len > decimal){
+    return Number(num).toFixed(decimal+1).slice(0,-1)
+  }
+  return num
 }

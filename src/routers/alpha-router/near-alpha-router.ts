@@ -310,7 +310,6 @@ export class NearRouter
         simplePools,
         options
       });
-      let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
       routes.push(swapTodos);
     }
 

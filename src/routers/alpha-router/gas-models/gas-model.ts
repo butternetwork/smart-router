@@ -5,15 +5,9 @@ import {
   BUSD_BNB,
   USDC_BNB,
   USDT_BNB,
-} from '../../../providers/pancakeswap/util/token-provider';
-import {
-  GLD_MAP,
   USDC_NEAR,
   USDT_NEAR,
-  WMAP_MAP,
   WRAP_NEART,
-} from '../../../providers/quickswap/util/token-provider';
-import {
   BMOS_BSCT,
   BUSD_BSCT,
   DAI_ARBITRUM,

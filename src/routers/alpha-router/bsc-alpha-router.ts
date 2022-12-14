@@ -359,7 +359,7 @@ export class BSCAlphaRouter
       tradeType == TradeType.EXACT_INPUT ? quoteCurrency : amount.currency;
     const tokenIn = currencyIn.wrapped;
     const tokenOut = currencyOut.wrapped;
-console.log("amount",amount.toExact())
+
     // Generate our distribution of amounts, i.e. fractions of the input amount.
     // We will get quotes for fractions of the input amount for different routes, then
     // combine to generate split routes.

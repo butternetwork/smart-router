@@ -14,7 +14,6 @@ import {
   BUSD_BSCT,
   PUSD_POLYGON_MUMBAI,
   AURORA_NEART,
-  TOKEN2_NEART,
   USDC_NEART,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
