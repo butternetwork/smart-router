@@ -5,14 +5,11 @@ import {
   BUSD_BNB,
   USDC_BNB,
   USDT_BNB,
-} from '../../../providers/pancakeswap/util/token-provider';
-import {
-  GLD_MAP,
   USDC_NEAR,
   USDT_NEAR,
-  WMAP_MAP,
-} from '../../../providers/quickswap/util/token-provider';
-import {
+  WRAP_NEART,
+  BMOS_BSCT,
+  BUSD_BSCT,
   DAI_ARBITRUM,
   DAI_ARBITRUM_RINKEBY,
   DAI_GÖRLI,
@@ -24,10 +21,12 @@ import {
   DAI_RINKEBY_1,
   DAI_RINKEBY_2,
   DAI_ROPSTEN,
+  PUSD_POLYGON_MUMBAI,
   USDC_ARBITRUM,
   USDC_GÖRLI,
   USDC_KOVAN,
   USDC_MAINNET,
+  USDC_MAP,
   USDC_OPTIMISM,
   USDC_OPTIMISTIC_KOVAN,
   USDC_POLYGON,
@@ -40,6 +39,7 @@ import {
   USDT_OPTIMISM,
   USDT_OPTIMISTIC_KOVAN,
   USDT_ROPSTEN,
+  WBNB_BSCT,
   WBTC_GÖRLI,
 } from '../../../providers/token-provider';
 import {
@@ -56,7 +56,7 @@ import {
   V3RouteWithValidQuote,
 } from '../entities/route-with-valid-quote';
 
-export const usdGasTokensByChain: { [chainId in ChainId]?: Token[] } = {
+export const usdGasTokensByChain: { [chainId in ChainId]: Token[] } = {
   [ChainId.MAINNET]: [DAI_MAINNET, USDC_MAINNET, USDT_MAINNET],
   [ChainId.RINKEBY]: [DAI_RINKEBY_1, DAI_RINKEBY_2],
   [ChainId.ARBITRUM_ONE]: [DAI_ARBITRUM, USDC_ARBITRUM, USDT_ARBITRUM],
@@ -71,10 +71,12 @@ export const usdGasTokensByChain: { [chainId in ChainId]?: Token[] } = {
   [ChainId.GÖRLI]: [USDC_GÖRLI, USDT_GÖRLI, WBTC_GÖRLI, DAI_GÖRLI],
   [ChainId.ROPSTEN]: [DAI_ROPSTEN, USDC_ROPSTEN, USDT_ROPSTEN],
   [ChainId.POLYGON]: [USDC_POLYGON],
-  [ChainId.POLYGON_MUMBAI]: [DAI_POLYGON_MUMBAI],
+  [ChainId.POLYGON_MUMBAI]: [PUSD_POLYGON_MUMBAI],
   [ChainId.BSC]: [BUSD_BNB, USDT_BNB, USDC_BNB],
+  [ChainId.BSC_TEST]: [BUSD_BSCT, BMOS_BSCT],
   [ChainId.NEAR]: [USDT_NEAR, USDC_NEAR],
-  [ChainId.MAP]: [WMAP_MAP],
+  [ChainId.NEAR_TEST]: [WRAP_NEART],
+  [ChainId.MAP]: [USDC_MAP],
 };
 
 export type L1ToL2GasCosts = {

@@ -4,6 +4,7 @@ import _ from 'lodash';
 import {
   pancakeTokenToUniToken,
   pancakeToUniCurrencyAmount,
+  pancakeToUniCurrencyAmount2,
   uniTokenToPancakeToken,
 } from '../../../../adapter/pancake-adapter';
 import { IV2PoolProvider } from '../../../../providers/interfaces/IPoolProvider';
@@ -83,7 +84,11 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
           return {
             gasEstimate: gasUse,
             gasCostInToken: pancakeToUniCurrencyAmount(gasCostInEth),
-            gasCostInUSD: pancakeToUniCurrencyAmount(gasCostInTermsOfUSD),
+            gasCostInUSD: pancakeToUniCurrencyAmount2(
+              token.address,
+              chainId,
+              gasCostInTermsOfUSD
+            ),
           };
         },
       };
@@ -181,10 +186,16 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
 
         return {
           gasEstimate: gasUse,
-          gasCostInToken: pancakeToUniCurrencyAmount(
+          gasCostInToken: pancakeToUniCurrencyAmount2(
+            usdToken.address,
+            chainId,
             gasCostInTermsOfQuoteToken
           ),
-          gasCostInUSD: pancakeToUniCurrencyAmount(gasCostInTermsOfUSD!),
+          gasCostInUSD: pancakeToUniCurrencyAmount2(
+            usdToken.address,
+            chainId,
+            gasCostInTermsOfUSD!
+          ),
         };
       },
     };
@@ -252,11 +263,13 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
       pancakeUsdTokens,
       (usdToken) => [usdToken, WRAPPED_NATIVE_CURRENCY[chainId]!]
     );
+
     const poolAccessor = await poolProvider.getPools(usdPools);
     const poolsRaw = poolAccessor.getAllPools();
+
     const pools = _.filter(
       poolsRaw,
-      (pool) => pool.reserve0.greaterThan(0) && pool.reserve1.greaterThan(0)
+      (pool) => pool.reserve0.greaterThan(-1) && pool.reserve1.greaterThan(-1)
     );
 
     if (pools.length == 0) {

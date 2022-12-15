@@ -22,7 +22,7 @@ export * from './uniswap/v3/caching-pool-provider';
 export * from './uniswap/v3/caching-subgraph-provider';
 export * from './uniswap/v3/pool-provider';
 export * from './uniswap/v3/quote-provider';
-export * from './uniswap/v3/static-subgraph-provider';
+//export * from './uniswap/v3/static-subgraph-provider';
 export * from './uniswap/v3/subgraph-provider';
 export * from './uniswap/v3/subgraph-provider-with-fallback';
 export * from './uniswap/v3/uri-subgraph-provider';

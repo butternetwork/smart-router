@@ -39,6 +39,7 @@ import {
   _getUsdRate,
 } from './functions/get-curve-best-router';
 import axios from 'axios';
+import { string } from '@oclif/command/lib/flags';
 
 /**
  * Determines the pools that the algorithm will consider when finding the optimal swap.
@@ -192,6 +193,7 @@ export class NearRouter
     if (protocolsSet.has(ButterProtocol.REF)) {
       quoteRefPromises.push(
         this.getRefQuotes(
+          this.chainId,
           tokenIn,
           tokenOut,
           amounts,
@@ -259,6 +261,7 @@ export class NearRouter
   }
 
   private async getRefQuotes(
+    chainId: number,
     token0: Token,
     token1: Token,
     amounts: CurrencyAmount[],
@@ -269,7 +272,13 @@ export class NearRouter
   ): Promise<{
     routesWithValidQuotes: RefRouteWithValidQuote[];
   }> {
-    init_env('mainnet');
+    if (chainId == ChainId.NEAR) {
+      init_env('mainnet');
+    } else if (chainId == ChainId.NEAR_TEST) {
+      init_env('testnet'); //ChainId.NEAR_TEST
+    } else {
+      throw new Error("the chainId isn't supported on near");
+    }
 
     let token0Name: string;
     let token1Name: string;
@@ -292,7 +301,6 @@ export class NearRouter
     };
 
     let routes = [];
-    let outputs = [];
     for (let i = 0; i < amounts.length; i++) {
       let swapTodos: EstimateSwapView[] = await estimateSwap({
         tokenIn,
@@ -301,12 +309,10 @@ export class NearRouter
         simplePools,
         options,
       });
-      let amountOut = getExpectedOutputFromSwapTodos(swapTodos, tokenOut.id);
       routes.push(swapTodos);
-      outputs.push(amountOut);
     }
 
-    if (outputs.length == 0) {
+    if (routes.length == 0) {
       return { routesWithValidQuotes: [] };
     }
 
@@ -319,6 +325,7 @@ export class NearRouter
       const routeWithValidQuote = new RefRouteWithValidQuote({
         amount: amount,
         rawQuote: BigNumber.from(quote.toFixed(0)),
+        expectedOutput: quote.toString(),
         percent: percent,
         route: refRoute,
         quoteToken: quoteToken,

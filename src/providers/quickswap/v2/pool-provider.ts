@@ -1,9 +1,10 @@
-import { ChainId, Pair, TokenAmount } from '@davidwgrossman/quickswap-sdk';
+import { ChainId, TokenAmount } from '@davidwgrossman/quickswap-sdk';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import { BigNumber } from 'ethers';
 import _ from 'lodash';
 import { uniTokenToQuickToken } from '../../../adapter/quick-adapter';
 import { IUniswapV2Pair__factory } from '../../../types/v2';
+import { CurrencyAmount } from '../../../util';
 import { log } from '../../../util/log';
 import { poolToString } from '../../../util/routes';
 import { Token } from '../../../util/token';
@@ -13,6 +14,7 @@ import {
 } from '../../interfaces/IPoolProvider';
 import { IMulticallProvider, Result } from '../../multicall-provider';
 import { ProviderConfig } from '../../provider';
+import { Pair } from '../util/pair';
 type IReserves = {
   reserve0: BigNumber;
   reserve1: BigNumber;
@@ -110,8 +112,8 @@ export class QuickV2PoolProvider implements IV2PoolProvider {
       const { reserve0, reserve1 } = reservesResult.result;
 
       const pool = new Pair(
-        new TokenAmount(uniTokenToQuickToken(token0), reserve0.toString()),
-        new TokenAmount(uniTokenToQuickToken(token1), reserve1.toString())
+        CurrencyAmount.fromRawAmount(token0, reserve0.toString()),
+        CurrencyAmount.fromRawAmount(token1, reserve1.toString())
       );
 
       const poolAddress = sortedPoolAddresses[i]!;
@@ -162,10 +164,7 @@ export class QuickV2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    const poolAddress = Pair.getAddress(
-      uniTokenToQuickToken(token0),
-      uniTokenToQuickToken(token1)
-    );
+    const poolAddress = Pair.getAddress(token0, token1);
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 

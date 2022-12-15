@@ -9,6 +9,7 @@ import _ from 'lodash';
 import {
   quickTokenToUniToken,
   quickToUniCurrencyAmount,
+  quickToUniCurrencyAmount2,
   uniTokenToQuickToken,
 } from '../../../../adapter/quick-adapter';
 import { IV2PoolProvider } from '../../../../providers/interfaces/IPoolProvider';
@@ -88,7 +89,11 @@ export class QuickV2HeuristicGasModelFactory extends IV2GasModelFactory {
           return {
             gasEstimate: gasUse,
             gasCostInToken: quickToUniCurrencyAmount(gasCostInEth),
-            gasCostInUSD: quickToUniCurrencyAmount(gasCostInTermsOfUSD),
+            gasCostInUSD: quickToUniCurrencyAmount2(
+              gasCostInTermsOfUSD,
+              token.address,
+              chainId
+            ),
           };
         },
       };
@@ -186,8 +191,16 @@ export class QuickV2HeuristicGasModelFactory extends IV2GasModelFactory {
 
         return {
           gasEstimate: gasUse,
-          gasCostInToken: quickToUniCurrencyAmount(gasCostInTermsOfQuoteToken),
-          gasCostInUSD: quickToUniCurrencyAmount(gasCostInTermsOfUSD!),
+          gasCostInToken: quickToUniCurrencyAmount2(
+            gasCostInTermsOfQuoteToken,
+            usdToken.address,
+            chainId
+          ),
+          gasCostInUSD: quickToUniCurrencyAmount2(
+            gasCostInTermsOfUSD!,
+            usdToken.address,
+            chainId
+          ),
         };
       },
     };

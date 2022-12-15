@@ -254,7 +254,7 @@ export function nearRouterToString(
   for (let pool of route.poolAddresses) {
     routerString = routerString + 'poolId:' + pool + ' --> ';
   }
-  total += Number(route.output.toExact());
+  total += Number(route.toString());
   routerString = routerString + symbolB + ' = ' + total.toString();
   return routerString;
 }

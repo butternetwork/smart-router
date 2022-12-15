@@ -338,7 +338,7 @@ export const DAI_POLYGON = new Token(
   'Dai Stablecoin'
 );
 
-export const USDT_MATIC = new Token(
+export const USDT_POLYGON = new Token(
   ChainId.POLYGON,
   '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
   6,
@@ -379,6 +379,22 @@ export const WETH_POLYGON_MUMBAI = new Token(
   'Wrapped Ether'
 );
 
+export const PMOS_POLYGON_MUMBAI = new Token(
+  ChainId.POLYGON_MUMBAI,
+  '0xe1D8eAB4e616156E11e1c59D1a0E0EFeD66f4cfa',
+  18,
+  'PMOS',
+  'PolygonMos'
+);
+
+export const PUSD_POLYGON_MUMBAI = new Token(
+  ChainId.POLYGON_MUMBAI,
+  '0x1E01CF4503808Fb30F17806035A87cf5A5217727',
+  18,
+  'PUSD',
+  'PolygonUSD'
+);
+
 //MAP tokens
 export const ETH_MAP = new Token(
   ChainId.MAP,
@@ -402,6 +418,15 @@ export const USDC_MAP = new Token(
   18,
   'Mapped USD Coin',
   'USDC'
+);
+
+//MAP Testnet
+export const mUSDC_MAPT = new Token(
+  212,
+  '0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703',
+  18,
+  'mUSDC',
+  'map usdc'
 );
 
 //BSC tokens
@@ -449,7 +474,7 @@ export const USDT_NEAR = new Token(
 export const USDC_NEAR = new Token(
   ChainId.NEAR,
   ZERO_ADDRESS,
-  6,
+  18,
   'USDC',
   'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near'
 );
@@ -460,6 +485,57 @@ export const WNEAR_NEAR = new Token(
   6,
   'WNEAR',
   'wrap.near'
+);
+
+//NEAR TESTNET
+
+export const WRAP_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  24,
+  'WRAP',
+  'wrap.testnet'
+);
+
+export const AURORA_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'AURORA',
+  'aurora.fakes.testnet'
+);
+
+export const USDC_NEART = new Token(
+  ChainId.NEAR_TEST,
+  ZERO_ADDRESS,
+  6,
+  'USDC',
+  'usdc.map007.testnet'
+);
+
+//BSC TESTNET
+export const BMOS_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0x593F6F6748dc203DFa636c299EeA6a39C0734EEd',
+  18,
+  'BMOS',
+  'BMOS'
+);
+
+export const BUSD_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0x3F1E91BFC874625f4ee6EF6D8668E79291882373',
+  18,
+  'BUSD', //BUSD
+  'BUSD' //BUSD
+);
+
+export const WBNB_BSCT = new Token(
+  ChainId.BSC_TEST,
+  '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
+  18,
+  'WBNB',
+  'Wrapped BNB'
 );
 
 export class TokenProvider implements ITokenProvider {
@@ -582,7 +658,7 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://files.mapprotocol.io/bridge/usdt.png';
     case USDT_NEAR.name:
       return 'https://files.mapprotocol.io/bridge/usdt.png';
-    case USDT_MATIC.address:
+    case USDT_POLYGON.address:
       return 'https://files.mapprotocol.io/bridge/usdt.png';
     default:
       return '';

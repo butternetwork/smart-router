@@ -1,42 +1,49 @@
-import { FACTORY_ADDRESS } from '@uniswap/v3-sdk';
 import { BigNumber } from 'ethers';
 import { ButterProtocol } from './protocol';
 
-export const V3_CORE_FACTORY_ADDRESS = FACTORY_ADDRESS;
-export const QUOTER_V2_ADDRESS = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
-export const OVM_GASPRICE_ADDRESS =
-  '0x420000000000000000000000000000000000000F';
-export const ARB_GASINFO_ADDRESS = '0x000000000000000000000000000000000000006C';
-export const TICK_LENS_ADDRESS = '0xbfd8137f7d1516D3ea5cA83523914859ec47F573';
-export const NONFUNGIBLE_POSITION_MANAGER_ADDRESS =
-  '0xC36442b4a4522E871399CD717aBDD847Ab11FE88';
-export const SWAP_ROUTER_ADDRESS = '0xE592427A0AEce92De3Edee1F18E0157C05861564';
-export const V3_MIGRATOR_ADDRESS = '0xA5644E29708357803b5A882D272c41cC0dF92B34';
-
+//mutilcall contract address
 export const UNISWAP_MULTICALL_ADDRESS =
   '0x1F98415757620B543A52E61c46B32eB19261F984';
 export const BSC_MULTICALL_ADDRESS =
   '0xC4b8A415EB2A1EABe12bfc34251e32ba2345036C';
+export const BSC_TESTNET_MULTICALL_ADDRESS =
+  '0xb10b46E2636B971FF73c140DA907214BEE076E4e';
 export const MAP_MULTICALL_ADDRESS =
   '0x4CeBB149dc672c9d0e008C40698ca8A0b8ac6c0a';
 export const MULTICALL2_ADDRESS = '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696';
+export const MATIC_TEST_MULTICALL_ADDRESS =
+  '0x935670Da4FbECF60d9BfB2a827994d103c0e4C17';
 
+//factory contract address
+export const V3_CORE_FACTORY_ADDRESS =
+  '0x1F98431c8aD98523631AE4a59f267346ea31F984';
 export const MAP_FACTORY_ADDRESS = '0x29c3d087302e3fCb75F16175A09E4C39119459B2';
+export const BSC_TEST_FACTORY_ADDRESS =
+  '0x49C03F798790383E84C50Bc3EA71efA85d51B075';
+export const MATIC_TEST_FACTORY_ADDRESS =
+  '0x604932F0AbC8E96Edcef51954DBEbe579BD1D4BE';
+
+//other contract address
+export const QUOTER_V2_ADDRESS = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
+export const OVM_GASPRICE_ADDRESS =
+  '0x420000000000000000000000000000000000000F';
+export const ARB_GASINFO_ADDRESS = '0x000000000000000000000000000000000000006C';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+export const NULL_ADDRESS = '0xffffffffffffffffffffffffffffffffffffffff';
 
-export const ROUTER_INDEX: {
-  [protocol in ButterProtocol]: BigNumber;
-} = {
-  V2: BigNumber.from(0),
-  V3: BigNumber.from(0),
-  SUSHISWAP: BigNumber.from(1),
-  QUICKSWAP: BigNumber.from(2),
-  PANCAKESWAP: BigNumber.from(3),
-  CURVE: BigNumber.from(4),
-  HIVESWAP: BigNumber.from(5),
-  REF: BigNumber.from(6),
-};
+// export const ROUTER_INDEX: {
+//   [protocol in ButterProtocol]: BigNumber;
+// } = {
+//   V2: BigNumber.from(0),
+//   V3: BigNumber.from(0),
+//   SUSHISWAP: BigNumber.from(1),
+//   QUICKSWAP: BigNumber.from(2),
+//   PANCAKESWAP: BigNumber.from(3),
+//   CURVE: BigNumber.from(4),
+//   HIVESWAP: BigNumber.from(5),
+//   REF: BigNumber.from(6),
+// };
 
 /*
 

@@ -3,9 +3,11 @@ import { ethers } from 'ethers';
 import { ButterProtocol } from './protocol';
 import {
   BSC_MAINNET_URL,
+  BSC_TESTNET_URL,
   ETH_MAINNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
+  POLYGON_MUMBAI_URL,
 } from './urls';
 export enum ChainId {
   MAINNET = 1,
@@ -20,8 +22,11 @@ export enum ChainId {
   POLYGON = 137,
   POLYGON_MUMBAI = 80001,
   BSC = 56,
+  BSC_TEST = 97,
   NEAR = 1313161554,
+  NEAR_TEST = 1313161555,
   MAP = 22776,
+  //MAP_TEST = 212
 }
 
 export const V2_SUPPORTED = [
@@ -263,8 +268,22 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     'WBNB',
     'Wrapped BNB'
   ),
+  [ChainId.BSC_TEST]: new Token(
+    ChainId.BSC_TEST,
+    '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
+    18,
+    'WBNB',
+    'Wrapped BNB'
+  ),
   [ChainId.NEAR]: new Token(
     ChainId.NEAR,
+    '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
+    24,
+    'Wrapped NEAR fungible token',
+    'wNEAR'
+  ),
+  [ChainId.NEAR_TEST]: new Token(
+    ChainId.NEAR_TEST,
     '0xc42c30ac6cc15fac9bd938618bcaa1a1fae8501d',
     24,
     'Wrapped NEAR fungible token',
@@ -349,6 +368,10 @@ export function getChainProvider(chainId: number) {
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
       protocols = [ButterProtocol.PANCAKESWAP];
       break;
+    case ChainId.BSC_TEST:
+      provider = new ethers.providers.JsonRpcProvider(BSC_TESTNET_URL, chainId);
+      protocols = [ButterProtocol.PANCAKESWAP];
+      break;
     case ChainId.POLYGON:
       provider = new ethers.providers.JsonRpcProvider(
         POLYGON_MAINNET_URL,
@@ -360,6 +383,13 @@ export function getChainProvider(chainId: number) {
         ButterProtocol.SUSHISWAP,
       ];
       break;
+    case ChainId.POLYGON_MUMBAI:
+      provider = new ethers.providers.JsonRpcProvider(
+        POLYGON_MUMBAI_URL,
+        chainId
+      );
+      protocols = [ButterProtocol.QUICKSWAP];
+      break;
     case ChainId.MAP:
       provider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, chainId);
       protocols = [ButterProtocol.HIVESWAP];
@@ -367,8 +397,11 @@ export function getChainProvider(chainId: number) {
     case ChainId.NEAR:
       protocols = [ButterProtocol.REF];
       break;
+    case ChainId.NEAR_TEST:
+      protocols = [ButterProtocol.REF];
+      break;
     default:
-      throw 'the chain is not supported for now';
+      throw new Error('the chain is not supported for now');
   }
   return { provider, protocols };
 }
@@ -378,8 +411,12 @@ export function IS_SUPPORT_CHAIN(id: string) {
     case '1':
     case '137':
     case '56':
+    case '97':
+    case '212':
     case '22776':
+    case '80001':
     case '5566818579631833088':
+    case '5566818579631833089':
       break;
     default:
       throw new Error(`Unsupported chain id: ${id}`);

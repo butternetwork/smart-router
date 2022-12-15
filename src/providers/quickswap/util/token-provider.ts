@@ -56,6 +56,24 @@ export const WNEAR_NEAR = new Token(
   'wrap.near'
 );
 
+//
+
+export const WRAP_NEART = new Token(
+  ChainId.NEAR_TEST,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'wrap',
+  'wrap.testnet'
+);
+
+export const AURORA_NEARTT = new Token(
+  ChainId.NEAR_TEST,
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  6,
+  'aurora',
+  'aurora.fakes.testnet'
+);
+
 //BSC tokens
 export const USDT_BNB = new Token(
   56,
@@ -150,7 +168,7 @@ export const WMATIC_MATIC = new Token(
 );
 
 export const WETH_MATIC = new Token(
-  1313161555,
+  ChainId.NEAR_TEST,
   '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
   18,
   'WETH',
