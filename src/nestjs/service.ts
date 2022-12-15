@@ -111,7 +111,7 @@ export class RouterService {
       let _amount = ethers.utils.parseUnits(amount,tokenInDecimals)
       let bridgeFee = await getBridgeFee(
         tokenIn,
-        toTargetToken(Number(toChainId),tokenOut),
+        toChainId,
         _amount.toString(),
         rpcProvider,
         mapChainId
@@ -138,7 +138,7 @@ export class RouterService {
         let _amount = srcAmountOut * Math.pow(10,tmp.decimals)
         let bridgeFee = await getBridgeFee(
           fromToken,
-          toTargetToken(Number(toChainId),fromToken),
+          toChainId,
           _amount.toFixed(0),
           rpcProvider,
           mapChainId

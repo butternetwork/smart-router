@@ -74,13 +74,13 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export async function getBridgeFee(
   srcToken: Token,
-  targetToken: Token,
+  targetChain: string,
   amount: string,
   provider: ethers.providers.JsonRpcProvider,
   providerChainId: string
 ): Promise<ButterFee> {
   let srcChainId = isNearChainId(srcToken.chainId.toString())
-  let targetChainId = isNearChainId(targetToken.chainId.toString())
+  let targetChainId = isNearChainId(targetChain)
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[providerChainId]!,
     provider
@@ -234,6 +234,7 @@ export function toTargetToken(chainId: number, token: Token) {
       targetToken = USDC_NEART;
       break;
     default:
+      console.log("chainId",chainId)
       throw new Error('There is no such token in the chain');
   }
 
