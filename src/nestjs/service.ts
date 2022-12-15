@@ -143,7 +143,7 @@ export class RouterService {
           rpcProvider,
           mapChainId
         )
-        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals),"sub")
+        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
       }else{
         throw new Error("there isn't the best router in src Chain")
       }
