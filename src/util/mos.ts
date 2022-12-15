@@ -74,25 +74,26 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export async function getBridgeFee(
   srcToken: Token,
-  targetChain: string,
+  targetToken: Token,
   amount: string,
   provider: ethers.providers.JsonRpcProvider,
-  providerChainId:string
+  providerChainId: string
 ): Promise<ButterFee> {
-  let chainId = srcToken.chainId.toString()
+  let srcChainId = isNearChainId(srcToken.chainId.toString())
+  let targetChainId = isNearChainId(targetToken.chainId.toString())
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[providerChainId]!,
     provider
   );
   let feeAmount = '';
   let feeRate: ButterFeeRate = { lowest: '0', rate: '0', highest: '0' };
-  if (IS_MAP(chainId)) {
+  if (IS_MAP(srcChainId)) {
     const tokenAddress = srcToken.isNative
       ? srcToken.wrapped.address
       : srcToken.address;
     const tokenFeeRate = await tokenRegister.getFeeRate(
       tokenAddress,
-      targetChain
+      targetChainId
     );
     feeRate.lowest = tokenFeeRate.lowest.toString();
     feeRate.highest = tokenFeeRate.highest.toString();
@@ -100,28 +101,37 @@ export async function getBridgeFee(
     feeAmount = _getFeeAmount(amount, feeRate);
   } else {
     const mapTokenAddress = await tokenRegister.getRelayChainToken(
-      chainId,
+      srcChainId,
       srcToken
     );
     const relayChainAmount = await tokenRegister.getRelayChainAmount(
       mapTokenAddress,
-      chainId,
+      srcChainId,
       amount
     );
     const tokenFeeRate: ButterFeeRate = await tokenRegister.getFeeRate(
       mapTokenAddress,
-      targetChain
+      targetChainId
     );
     feeRate.lowest = tokenFeeRate.lowest;
     feeRate.highest = tokenFeeRate.highest;
     feeRate.rate = BigNumber.from(tokenFeeRate.rate).div(100).toString();
-
     const feeAmountInMappingToken = _getFeeAmount(relayChainAmount, feeRate);
     const feeAmountBN = BigNumber.from(feeAmountInMappingToken);
-    const ratio = BigNumber.from(amount).div(BigNumber.from(relayChainAmount));
-    feeRate.lowest = BigNumber.from(feeRate.lowest).mul(ratio).toString();
-    feeRate.highest = BigNumber.from(feeRate.highest).mul(ratio).toString();
-    feeAmount = feeAmountBN.mul(ratio).toString();
+    // const ratio = BigNumber.from(amount).div(BigNumber.from(relayChainAmount));
+    // console.log("ratio    |    ",ratio.toString())
+    // feeRate.lowest = BigNumber.from(feeRate.lowest).mul(ratio).toString();
+    // feeRate.highest = BigNumber.from(feeRate.highest).mul(ratio).toString();
+    // feeAmount = feeAmountBN.mul(ratio).toString();
+    feeRate.lowest = BigNumber.from(feeRate.lowest)
+    .mul(amount)
+    .div(relayChainAmount)
+    .toString();
+    feeRate.highest = BigNumber.from(feeRate.highest)
+    .mul(amount)
+    .div(relayChainAmount)
+    .toString();
+    feeAmount = feeAmountBN.mul(amount).div(relayChainAmount).toString();
   }
   return Promise.resolve({
     feeToken: srcToken,
@@ -210,7 +220,7 @@ export function toTargetToken(chainId: number, token: Token) {
       break;
     case ChainId.BSC_TEST:
       targetToken = BUSD_BSCT;
-      break;  
+      break;
     case ChainId.POLYGON:
       targetToken = USDC_POLYGON;
       break;
@@ -318,31 +328,17 @@ class TokenRegister {
     fromChain: string,
     fromToken: Token
   ): Promise<string> {
-    if(fromChain == ChainId.NEAR.toString()){
-      if (this.contract instanceof ethers.Contract) {
-        return await this.contract.getRelayChainToken(
-          fromChain,
-          getHexAddress(fromToken.name!, '5566818579631833088', false)
-        );
-      } else return '';
-    }
-  
-    if(fromChain == ChainId.NEAR_TEST.toString()){
-      if (this.contract instanceof ethers.Contract) {
-        return await this.contract.getRelayChainToken(
-          fromChain,
-          getHexAddress(fromToken.name!, '5566818579631833089', false)
-        );
-      } else return '';
-    }
-
     if (fromToken.isNative) {
       fromToken = fromToken.wrapped;
     }
     if (this.contract instanceof ethers.Contract) {
+      let address = fromToken.address
+      if(fromChain == '5566818579631833088' || fromChain == '5566818579631833089'){
+        address = fromToken.name!
+      }
       return await this.contract.getRelayChainToken(
         fromChain,
-        getHexAddress(fromToken.address, fromChain, false)
+        getHexAddress(address, fromChain, false)
       );
     } else return '';
   }
@@ -533,4 +529,14 @@ function _getFeeAmount(amount: string, feeRate: ButterFeeRate): string {
     return feeRate.lowest.toString();
   }
   return feeAmount.toString();
+}
+
+function isNearChainId(chainId:string):string{
+  if (chainId == ChainId.NEAR.toString()) {
+    return '5566818579631833088'
+  }else if(chainId == ChainId.NEAR_TEST.toString()){
+    return '5566818579631833089'
+  }else{
+    return  chainId
+  }
 }

@@ -1,7 +1,7 @@
 
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers, utils } from 'ethers';
-import { BMOS_BSCT, BUSD_BSCT, mUSDC_MAPT, PMOS_POLYGON_MUMBAI, PUSD_POLYGON_MUMBAI, USDC_NEAR, WBNB_BSCT } from '../providers';
+import { BMOS_BSCT, BUSD_BSCT, mUSDC_MAPT, PMOS_POLYGON_MUMBAI, PUSD_POLYGON_MUMBAI, USDC_NEAR, USDC_NEART, WBNB_BSCT } from '../providers';
 import { _getUsdRate } from '../routers/alpha-router/functions/get-curve-best-router';
 import { CurrencyAmount } from '../util';
 import { getBridgeFee, getVaultBalance } from '../util/mos';
@@ -23,23 +23,36 @@ const BSC_TEST_MOST = new Token(
   'MOST Token'
 );
 
-async function test1() {
+// async function test1() {
+//   const provider = new ethers.providers.JsonRpcProvider(
+//     'https://testnet-rpc.maplabs.io'
+//   );
+//   const data = await getVaultBalance(212, MAP_TEST_MOST, 97, provider);
+//   console.log('test1', data);
+// }
+
+async function test2() {
   const provider = new ethers.providers.JsonRpcProvider(
     'https://testnet-rpc.maplabs.io'
   );
-  const data = await getVaultBalance(212, MAP_TEST_MOST, 97, provider);
-  console.log('test1', data);
-}
 
-async function test2() {
-  // const provider = new ethers.providers.JsonRpcProvider(
-  //   'https://testnet-rpc.maplabs.io'
-  // );
+  console.log("polygon -> near")
+  let a = await getBridgeFee(PUSD_POLYGON_MUMBAI, USDC_NEART, '80', provider,'212')
+  console.log("amount",a.amount)
+  console.log('============')
+  console.log()
 
-  // console.log(await getBridgeFee(PUSD_POLYGON_MUMBAI, '97', '80', provider,'212'))
-  //console.log(await getBridgeFee(BUSD_BSCT, '80001', '80', provider,'212'))
-  console.log(ethers.utils.formatUnits("10",18))
-  console.log(ethers.utils.parseUnits("889.4855614461119",6).toString())
+  console.log("near -> polygon")
+  let b = await getBridgeFee(USDC_NEART, PUSD_POLYGON_MUMBAI, '80', provider,'212')
+  console.log("amount",b.amount)
+  console.log('============')
+  console.log()
+
+  // console.log("polygon -> bsc")
+  // let c = await getBridgeFee(PUSD_POLYGON_MUMBAI, BMOS_BSCT, '80', provider,'212')
+  // console.log("amount",c.amount)
+  // console.log('============')
+  // console.log()
 }
 
 //test1()

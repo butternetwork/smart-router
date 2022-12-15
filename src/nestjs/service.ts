@@ -109,8 +109,18 @@ export class RouterService {
     let srcRouter:swapData[]
     if(fromChainId == mapChainId){
       let _amount = ethers.utils.parseUnits(amount,tokenInDecimals)
-      let bridgeFee = await getBridgeFee(tokenIn,toChainId,_amount.toString(),rpcProvider,mapChainId) // chainId
-      subFee = calculate(Number(amount),Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals),"sub")
+      let bridgeFee = await getBridgeFee(
+        tokenIn,
+        toTargetToken(Number(toChainId),tokenOut),
+        _amount.toString(),
+        rpcProvider,
+        mapChainId
+      ) // chainId
+      subFee = calculate(
+        Number(amount),
+        Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals)
+        ,"sub"
+      )
       srcRouter = directSwap(mUSDC_MAPT,amount,subFee.toString())
     }else{
       srcRouter = await chainRouter(
@@ -125,8 +135,14 @@ export class RouterService {
       if (srcRouter!=null){
         let tmp = srcRouter[0]!.tokenOut
         let fromToken = new Token(tokenIn.chainId,tmp.address,tmp.decimals,tmp.symbol,tmp.name)
-        let _amount = srcAmountOut * Math.pow(10,tmp.decimals)// ethers.utils.parseUnits(srcAmountOut.toString(),tmp.decimals).toString()
-        let bridgeFee = await getBridgeFee(fromToken,toChainId,_amount.toFixed(0),rpcProvider,mapChainId)
+        let _amount = srcAmountOut * Math.pow(10,tmp.decimals)
+        let bridgeFee = await getBridgeFee(
+          fromToken,
+          toTargetToken(Number(toChainId),fromToken),
+          _amount.toFixed(0),
+          rpcProvider,
+          mapChainId
+        )
         let fee =  ethers.utils.formatEther(bridgeFee.amount)
         subFee = calculate(srcAmountOut,Number(fee),"sub")
       }else{
