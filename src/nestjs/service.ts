@@ -143,8 +143,7 @@ export class RouterService {
           rpcProvider,
           mapChainId
         )
-        let fee =  ethers.utils.formatUnits(bridgeFee.amount,tmp.decimals)
-        subFee = calculate(srcAmountOut,Number(fee),"sub")
+        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals),"sub")
       }else{
         throw new Error("there isn't the best router in src Chain")
       }
