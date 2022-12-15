@@ -384,7 +384,10 @@ export function getChainProvider(chainId: number) {
       ];
       break;
     case ChainId.POLYGON_MUMBAI:
-      provider = new ethers.providers.JsonRpcProvider(POLYGON_MUMBAI_URL, chainId);
+      provider = new ethers.providers.JsonRpcProvider(
+        POLYGON_MUMBAI_URL,
+        chainId
+      );
       protocols = [ButterProtocol.QUICKSWAP];
       break;
     case ChainId.MAP:

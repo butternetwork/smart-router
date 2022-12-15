@@ -21,7 +21,7 @@ import {
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
   AURORA_NEART,
-  USDC_NEART
+  USDC_NEART,
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -37,7 +37,14 @@ import { TradeType } from '../util/constants';
 import { getBridgeFee } from '../util/mos';
 import { ButterProtocol } from '../util/protocol';
 import { Token } from '../util/token';
-import { BSC_MAINNET_URL, BSC_TESTNET_URL, ETH_MAINNET_URL, MAP_MAINNET_URL, POLYGON_MAINNET_URL, POLYGON_MUMBAI_URL } from '../util/urls';
+import {
+  BSC_MAINNET_URL,
+  BSC_TESTNET_URL,
+  ETH_MAINNET_URL,
+  MAP_MAINNET_URL,
+  POLYGON_MAINNET_URL,
+  POLYGON_MUMBAI_URL,
+} from '../util/urls';
 import JSBI from 'jsbi';
 
 async function main() {
@@ -49,19 +56,19 @@ async function main() {
   // await findBestRouter(ChainId.MAP,WMAP_MAP,USDC_MAP,amount)
   // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
-  
+
   // await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
   // await findBestRouter(ChainId.POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,PMOS_POLYGON_MUMBAI,amount)
-  
+
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,BMOS_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,BMOS_BSCT,BUSD_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 
-  await findBestRouter(ChainId.NEAR_TEST,WRAP_NEART,USDC_NEART,amount);
-  await findBestRouter(ChainId.NEAR_TEST,USDC_NEART,WRAP_NEART,amount);
+  await findBestRouter(ChainId.NEAR_TEST, WRAP_NEART, USDC_NEART, amount);
+  await findBestRouter(ChainId.NEAR_TEST, USDC_NEART, WRAP_NEART, amount);
 
   // console.log(utils.formatUnits("1000000000000000000000000",24))
   // console.log(utils.parseUnits("1000000000000000000000000",18).toString())
@@ -97,7 +104,10 @@ async function findBestRouter(
       protocols = [ButterProtocol.PANCAKESWAP];
       break;
     case ChainId.POLYGON:
-      provider = new ethers.providers.JsonRpcProvider(POLYGON_MAINNET_URL, chainId);
+      provider = new ethers.providers.JsonRpcProvider(
+        POLYGON_MAINNET_URL,
+        chainId
+      );
       protocols = [
         ButterProtocol.QUICKSWAP,
         ButterProtocol.UNI_V3,
@@ -105,10 +115,11 @@ async function findBestRouter(
       ];
       break;
     case ChainId.POLYGON_MUMBAI:
-      provider = new ethers.providers.JsonRpcProvider(POLYGON_MUMBAI_URL, chainId);
-      protocols = [
-        ButterProtocol.QUICKSWAP
-      ];
+      provider = new ethers.providers.JsonRpcProvider(
+        POLYGON_MUMBAI_URL,
+        chainId
+      );
+      protocols = [ButterProtocol.QUICKSWAP];
       break;
     case ChainId.MAP: //map
       provider = new ethers.providers.JsonRpcProvider(MAP_MAINNET_URL, chainId);
@@ -119,7 +130,7 @@ async function findBestRouter(
       break;
     case ChainId.NEAR_TEST: //near
       protocols = [ButterProtocol.REF];
-      break;  
+      break;
     default:
       protocols = [
         ButterProtocol.UNI_V2,
@@ -158,7 +169,11 @@ async function findBestRouter(
     }
   } else {
     for (let route of swapRoute.route) {
-      console.log(`${routeAmountToString(route)} = ${route.output.toExact()} | ${route.quote.toExact()})}`);
+      console.log(
+        `${routeAmountToString(
+          route
+        )} = ${route.output.toExact()} | ${route.quote.toExact()})}`
+      );
       total += Number(route.output.toExact());
       gasCostInUSD += parseFloat(route.gasCostInUSD.toExact());
     }

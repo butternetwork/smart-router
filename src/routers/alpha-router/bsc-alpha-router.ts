@@ -252,7 +252,8 @@ export class BSCAlphaRouter
     this.chainId = chainId;
     this.provider = provider;
     this.multicall2Provider =
-      multicall2Provider ?? new BSCMulticallProvider(chainId, provider, 375_000);
+      multicall2Provider ??
+      new BSCMulticallProvider(chainId, provider, 375_000);
     this.pancakeV2PoolProvider =
       pancakeV2PoolProvider ??
       new PancakeV2PoolProvider(chainId, this.multicall2Provider);

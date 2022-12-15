@@ -16,7 +16,6 @@ import { ProviderConfig } from '../../provider';
 import { getCreate2Address } from '@ethersproject/address';
 import { pack, keccak256 } from '@ethersproject/solidity';
 
-
 export type V2PoolRetryOptions = AsyncRetry.Options;
 
 export class V2PoolProvider implements IV2PoolProvider {

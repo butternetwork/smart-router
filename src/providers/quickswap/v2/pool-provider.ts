@@ -164,10 +164,7 @@ export class QuickV2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    const poolAddress = Pair.getAddress(
-      token0,
-      token1
-    );
+    const poolAddress = Pair.getAddress(token0, token1);
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 

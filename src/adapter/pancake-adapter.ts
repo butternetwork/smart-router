@@ -11,7 +11,10 @@ import {
 } from '@uniswap/sdk-core';
 import { Pair as UPair } from '@uniswap/v2-sdk';
 import JSBI from 'jsbi';
-import { wrappedCurrency, wrappedCurrency2 } from '../providers/pancakeswap/v2/quote-provider';
+import {
+  wrappedCurrency,
+  wrappedCurrency2,
+} from '../providers/pancakeswap/v2/quote-provider';
 import { PancakeV2Route, V2Route } from '../routers';
 import { CurrencyAmount as UCurrencyAmount } from '../util/amounts';
 
@@ -83,12 +86,12 @@ export function pancakeToUniCurrencyAmount(
 }
 
 export function pancakeToUniCurrencyAmount2(
-  address:string,
-  chainId:number,
+  address: string,
+  chainId: number,
   amount: CurrencyAmount
 ): UCurrencyAmount {
   return UCurrencyAmount.fromRawAmount(
-    pancakeTokenToUniToken(wrappedCurrency2(amount.currency,chainId,address)),
+    pancakeTokenToUniToken(wrappedCurrency2(amount.currency, chainId, address)),
     amount.numerator
   );
 }

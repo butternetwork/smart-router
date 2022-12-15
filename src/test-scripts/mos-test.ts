@@ -1,7 +1,15 @@
-
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers, utils } from 'ethers';
-import { BMOS_BSCT, BUSD_BSCT, mUSDC_MAPT, PMOS_POLYGON_MUMBAI, PUSD_POLYGON_MUMBAI, USDC_NEAR, USDC_NEART, WBNB_BSCT } from '../providers';
+import {
+  BMOS_BSCT,
+  BUSD_BSCT,
+  mUSDC_MAPT,
+  PMOS_POLYGON_MUMBAI,
+  PUSD_POLYGON_MUMBAI,
+  USDC_NEAR,
+  USDC_NEART,
+  WBNB_BSCT,
+} from '../providers';
 import { _getUsdRate } from '../routers/alpha-router/functions/get-curve-best-router';
 import { CurrencyAmount } from '../util';
 import { getBridgeFee, getVaultBalance } from '../util/mos';
@@ -36,17 +44,29 @@ async function test2() {
     'https://testnet-rpc.maplabs.io'
   );
 
-  console.log("polygon -> near")
-  let a = await getBridgeFee(PUSD_POLYGON_MUMBAI, USDC_NEART, '80', provider,'212')
-  console.log("amount",a.amount)
-  console.log('============')
-  console.log()
+  console.log('polygon -> near');
+  let a = await getBridgeFee(
+    PUSD_POLYGON_MUMBAI,
+    USDC_NEART,
+    '80',
+    provider,
+    '212'
+  );
+  console.log('amount', a.amount);
+  console.log('============');
+  console.log();
 
-  console.log("near -> polygon")
-  let b = await getBridgeFee(USDC_NEART, PUSD_POLYGON_MUMBAI, '80', provider,'212')
-  console.log("amount",b.amount)
-  console.log('============')
-  console.log()
+  console.log('near -> polygon');
+  let b = await getBridgeFee(
+    USDC_NEART,
+    PUSD_POLYGON_MUMBAI,
+    '80',
+    provider,
+    '212'
+  );
+  console.log('amount', b.amount);
+  console.log('============');
+  console.log();
 
   // console.log("polygon -> bsc")
   // let c = await getBridgeFee(PUSD_POLYGON_MUMBAI, BMOS_BSCT, '80', provider,'212')
@@ -56,4 +76,4 @@ async function test2() {
 }
 
 //test1()
-test2()
+test2();

@@ -534,17 +534,17 @@ export class AlphaRouter
     }
     this.v2PoolProvider =
       v2PoolProvider ?? new V2PoolProvider(chainId, this.multicall2Provider);
-    
-      this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
 
-    if(chainId == ChainId.POLYGON_MUMBAI){
+    this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
+
+    if (chainId == ChainId.POLYGON_MUMBAI) {
       this.quickV2PoolProvider =
-      quickV2PoolProvider ??
-      new QuickV2PoolProvider(QChainId.MUMBAI, this.multicall2Provider);
-    } else{
+        quickV2PoolProvider ??
+        new QuickV2PoolProvider(QChainId.MUMBAI, this.multicall2Provider);
+    } else {
       this.quickV2PoolProvider =
-      quickV2PoolProvider ??
-      new QuickV2PoolProvider(QChainId.MATIC, this.multicall2Provider);
+        quickV2PoolProvider ??
+        new QuickV2PoolProvider(QChainId.MATIC, this.multicall2Provider);
     }
 
     this.quickV2QuoteProvider =

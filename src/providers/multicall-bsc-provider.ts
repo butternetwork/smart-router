@@ -4,7 +4,10 @@ import _ from 'lodash';
 import stats from 'stats-lite';
 import { UniswapInterfaceMulticall__factory } from '../types/v3/factories/UniswapInterfaceMulticall__factory';
 import { UniswapInterfaceMulticall } from '../types/v3/UniswapInterfaceMulticall';
-import { BSC_MULTICALL_ADDRESS, BSC_TESTNET_MULTICALL_ADDRESS } from '../util/addresses';
+import {
+  BSC_MULTICALL_ADDRESS,
+  BSC_TESTNET_MULTICALL_ADDRESS,
+} from '../util/addresses';
 import { log } from '../util/log';
 import {
   CallMultipleFunctionsOnSameContractParams,
@@ -20,7 +23,7 @@ export type BSCMulticallConfig = {
 
 const contractAddressByChain: { [chainId in ChainId]?: string } = {
   [ChainId.BSC]: BSC_MULTICALL_ADDRESS,
-  [ChainId.BSC_TEST]:BSC_TESTNET_MULTICALL_ADDRESS
+  [ChainId.BSC_TEST]: BSC_TESTNET_MULTICALL_ADDRESS,
 };
 
 /**
@@ -38,7 +41,7 @@ export class BSCMulticallProvider extends IMulticallProvider<BSCMulticallConfig>
   constructor(
     protected chainId: ChainId,
     protected provider: providers.BaseProvider,
-    protected gasLimitPerCall = 1_000_000,
+    protected gasLimitPerCall = 1_000_000
   ) {
     super();
     const multicallAddress = contractAddressByChain[this.chainId];

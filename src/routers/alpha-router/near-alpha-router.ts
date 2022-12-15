@@ -272,13 +272,12 @@ export class NearRouter
   ): Promise<{
     routesWithValidQuotes: RefRouteWithValidQuote[];
   }> {
-
-    if(chainId == ChainId.NEAR){
+    if (chainId == ChainId.NEAR) {
       init_env('mainnet');
-    }else if(chainId == ChainId.NEAR_TEST){
-      init_env('testnet');//ChainId.NEAR_TEST
-    }else{
-      throw new Error("the chainId isn't supported on near")
+    } else if (chainId == ChainId.NEAR_TEST) {
+      init_env('testnet'); //ChainId.NEAR_TEST
+    } else {
+      throw new Error("the chainId isn't supported on near");
     }
 
     let token0Name: string;
@@ -308,7 +307,7 @@ export class NearRouter
         tokenOut,
         amountIn: amounts[i]!.toExact(),
         simplePools,
-        options
+        options,
       });
       routes.push(swapTodos);
     }
@@ -326,7 +325,7 @@ export class NearRouter
       const routeWithValidQuote = new RefRouteWithValidQuote({
         amount: amount,
         rawQuote: BigNumber.from(quote.toFixed(0)),
-        expectedOutput:quote.toString(),
+        expectedOutput: quote.toString(),
         percent: percent,
         route: refRoute,
         quoteToken: quoteToken,

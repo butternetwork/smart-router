@@ -86,7 +86,7 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
       }`
     );
 
-    const poolAddressToPool: { [poolAddress: string]: Pair|BscTestPair } = {};
+    const poolAddressToPool: { [poolAddress: string]: Pair | BscTestPair } = {};
 
     const invalidPools: [Token, Token][] = [];
 
@@ -103,19 +103,19 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
       const [token0, token1] = sortedTokenPairs[i]!;
       const { reserve0, reserve1 } = reservesResult.result;
 
-      let pool
-      if(this.chainId == ChainId.BSC){
+      let pool;
+      if (this.chainId == ChainId.BSC) {
         pool = new Pair(
           new TokenAmount(uniTokenToPancakeToken(token0), reserve0.toString()),
           new TokenAmount(uniTokenToPancakeToken(token1), reserve1.toString())
         );
-      }else if(this.chainId == ChainId.BSC_TEST){
+      } else if (this.chainId == ChainId.BSC_TEST) {
         pool = new BscTestPair(
           CurrencyAmount.fromRawAmount(token0, reserve0.toString()),
           CurrencyAmount.fromRawAmount(token1, reserve1.toString())
         );
-      }else{
-        throw new Error(`unknown token chainId ${this.chainId}`)
+      } else {
+        throw new Error(`unknown token chainId ${this.chainId}`);
       }
 
       const poolAddress = sortedPoolAddresses[i]!;
@@ -140,11 +140,14 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
     log.debug({ poolStrs }, `Found ${poolStrs.length} valid pools`);
 
     return {
-      getPool: (tokenA: Token, tokenB: Token): Pair | BscTestPair | undefined => {
+      getPool: (
+        tokenA: Token,
+        tokenB: Token
+      ): Pair | BscTestPair | undefined => {
         const { poolAddress } = this.getPoolAddress(tokenA, tokenB);
         return poolAddressToPool[poolAddress];
       },
-      getPoolByAddress: (address: string): Pair| BscTestPair  | undefined =>
+      getPoolByAddress: (address: string): Pair | BscTestPair | undefined =>
         poolAddressToPool[address],
       getAllPools: (): any[] => Object.values(poolAddressToPool),
     };
@@ -166,20 +169,20 @@ export class PancakeV2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    let poolAddress :string
-    if(tokenA.chainId == ChainId.BSC){
+    let poolAddress: string;
+    if (tokenA.chainId == ChainId.BSC) {
       poolAddress = Pair.getAddress(
         uniTokenToPancakeToken(token0),
         uniTokenToPancakeToken(token1)
       );
-    }else if(tokenA.chainId == ChainId.BSC_TEST){
+    } else if (tokenA.chainId == ChainId.BSC_TEST) {
       poolAddress = computeBscTestPairAddress({
-        factoryAddress:BSC_TEST_FACTORY_ADDRESS,
-        tokenA:token0,
-        tokenB:token1
+        factoryAddress: BSC_TEST_FACTORY_ADDRESS,
+        tokenA: token0,
+        tokenB: token1,
       });
-    }else{
-      throw(new Error(`unknown token chianId ${tokenA.chainId}`))
+    } else {
+      throw new Error(`unknown token chianId ${tokenA.chainId}`);
     }
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;

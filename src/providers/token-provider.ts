@@ -395,7 +395,6 @@ export const PUSD_POLYGON_MUMBAI = new Token(
   'PolygonUSD'
 );
 
-
 //MAP tokens
 export const ETH_MAP = new Token(
   ChainId.MAP,
@@ -514,8 +513,7 @@ export const USDC_NEART = new Token(
   'usdc.map007.testnet'
 );
 
-
-//BSC TESTNET 
+//BSC TESTNET
 export const BMOS_BSCT = new Token(
   ChainId.BSC_TEST,
   '0x593F6F6748dc203DFa636c299EeA6a39C0734EEd',
@@ -528,8 +526,8 @@ export const BUSD_BSCT = new Token(
   ChainId.BSC_TEST,
   '0x3F1E91BFC874625f4ee6EF6D8668E79291882373',
   18,
-  'BUSD',//BUSD
-  'BUSD'//BUSD
+  'BUSD', //BUSD
+  'BUSD' //BUSD
 );
 
 export const WBNB_BSCT = new Token(

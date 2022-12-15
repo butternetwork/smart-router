@@ -84,7 +84,11 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
           return {
             gasEstimate: gasUse,
             gasCostInToken: pancakeToUniCurrencyAmount(gasCostInEth),
-            gasCostInUSD: pancakeToUniCurrencyAmount2(token.address,chainId,gasCostInTermsOfUSD),
+            gasCostInUSD: pancakeToUniCurrencyAmount2(
+              token.address,
+              chainId,
+              gasCostInTermsOfUSD
+            ),
           };
         },
       };
@@ -191,7 +195,7 @@ export class PancakeV2HeuristicGasModelFactory extends IV2GasModelFactory {
             usdToken.address,
             chainId,
             gasCostInTermsOfUSD!
-            ),
+          ),
         };
       },
     };

@@ -81,8 +81,11 @@ export class PancakeV2QuoteProvider implements IPancakeV2QuoteProvider {
               const [outputAmountNew] = pair.getOutputAmount(outputAmount);
               outputAmount = outputAmountNew;
             }
-            
-            let tmp = utils.parseUnits(outputAmount.toExact(),outputAmount.currency.decimals)
+
+            let tmp = utils.parseUnits(
+              outputAmount.toExact(),
+              outputAmount.currency.decimals
+            );
             amountQuotes.push({
               amount,
               quote: BigNumber.from(tmp),
@@ -159,7 +162,11 @@ export function wrappedCurrency(currency: Currency, chainId: ChainId): Token {
   invariant(false, 'CURRENCY');
 }
 
-export function wrappedCurrency2(currency: Currency, chainId: ChainId,address:string): Token {
+export function wrappedCurrency2(
+  currency: Currency,
+  chainId: ChainId,
+  address: string
+): Token {
   if (currency instanceof Token) return currency;
   if (currency === ETHER) return WETH[chainId];
   return new Token(
@@ -168,5 +175,5 @@ export function wrappedCurrency2(currency: Currency, chainId: ChainId,address:st
     currency.decimals,
     currency.symbol,
     currency.name
-  )
+  );
 }

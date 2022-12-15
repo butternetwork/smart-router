@@ -516,7 +516,7 @@ export type RefRouteWithValidQuoteParams = {
   rawQuote: BigNumber;
   percent: number;
   route: RefRoute;
-  expectedOutput:string;
+  expectedOutput: string;
   quoteToken: Token;
   gasPriceWei: BigNumber;
   tradeType: TradeType;

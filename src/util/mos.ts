@@ -51,22 +51,28 @@ enum mosSupportedChainId {
 }
 
 const MOS_CONTRACT_ADDRESS_SET: { [chainId in mosSupportedChainId]: string } = {
-  [mosSupportedChainId.MAP_MAINNET]: '0x630105189c7114667a7179Aa57f07647a5f42B7F',
-  [mosSupportedChainId.BSC_MAINNET]: '0x630105189c7114667a7179Aa57f07647a5f42B7F',
-  [mosSupportedChainId.POLYGON_MAINNET]: '0x630105189c7114667a7179Aa57f07647a5f42B7F',
+  [mosSupportedChainId.MAP_MAINNET]:
+    '0x630105189c7114667a7179Aa57f07647a5f42B7F',
+  [mosSupportedChainId.BSC_MAINNET]:
+    '0x630105189c7114667a7179Aa57f07647a5f42B7F',
+  [mosSupportedChainId.POLYGON_MAINNET]:
+    '0x630105189c7114667a7179Aa57f07647a5f42B7F',
   [mosSupportedChainId.NEAR_MAINNET]: 'mos.mfac.butternetwork.near',
 
   [mosSupportedChainId.ETH_PRIV]: '0x43130059C655314d7ba7eDfb8299d26FbDE726F1',
   [mosSupportedChainId.BSC_TEST]: '0x220bE51C717c4E257Cb8e96be8591740336623F8',
   [mosSupportedChainId.MAP_TEST]: '0xB6c1b689291532D11172Fb4C204bf13169EC0dCA',
-  [mosSupportedChainId.POLYGON_TEST]: '0x688f3Ef5f728995a9DcB299DAEC849CA2E49ddE1',
+  [mosSupportedChainId.POLYGON_TEST]:
+    '0x688f3Ef5f728995a9DcB299DAEC849CA2E49ddE1',
   [mosSupportedChainId.NEAR_TESTNET]: 'mos2.mfac.maplabs.testnet',
 };
 
-
-export const TOKEN_REGISTER_ADDRESS_SET: { [mosSupportedChainId: string]: string } = {
+export const TOKEN_REGISTER_ADDRESS_SET: {
+  [mosSupportedChainId: string]: string;
+} = {
   [mosSupportedChainId.MAP_TEST]: '0x648349aDd3790813787746A7A569a87216944003',
-  [mosSupportedChainId.MAP_MAINNET]: '0xff44790d336d3C004F2Dac7e401E4EA5680529dD',
+  [mosSupportedChainId.MAP_MAINNET]:
+    '0xff44790d336d3C004F2Dac7e401E4EA5680529dD',
 };
 
 const TOKEN_REGISTER_ADDRESS = '0x648349aDd3790813787746A7A569a87216944003';
@@ -79,8 +85,8 @@ export async function getBridgeFee(
   provider: ethers.providers.JsonRpcProvider,
   providerChainId: string
 ): Promise<ButterFee> {
-  let srcChainId = isNearChainId(srcToken.chainId.toString())
-  let targetChainId = isNearChainId(targetChain)
+  let srcChainId = isNearChainId(srcToken.chainId.toString());
+  let targetChainId = isNearChainId(targetChain);
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[providerChainId]!,
     provider
@@ -124,13 +130,13 @@ export async function getBridgeFee(
     // feeRate.highest = BigNumber.from(feeRate.highest).mul(ratio).toString();
     // feeAmount = feeAmountBN.mul(ratio).toString();
     feeRate.lowest = BigNumber.from(feeRate.lowest)
-    .mul(amount)
-    .div(relayChainAmount)
-    .toString();
+      .mul(amount)
+      .div(relayChainAmount)
+      .toString();
     feeRate.highest = BigNumber.from(feeRate.highest)
-    .mul(amount)
-    .div(relayChainAmount)
-    .toString();
+      .mul(amount)
+      .div(relayChainAmount)
+      .toString();
     feeAmount = feeAmountBN.mul(amount).div(relayChainAmount).toString();
   }
   return Promise.resolve({
@@ -234,7 +240,7 @@ export function toTargetToken(chainId: number, token: Token) {
       targetToken = USDC_NEART;
       break;
     default:
-      console.log("chainId",chainId)
+      console.log('chainId', chainId);
       throw new Error('There is no such token in the chain');
   }
 
@@ -333,9 +339,12 @@ class TokenRegister {
       fromToken = fromToken.wrapped;
     }
     if (this.contract instanceof ethers.Contract) {
-      let address = fromToken.address
-      if(fromChain == '5566818579631833088' || fromChain == '5566818579631833089'){
-        address = fromToken.name!
+      let address = fromToken.address;
+      if (
+        fromChain == '5566818579631833088' ||
+        fromChain == '5566818579631833089'
+      ) {
+        address = fromToken.name!;
       }
       return await this.contract.getRelayChainToken(
         fromChain,
@@ -343,7 +352,6 @@ class TokenRegister {
       );
     } else return '';
   }
-
 
   async getFeeRate(
     tokenAddress: string,
@@ -532,12 +540,12 @@ function _getFeeAmount(amount: string, feeRate: ButterFeeRate): string {
   return feeAmount.toString();
 }
 
-function isNearChainId(chainId:string):string{
+function isNearChainId(chainId: string): string {
   if (chainId == ChainId.NEAR.toString()) {
-    return '5566818579631833088'
-  }else if(chainId == ChainId.NEAR_TEST.toString()){
-    return '5566818579631833089'
-  }else{
-    return  chainId
+    return '5566818579631833088';
+  } else if (chainId == ChainId.NEAR_TEST.toString()) {
+    return '5566818579631833089';
+  } else {
+    return chainId;
   }
 }

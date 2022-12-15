@@ -41,11 +41,11 @@ export async function getBestRoute(
       });
       break;
     case ChainId.BSC_TEST:
-        router = new BSCAlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        });
-        break;
+      router = new BSCAlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
     case ChainId.POLYGON:
       router = new AlphaRouter({
         chainId: chainId,
@@ -53,11 +53,11 @@ export async function getBestRoute(
       });
       break;
     case ChainId.POLYGON_MUMBAI:
-        router = new AlphaRouter({
-          chainId: chainId,
-          provider: provider,
-        });
-        break;
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
     case ChainId.MAP:
       router = new MapAlphaRouter({
         chainId: chainId,

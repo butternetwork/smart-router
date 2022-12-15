@@ -10,10 +10,7 @@ import {
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
 } from '../providers/token-provider';
-import {
-  RefRouteWithValidQuote,
-  RouteWithValidQuote,
-} from '../routers/';
+import { RefRouteWithValidQuote, RouteWithValidQuote } from '../routers/';
 import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
@@ -27,8 +24,8 @@ import { getBridgeFee, toTargetToken } from '../util/mos';
 import { Token } from '../util/token';
 
 type sortObj = {
-  key: number,
-  pair:[Token,Token];
+  key: number;
+  pair: [Token, Token];
   value: number;
 };
 
@@ -40,7 +37,7 @@ type swapData = {
   tokenIn: token;
   tokenOut: token;
   path: {
-    id:string,
+    id: string;
     tokenIn: {
       address: string;
       name: string;
@@ -74,11 +71,10 @@ enum RouterType {
   SRC_CHAIN = 0,
   TARGET_CHAIN = 1,
 }
-const mapChainId = '212'
+const mapChainId = '212';
 
 @Injectable()
 export class RouterService {
-
   async crossChainRouter(
     tokenInAddr: string,
     tokenInDecimals: number,
@@ -97,32 +93,42 @@ export class RouterService {
     }
 
     const rpcProvider = new ethers.providers.JsonRpcProvider(
-      'https://testnet-rpc.maplabs.io',
+      'https://testnet-rpc.maplabs.io'
     );
 
-    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
-    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
-    
-    let srcAmountOut = 0;
-    let subFee = 0
+    let tokenIn: Token = newToken(
+      fromChainId,
+      tokenInAddr,
+      tokenInDecimals,
+      tokenInSymbol
+    );
+    let tokenOut: Token = newToken(
+      toChainId,
+      tokenOutAddr,
+      tokenOutDecimals,
+      tokenOutSymbol
+    );
 
-    let srcRouter:swapData[]
-    if(fromChainId == mapChainId){
-      let _amount = ethers.utils.parseUnits(amount,tokenInDecimals)
+    let srcAmountOut = 0;
+    let subFee = 0;
+
+    let srcRouter: swapData[];
+    if (fromChainId == mapChainId) {
+      let _amount = ethers.utils.parseUnits(amount, tokenInDecimals);
       let bridgeFee = await getBridgeFee(
         tokenIn,
         toChainId,
         _amount.toString(),
         rpcProvider,
         mapChainId
-      ) // chainId
+      ); // chainId
       subFee = calculate(
         Number(amount),
-        Number(bridgeFee.amount)/Math.pow(10,tokenInDecimals)
-        ,"sub"
-      )
-      srcRouter = directSwap(mUSDC_MAPT,amount,subFee.toString())
-    }else{
+        Number(bridgeFee.amount) / Math.pow(10, tokenInDecimals),
+        'sub'
+      );
+      srcRouter = directSwap(mUSDC_MAPT, amount, subFee.toString());
+    } else {
       srcRouter = await chainRouter(
         tokenIn,
         amount,
@@ -130,31 +136,49 @@ export class RouterService {
         RouterType.SRC_CHAIN
       );
       for (let p of srcRouter) {
-        srcAmountOut = calculate(srcAmountOut,Number(p.amountOut),"add");
+        srcAmountOut = calculate(srcAmountOut, Number(p.amountOut), 'add');
       }
-      if (srcRouter!=null){
-        let tmp = srcRouter[0]!.tokenOut
-        let fromToken = new Token(tokenIn.chainId,tmp.address,tmp.decimals,tmp.symbol,tmp.name)
-        let _amount = srcAmountOut * Math.pow(10,tmp.decimals)
+      if (srcRouter != null) {
+        let tmp = srcRouter[0]!.tokenOut;
+        let fromToken = new Token(
+          tokenIn.chainId,
+          tmp.address,
+          tmp.decimals,
+          tmp.symbol,
+          tmp.name
+        );
+        let _amount = srcAmountOut * Math.pow(10, tmp.decimals);
         let bridgeFee = await getBridgeFee(
           fromToken,
           toChainId,
           _amount.toFixed(0),
           rpcProvider,
           mapChainId
-        )
-        subFee = calculate(srcAmountOut,Number(bridgeFee.amount)/Math.pow(10,tmp.decimals),"sub")
-      }else{
-        throw new Error("there isn't the best router in src Chain")
+        );
+        subFee = calculate(
+          srcAmountOut,
+          Number(bridgeFee.amount) / Math.pow(10, tmp.decimals),
+          'sub'
+        );
+      } else {
+        throw new Error("there isn't the best router in src Chain");
       }
     }
 
-    let mapRouter: swapData[] = directSwap(mUSDC_MAPT,srcAmountOut.toString(),subFee.toString())
+    let mapRouter: swapData[] = directSwap(
+      mUSDC_MAPT,
+      srcAmountOut.toString(),
+      subFee.toString()
+    );
 
-    let targetRouter:swapData[]
-    if(toChainId == mapChainId){
-      targetRouter = directSwap(mUSDC_MAPT,srcAmountOut.toString(),subFee.toString())
-    }else{
+    let targetRouter: swapData[];
+    if (toChainId == mapChainId) {
+      targetRouter = directSwap(
+        mUSDC_MAPT,
+        srcAmountOut.toString(),
+        subFee.toString()
+      );
+    } else {
       targetRouter = await chainRouter(
         tokenOut,
         subFee.toString(),
@@ -163,26 +187,54 @@ export class RouterService {
       );
     }
 
-    if(fromChainId == mapChainId){
+    if (fromChainId == mapChainId) {
       return {
-        mapChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
-        targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
+        mapChain: formatReturn(
+          srcRouter,
+          fromChainId,
+          tokenInAddr,
+          RouterType.SRC_CHAIN
+        ),
+        targetChain: formatReturn(
+          targetRouter,
+          toChainId,
+          tokenOutAddr,
+          RouterType.TARGET_CHAIN
+        ),
       };
-    }else if(toChainId == mapChainId){
+    } else if (toChainId == mapChainId) {
       return {
-        srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
-        mapChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
+        srcChain: formatReturn(
+          srcRouter,
+          fromChainId,
+          tokenInAddr,
+          RouterType.SRC_CHAIN
+        ),
+        mapChain: formatReturn(
+          targetRouter,
+          toChainId,
+          tokenOutAddr,
+          RouterType.TARGET_CHAIN
+        ),
       };
-    }else{
+    } else {
       return {
-        srcChain: formatReturn(srcRouter,fromChainId,tokenInAddr,RouterType.SRC_CHAIN),
+        srcChain: formatReturn(
+          srcRouter,
+          fromChainId,
+          tokenInAddr,
+          RouterType.SRC_CHAIN
+        ),
         mapChain: mapRouter,
-        targetChain: formatReturn(targetRouter,toChainId,tokenOutAddr,RouterType.TARGET_CHAIN),
+        targetChain: formatReturn(
+          targetRouter,
+          toChainId,
+          tokenOutAddr,
+          RouterType.TARGET_CHAIN
+        ),
       };
     }
-
   }
-
 }
 
 async function findBestRouter(
@@ -224,7 +276,6 @@ async function findBestRouter(
   return [total, gasCostInUSD, swapRoute.route];
 }
 
-
 async function chainRouter(
   swapToken: Token,
   amount: string,
@@ -235,21 +286,20 @@ async function chainRouter(
   const TokenList = BRIDGE_SUPPORTED_TOKEN; //await getTokenCandidates('212',chainId.toString(),rpcProvider)
   let tmp: sortObj[] = [];
   let RouterMap = new Map();
-  let index = 0
+  let index = 0;
 
   for (let token of TokenList) {
     let tokenIn: Token = swapToken;
     let tokenOut: Token = toTargetToken(chainId, token);
-    let swapAmount = amount
+    let swapAmount = amount;
     if (routerType == RouterType.TARGET_CHAIN) {
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
-      swapAmount = exceedDecimals(swapAmount,tokenIn.decimals)
+      swapAmount = exceedDecimals(swapAmount, tokenIn.decimals);
     }
 
-
-    if(tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name){
-      return directSwap(tokenIn,amount,amount)
+    if (tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name) {
+      return directSwap(tokenIn, amount, amount);
     }
 
     let [total, gas, router] = await findBestRouter(
@@ -259,8 +309,8 @@ async function chainRouter(
       swapAmount
     );
     tmp.push({
-      key: index, 
-      pair: [tokenIn,tokenOut],
+      key: index,
+      pair: [tokenIn, tokenOut],
       value: total,
     });
     RouterMap.set(index, router);
@@ -269,7 +319,7 @@ async function chainRouter(
 
   tmp.sort((a, b) => (a.value > b.value ? 1 : b.value > a.value ? -1 : 0));
 
-  const bestPair:sortObj  = tmp[tmp.length - 1]!;
+  const bestPair: sortObj = tmp[tmp.length - 1]!;
   const bestRouter: RouteWithValidQuote[] = RouterMap.get(bestPair.key);
 
   if (bestRouter == null) {
@@ -278,10 +328,16 @@ async function chainRouter(
 
   let icon_key1 = bestPair.pair[0].address;
   let icon_key2 = bestPair.pair[1].address;
-  if (bestPair.pair[0].chainId == ChainId.NEAR || bestPair.pair[0].chainId == ChainId.NEAR_TEST) {
+  if (
+    bestPair.pair[0].chainId == ChainId.NEAR ||
+    bestPair.pair[0].chainId == ChainId.NEAR_TEST
+  ) {
     icon_key1 = bestPair.pair[0].name!;
   }
-  if (bestPair.pair[1].chainId == ChainId.NEAR || bestPair.pair[1].chainId == ChainId.NEAR_TEST) {
+  if (
+    bestPair.pair[1].chainId == ChainId.NEAR ||
+    bestPair.pair[1].chainId == ChainId.NEAR_TEST
+  ) {
     icon_key2 = bestPair.pair[1].name!;
   }
 
@@ -303,7 +359,6 @@ async function chainRouter(
   return formatData(bestRouter, token1, token2, chainId);
 }
 
-
 function formatData(
   bestRouter: RouteWithValidQuote[],
   tokenIn: token,
@@ -314,12 +369,12 @@ function formatData(
   let swapPath: swapData[] = [];
 
   for (let i = 0; i < bestRouter.length; i++) {
-    if (chainId == ChainId.NEAR ||chainId == ChainId.NEAR_TEST ) {
+    if (chainId == ChainId.NEAR || chainId == ChainId.NEAR_TEST) {
       const refRouter = bestRouter[i]!;
       if (refRouter instanceof RefRouteWithValidQuote) {
         for (let r of refRouter.swapData!) {
           pairs.push({
-            id:r.poolId.toString(),
+            id: r.poolId.toString(),
             tokenIn: {
               address: r.tokenIn,
               name: r.tokenInName,
@@ -335,14 +390,14 @@ function formatData(
           });
         }
 
-        let _chainId = '5566818579631833088'
-        if(chainId == ChainId.NEAR_TEST){
-          _chainId = '5566818579631833089'
+        let _chainId = '5566818579631833088';
+        if (chainId == ChainId.NEAR_TEST) {
+          _chainId = '5566818579631833089';
         }
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
-          amountOut: exceedDecimals(refRouter.toString(),tokenOut.decimals),
+          amountOut: exceedDecimals(refRouter.toString(), tokenOut.decimals),
           path: pairs,
           dexName: bestRouter[i]!.platform,
           tokenIn: tokenIn,
@@ -354,7 +409,7 @@ function formatData(
     } else {
       for (let j = 0; j < bestRouter[i]!.poolAddresses.length; j++) {
         pairs.push({
-          id:bestRouter[i]!.poolAddresses[j]!,
+          id: bestRouter[i]!.poolAddresses[j]!,
           tokenIn: {
             name: bestRouter[i]!.tokenPath[j]?.name!,
             symbol: bestRouter[i]!.tokenPath[j]?.symbol!,
@@ -387,9 +442,11 @@ function formatData(
   return swapPath;
 }
 
-
-function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{   
-
+function directSwap(
+  token: Token,
+  amountIn: string,
+  amountOut: string
+): swapData[] {
   let icon_key = token.address;
   if (token.chainId == ChainId.NEAR) {
     icon_key = token.name!;
@@ -398,7 +455,7 @@ function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{
   const router: swapData[] = [
     {
       chainId: token.chainId.toString(),
-      dexName: "",
+      dexName: '',
       amountIn: amountIn,
       amountOut: amountOut,
       tokenIn: {
@@ -418,134 +475,122 @@ function directSwap(token:Token,amountIn:string,amountOut:string):swapData[]{
       path: [],
     },
   ];
-  return router
+  return router;
 }
 
-
-function calculate (num1: number, num2: number, op: string):any {
+function calculate(num1: number, num2: number, op: string): any {
   let a: number | string, b: number | string, len1: number, len2: number;
   try {
-    len1 = num1.toString().split(".")[1]!.length;
+    len1 = num1.toString().split('.')[1]!.length;
   } catch (error) {
     len1 = 0;
   }
   try {
-    len2 = num2.toString().split(".")[1]!.length;
+    len2 = num2.toString().split('.')[1]!.length;
   } catch (error) {
     len2 = 0;
   }
-  a = num1.toString().split(".").join("");
-  b = num2.toString().split(".").join("");
+  a = num1.toString().split('.').join('');
+  b = num2.toString().split('.').join('');
   let c = Math.pow(10, Math.abs(len1 - len2));
   len1 > len2 && (b = Number(b) * c);
   len1 < len2 && (a = Number(a) * c);
   let d = Math.pow(10, Math.max(len1, len2));
-  if (op === "add") return (Number(a) + Number(b)) / d;
-  if (op === "sub") return (Number(a) - Number(b)) / d;
-  if (op === "mul") return (Number(a) * Number(b)) / Math.pow(10, Math.max(len1, len2) * 2);
-  if (op === "div") return Number(a) / Number(b);
-};
-
+  if (op === 'add') return (Number(a) + Number(b)) / d;
+  if (op === 'sub') return (Number(a) - Number(b)) / d;
+  if (op === 'mul')
+    return (Number(a) * Number(b)) / Math.pow(10, Math.max(len1, len2) * 2);
+  if (op === 'div') return Number(a) / Number(b);
+}
 
 function newToken(
-  _chainId:string,
-  _address:string,
-  _decimals:number,
-  _symbol:string,
-):Token{
+  _chainId: string,
+  _address: string,
+  _decimals: number,
+  _symbol: string
+): Token {
   let token: Token;
   let chainId: number = Number(_chainId);
   const decimals: number = Number(_decimals);
   if (_chainId == '5566818579631833088') {
     chainId = ChainId.NEAR;
-    let address = isWrapToken(_address,chainId)
-    token = new Token(
-      chainId,
-      NULL_ADDRESS,
-      decimals,
-      _symbol,
-      address
-    );
+    let address = isWrapToken(_address, chainId);
+    token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
   } else if (_chainId == '5566818579631833089') {
     chainId = ChainId.NEAR_TEST;
-    let address = isWrapToken(_address,chainId)
-    token = new Token(
-      chainId,
-      NULL_ADDRESS,
-      decimals,
-      _symbol,
-      address
-    ) 
-  }else {
-    let address = isWrapToken(_address,chainId)
+    let address = isWrapToken(_address, chainId);
+    token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
+  } else {
+    let address = isWrapToken(_address, chainId);
     chainId = Number(_chainId);
     token = new Token(chainId, address, decimals, _symbol);
   }
-  return token
+  return token;
 }
 
-
-function isWrapToken(address:string,chainId:number):string{
-  if (address == ZERO_ADDRESS){
-    switch (chainId){
+function isWrapToken(address: string, chainId: number): string {
+  if (address == ZERO_ADDRESS) {
+    switch (chainId) {
       case ChainId.BSC_TEST:
-        return WBNB_BSCT.address
-      case ChainId.POLYGON_MUMBAI: 
-        return WMATIC_POLYGON_MUMBAI.address 
-      case ChainId.NEAR_TEST: 
-        return WRAP_NEART.name! 
+        return WBNB_BSCT.address;
+      case ChainId.POLYGON_MUMBAI:
+        return WMATIC_POLYGON_MUMBAI.address;
+      case ChainId.NEAR_TEST:
+        return WRAP_NEART.name!;
       default:
-        return address
+        return address;
     }
   }
-  return address
+  return address;
 }
 
-
-function formatReturn(params:swapData[],chainId:string,address:string,type:RouterType){
-
-  if(type == RouterType.SRC_CHAIN){
-
-    let data:swapData[] = params
-    for(let i=0;i<data.length;i++){
-
-      data[i]!.chainId = chainId
-      if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
-        data[i]!.tokenIn.address = address
-        data[i]!.tokenOut.address = data[i]!.tokenOut.name
-      }else{
-        data[i]!.tokenIn.address = address
+function formatReturn(
+  params: swapData[],
+  chainId: string,
+  address: string,
+  type: RouterType
+) {
+  if (type == RouterType.SRC_CHAIN) {
+    let data: swapData[] = params;
+    for (let i = 0; i < data.length; i++) {
+      data[i]!.chainId = chainId;
+      if (
+        chainId == '5566818579631833089' ||
+        chainId == '5566818579631833089'
+      ) {
+        data[i]!.tokenIn.address = address;
+        data[i]!.tokenOut.address = data[i]!.tokenOut.name;
+      } else {
+        data[i]!.tokenIn.address = address;
       }
-
     }
-    return data
-
-  }else if(type == RouterType.TARGET_CHAIN){
-
-    let data:swapData[] = params
-    for(let i=0;i<data.length;i++){
-
-      data[i]!.chainId = chainId
-      if(chainId == '5566818579631833089' || chainId == '5566818579631833089'){
-        data[i]!.tokenIn.address = data[i]!.tokenIn.name
-        data[i]!.tokenOut.address = address
-      }else{
-        data[i]!.tokenOut.address = address
+    return data;
+  } else if (type == RouterType.TARGET_CHAIN) {
+    let data: swapData[] = params;
+    for (let i = 0; i < data.length; i++) {
+      data[i]!.chainId = chainId;
+      if (
+        chainId == '5566818579631833089' ||
+        chainId == '5566818579631833089'
+      ) {
+        data[i]!.tokenIn.address = data[i]!.tokenIn.name;
+        data[i]!.tokenOut.address = address;
+      } else {
+        data[i]!.tokenOut.address = address;
       }
-
     }
-    return data
-
-  }else {
-    throw new Error("Please check the returned data")
+    return data;
+  } else {
+    throw new Error('Please check the returned data');
   }
-
 }
 
-function exceedDecimals(num:string,decimal:number):string{
-  let len = num.split(".")[1]!.length
-  if(len > decimal){
-    return Number(num).toFixed(decimal+1).slice(0,-1)
+function exceedDecimals(num: string, decimal: number): string {
+  let len = num.split('.')[1]!.length;
+  if (len > decimal) {
+    return Number(num)
+      .toFixed(decimal + 1)
+      .slice(0, -1);
   }
-  return num
+  return num;
 }

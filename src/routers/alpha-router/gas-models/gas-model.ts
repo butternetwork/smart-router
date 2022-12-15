@@ -73,7 +73,7 @@ export const usdGasTokensByChain: { [chainId in ChainId]: Token[] } = {
   [ChainId.POLYGON]: [USDC_POLYGON],
   [ChainId.POLYGON_MUMBAI]: [PUSD_POLYGON_MUMBAI],
   [ChainId.BSC]: [BUSD_BNB, USDT_BNB, USDC_BNB],
-  [ChainId.BSC_TEST]: [BUSD_BSCT,BMOS_BSCT],
+  [ChainId.BSC_TEST]: [BUSD_BSCT, BMOS_BSCT],
   [ChainId.NEAR]: [USDT_NEAR, USDC_NEAR],
   [ChainId.NEAR_TEST]: [WRAP_NEART],
   [ChainId.MAP]: [USDC_MAP],

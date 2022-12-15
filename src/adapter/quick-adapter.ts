@@ -8,7 +8,10 @@ import {
 import { Token as UToken } from '@uniswap/sdk-core';
 import { Pair as UPair } from '@uniswap/v2-sdk';
 import JSBI from 'jsbi';
-import { wrappedCurrency, wrappedCurrency2 } from '../providers/quickswap/v2/quote-provider';
+import {
+  wrappedCurrency,
+  wrappedCurrency2,
+} from '../providers/quickswap/v2/quote-provider';
 import { QuickV2Route, V2Route } from '../routers';
 import { CurrencyAmount as UCurrencyAmount } from '../util/amounts';
 export function uniTokenToQuickToken(token: UToken): QToken {
@@ -74,11 +77,11 @@ export function quickToUniCurrencyAmount(
 
 export function quickToUniCurrencyAmount2(
   amount: QCurrencyAmount,
-  address:string,
-  chainId:number
+  address: string,
+  chainId: number
 ): UCurrencyAmount {
   return UCurrencyAmount.fromRawAmount(
-    quickTokenToUniToken(wrappedCurrency2(amount.currency, chainId,address)),
+    quickTokenToUniToken(wrappedCurrency2(amount.currency, chainId, address)),
     amount.numerator
   );
 }

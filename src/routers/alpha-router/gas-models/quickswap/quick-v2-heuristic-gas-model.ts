@@ -89,7 +89,11 @@ export class QuickV2HeuristicGasModelFactory extends IV2GasModelFactory {
           return {
             gasEstimate: gasUse,
             gasCostInToken: quickToUniCurrencyAmount(gasCostInEth),
-            gasCostInUSD: quickToUniCurrencyAmount2(gasCostInTermsOfUSD,token.address,chainId),
+            gasCostInUSD: quickToUniCurrencyAmount2(
+              gasCostInTermsOfUSD,
+              token.address,
+              chainId
+            ),
           };
         },
       };
@@ -187,8 +191,16 @@ export class QuickV2HeuristicGasModelFactory extends IV2GasModelFactory {
 
         return {
           gasEstimate: gasUse,
-          gasCostInToken: quickToUniCurrencyAmount2(gasCostInTermsOfQuoteToken,usdToken.address,chainId),
-          gasCostInUSD: quickToUniCurrencyAmount2(gasCostInTermsOfUSD!,usdToken.address,chainId),
+          gasCostInToken: quickToUniCurrencyAmount2(
+            gasCostInTermsOfQuoteToken,
+            usdToken.address,
+            chainId
+          ),
+          gasCostInUSD: quickToUniCurrencyAmount2(
+            gasCostInTermsOfUSD!,
+            usdToken.address,
+            chainId
+          ),
         };
       },
     };

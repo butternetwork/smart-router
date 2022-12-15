@@ -462,8 +462,8 @@ export async function getBestSwapRouteBy(
     .map((routeWithValidQuote) => {
       let decimalsDiff =
         usdTokenDecimals - routeWithValidQuote.gasCostInUSD.currency.decimals;
-      if(decimalsDiff<=0){
-        decimalsDiff = 0
+      if (decimalsDiff <= 0) {
+        decimalsDiff = 0;
       }
 
       if (decimalsDiff == 0) {
@@ -500,7 +500,6 @@ export async function getBestSwapRouteBy(
   } else {
     estimatedGasUsedUSD = estimatedGasUsedUSD.add(gasCostL1USD);
   }
-  
 
   const estimatedGasUsedQuoteToken = sumFn(
     _.map(bestSwap, (routeWithValidQuote) => routeWithValidQuote.gasCostInToken)
