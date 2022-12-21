@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 import {
   BRIDGE_SUPPORTED_TOKEN,
@@ -90,7 +90,10 @@ export class RouterService {
     IS_SUPPORT_CHAIN(fromChainId);
     IS_SUPPORT_CHAIN(toChainId);
     if (fromChainId == toChainId) {
-      throw new Error('fromChainId and toChainId cannot be the same');
+      throw new HttpException({
+        status: HttpStatus.OK,
+        error: 'fromChainId and toChainId cannot be the same',
+      }, HttpStatus.OK);
     }
 
     const rpcProvider = new ethers.providers.JsonRpcProvider(
@@ -170,7 +173,12 @@ export class RouterService {
         }
 
       } else {
-        throw new Error("there isn't the best router in src chain")
+
+        throw new HttpException({
+          status: HttpStatus.OK,
+          error: "there isn't the best router in src chain",
+        }, HttpStatus.OK);
+        
       }
     }
 
@@ -180,13 +188,13 @@ export class RouterService {
     if (toChainId == mapChainId) {
       targetRouter = directSwap(
         mUSDC_MAPT,
-        srcAmountOut.toString(),
-        subFee.toString()
+        srcAmountOut,
+        subFee
       );
     } else {
       targetRouter = await chainRouter(
         tokenOut,
-        subFee.toString(),
+        subFee,
         tokenOut.chainId,
         RouterType.TARGET_CHAIN
       );
@@ -413,7 +421,10 @@ function formatData(
           tokenOut: tokenOut,
         });
       } else {
-        throw 'get ref router fail';
+        throw new HttpException({
+          status: HttpStatus.OK,
+          error: "cannot get router of ref",
+        }, HttpStatus.OK); 
       }
     } else {
       for (let j = 0; j < bestRouter[i]!.poolAddresses.length; j++) {
@@ -569,7 +580,7 @@ function formatReturn(
     }
     return data;
   } else {
-    throw new Error('Please check the returned data');
+    throw new Error('return incorrect data! please contact the administrator to fix.');
   }
 }
 
@@ -588,17 +599,20 @@ function isSufficientLiquidity(amount: string, balance: string, amountDecimal: n
   if (amountDecimal > balanceDecimal) {
     let num1 = ethers.BigNumber.from(amount)
     let num2 = ethers.utils.parseUnits(balance, amountDecimal - balanceDecimal)
-    if (num2.gt(num1)) {
+    if (num2.gte(num1)) {
       return true
     }
   } else {
     let num1 = ethers.utils.parseUnits(amount, balanceDecimal - amountDecimal)
     let num2 = ethers.BigNumber.from(balance)
-    if (num2.gt(num1)) {
+    if (num2.gte(num1)) {
       return true
     }
   }
 
-  throw new Error("there isn't sufficiently liquidity to cross chain")
+  throw new HttpException({
+    status: HttpStatus.OK,
+    error: "there isn't sufficiently liquidity to cross chain",
+  }, HttpStatus.OK);
 
 }

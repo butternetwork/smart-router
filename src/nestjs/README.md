@@ -4,11 +4,11 @@
 
 ## bscTest(BMOS) -> NearTest(WNEAR)
 
-`http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=5566818579631833089&amountIn=9.9&tokenInAddress=0x593F6F6748dc203DFa636c299EeA6a39C0734EEd&tokenInDecimal=18&tokenOutAddress=wrap.testnet&tokenOutDecimal=6&tokenOutSymbol=WNEAR&tokenInSymbol=BMOS`
+`http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=5566818579631833089&amountIn=9.9&tokenInAddress=0x593F6F6748dc203DFa636c299EeA6a39C0734EEd&tokenInDecimal=18&tokenOutAddress=wrap.testnet&tokenOutDecimal=24&tokenOutSymbol=WNEAR&tokenInSymbol=BMOS`
 
 ## NearTest(WNEAR) -> bscTest(BMOS)
 
-`http://127.0.0.1:9009/router/best_route?fromChainId=5566818579631833089&toChainId=97&amountIn=9.9&tokenInAddress=wrap.testnet&tokenInDecimal=6&tokenOutAddress=0x593F6F6748dc203DFa636c299EeA6a39C0734EEd&tokenOutDecimal=18&tokenOutSymbol=BMOS&tokenInSymbol=WNEAR`
+`http://127.0.0.1:9009/router/best_route?fromChainId=5566818579631833089&toChainId=97&amountIn=9.9&tokenInAddress=wrap.testnet&tokenInDecimal=24&tokenOutAddress=0x593F6F6748dc203DFa636c299EeA6a39C0734EEd&tokenOutDecimal=18&tokenOutSymbol=BMOS&tokenInSymbol=WNEAR`
 
 ## bscTest(BMOS) -> PolygonTest(PMOS)
 

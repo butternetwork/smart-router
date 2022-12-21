@@ -9,7 +9,7 @@ import { RouterService } from './service';
 
 @Controller('router')
 export class RouterController {
-  constructor(private readonly routerService: RouterService) {}
+  constructor(private readonly routerService: RouterService) { }
 
   @Get('best_route')
   async getBestRoute(
@@ -37,7 +37,9 @@ export class RouterController {
       );
       return bestRouter;
     } catch (error: unknown) {
-      if (error instanceof Error) {
+      if (error instanceof HttpException) {
+        throw error
+      } else if (error instanceof Error) {
         throw new HttpException(
           error.message,
           HttpStatus.INTERNAL_SERVER_ERROR
