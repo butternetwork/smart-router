@@ -20,7 +20,7 @@ import {
   ZERO_ADDRESS,
 } from '../util';
 import { TradeType } from '../util/constants';
-import { getBridgeFee, toTargetToken } from '../util/mos';
+import { getBridgeFee, getVaultBalance, toTargetToken } from '../util/mos';
 import { Token } from '../util/token';
 
 type sortObj = {
@@ -75,6 +75,7 @@ const mapChainId = '212';
 
 @Injectable()
 export class RouterService {
+
   async crossChainRouter(
     tokenInAddr: string,
     tokenInDecimals: number,
@@ -108,26 +109,27 @@ export class RouterService {
       tokenOutDecimals,
       tokenOutSymbol
     );
-
-    let srcAmountOut = 0;
-    let subFee = 0;
-
+    let srcAmountOut = '0'
+    let subFee = '0'
     let srcRouter: swapData[];
+
     if (fromChainId == mapChainId) {
-      let _amount = ethers.utils.parseUnits(amount, tokenInDecimals);
-      let bridgeFee = await getBridgeFee(
+      let amountBN = ethers.utils.parseUnits(amount, tokenIn.decimals)
+      const bridgeFee = await getBridgeFee(
         tokenIn,
         toChainId,
-        _amount.toString(),
+        amountBN.toString(),
         rpcProvider,
         mapChainId
       ); // chainId
-      subFee = calculate(
-        Number(amount),
-        Number(bridgeFee.amount) / Math.pow(10, tokenInDecimals),
-        'sub'
-      );
-      srcRouter = directSwap(mUSDC_MAPT, amount, subFee.toString());
+
+      srcAmountOut = amount
+      subFee = ethers.utils.formatUnits(amountBN.sub(bridgeFee.amount), tokenIn.decimals)
+      srcRouter = directSwap(
+        mUSDC_MAPT,
+        amount,
+        subFee
+      )
     } else {
       srcRouter = await chainRouter(
         tokenIn,
@@ -135,41 +137,44 @@ export class RouterService {
         tokenIn.chainId,
         RouterType.SRC_CHAIN
       );
-      for (let p of srcRouter) {
-        srcAmountOut = calculate(srcAmountOut, Number(p.amountOut), 'add');
-      }
+
       if (srcRouter != null) {
-        let tmp = srcRouter[0]!.tokenOut;
-        let fromToken = new Token(
-          tokenIn.chainId,
-          tmp.address,
-          tmp.decimals,
-          tmp.symbol,
-          tmp.name
-        );
-        let _amount = srcAmountOut * Math.pow(10, tmp.decimals);
-        let bridgeFee = await getBridgeFee(
+        const token = srcRouter[0]!.tokenOut
+        const fromToken = new Token(tokenIn.chainId, token.address, token.decimals, token.symbol, token.name)
+
+        let amountOut = '0'
+        for (let p of srcRouter) {
+          amountOut = ethers.utils.parseUnits(amountOut, p.tokenOut.decimals).add(ethers.utils.parseUnits(p.amountOut, p.tokenOut.decimals)).toString()
+        }
+
+        const bridgeFee = await getBridgeFee(
           fromToken,
           toChainId,
-          _amount.toFixed(0),
+          amountOut,
           rpcProvider,
           mapChainId
-        );
-        subFee = calculate(
-          srcAmountOut,
-          Number(bridgeFee.amount) / Math.pow(10, tmp.decimals),
-          'sub'
-        );
+        )
+        
+        srcAmountOut = ethers.utils.formatUnits(amountOut, fromToken.decimals)
+        amountOut = ethers.BigNumber.from(amountOut).sub(bridgeFee.amount).toString()
+        subFee = ethers.utils.formatUnits(amountOut, fromToken.decimals)
+
+        if (toChainId != mapChainId) {
+          const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
+          isSufficientLiquidity(
+            amountOut,
+            vaultBalance.balance,
+            fromToken.decimals,
+            vaultBalance.token.decimals
+          )
+        }
+
       } else {
-        throw new Error("there isn't the best router in src Chain");
+        throw new Error("there isn't the best router in src chain")
       }
     }
 
-    let mapRouter: swapData[] = directSwap(
-      mUSDC_MAPT,
-      srcAmountOut.toString(),
-      subFee.toString()
-    );
+    let mapRouter: swapData[] = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
 
     let targetRouter: swapData[];
     if (toChainId == mapChainId) {
@@ -235,7 +240,9 @@ export class RouterService {
       };
     }
   }
+
 }
+
 
 async function findBestRouter(
   chainId: number,
@@ -276,6 +283,7 @@ async function findBestRouter(
   return [total, gasCostInUSD, swapRoute.route];
 }
 
+
 async function chainRouter(
   swapToken: Token,
   amount: string,
@@ -295,7 +303,7 @@ async function chainRouter(
     if (routerType == RouterType.TARGET_CHAIN) {
       tokenIn = toTargetToken(chainId, token); //await getTargetToken(token,chainId.toString(),rpcProvider)
       tokenOut = swapToken;
-      swapAmount = exceedDecimals(swapAmount, tokenIn.decimals);
+      swapAmount = notExceedDecimals(swapAmount, tokenIn.decimals);
     }
 
     if (tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name) {
@@ -359,6 +367,7 @@ async function chainRouter(
   return formatData(bestRouter, token1, token2, chainId);
 }
 
+
 function formatData(
   bestRouter: RouteWithValidQuote[],
   tokenIn: token,
@@ -397,7 +406,7 @@ function formatData(
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
-          amountOut: exceedDecimals(refRouter.toString(), tokenOut.decimals),
+          amountOut: notExceedDecimals(refRouter.toString(), tokenOut.decimals),
           path: pairs,
           dexName: bestRouter[i]!.platform,
           tokenIn: tokenIn,
@@ -442,6 +451,7 @@ function formatData(
   return swapPath;
 }
 
+
 function directSwap(
   token: Token,
   amountIn: string,
@@ -478,30 +488,6 @@ function directSwap(
   return router;
 }
 
-function calculate(num1: number, num2: number, op: string): any {
-  let a: number | string, b: number | string, len1: number, len2: number;
-  try {
-    len1 = num1.toString().split('.')[1]!.length;
-  } catch (error) {
-    len1 = 0;
-  }
-  try {
-    len2 = num2.toString().split('.')[1]!.length;
-  } catch (error) {
-    len2 = 0;
-  }
-  a = num1.toString().split('.').join('');
-  b = num2.toString().split('.').join('');
-  let c = Math.pow(10, Math.abs(len1 - len2));
-  len1 > len2 && (b = Number(b) * c);
-  len1 < len2 && (a = Number(a) * c);
-  let d = Math.pow(10, Math.max(len1, len2));
-  if (op === 'add') return (Number(a) + Number(b)) / d;
-  if (op === 'sub') return (Number(a) - Number(b)) / d;
-  if (op === 'mul')
-    return (Number(a) * Number(b)) / Math.pow(10, Math.max(len1, len2) * 2);
-  if (op === 'div') return Number(a) / Number(b);
-}
 
 function newToken(
   _chainId: string,
@@ -528,6 +514,7 @@ function newToken(
   return token;
 }
 
+
 function isWrapToken(address: string, chainId: number): string {
   if (address == ZERO_ADDRESS) {
     switch (chainId) {
@@ -543,6 +530,7 @@ function isWrapToken(address: string, chainId: number): string {
   }
   return address;
 }
+
 
 function formatReturn(
   params: swapData[],
@@ -585,12 +573,32 @@ function formatReturn(
   }
 }
 
-function exceedDecimals(num: string, decimal: number): string {
-  let len = num.split('.')[1]!.length;
+
+function notExceedDecimals(num: string, decimal: number): string {
+  let len = num.split(".")[1]!.length
   if (len > decimal) {
-    return Number(num)
-      .toFixed(decimal + 1)
-      .slice(0, -1);
+    return Number(num).toFixed(decimal + 1).slice(0, -1)
   }
-  return num;
+  return num
+}
+
+
+function isSufficientLiquidity(amount: string, balance: string, amountDecimal: number, balanceDecimal: number) {
+
+  if (amountDecimal > balanceDecimal) {
+    let num1 = ethers.BigNumber.from(amount)
+    let num2 = ethers.utils.parseUnits(balance, amountDecimal - balanceDecimal)
+    if (num2.gt(num1)) {
+      return true
+    }
+  } else {
+    let num1 = ethers.utils.parseUnits(amount, balanceDecimal - amountDecimal)
+    let num2 = ethers.BigNumber.from(balance)
+    if (num2.gt(num1)) {
+      return true
+    }
+  }
+
+  throw new Error("there isn't sufficiently liquidity to cross chain")
+
 }

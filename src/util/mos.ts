@@ -15,6 +15,7 @@ import {
   PUSD_POLYGON_MUMBAI,
   AURORA_NEART,
   USDC_NEART,
+  mUSDC_MAPT,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 import { chain } from 'lodash';
@@ -124,11 +125,7 @@ export async function getBridgeFee(
     feeRate.rate = BigNumber.from(tokenFeeRate.rate).div(100).toString();
     const feeAmountInMappingToken = _getFeeAmount(relayChainAmount, feeRate);
     const feeAmountBN = BigNumber.from(feeAmountInMappingToken);
-    // const ratio = BigNumber.from(amount).div(BigNumber.from(relayChainAmount));
-    // console.log("ratio    |    ",ratio.toString())
-    // feeRate.lowest = BigNumber.from(feeRate.lowest).mul(ratio).toString();
-    // feeRate.highest = BigNumber.from(feeRate.highest).mul(ratio).toString();
-    // feeAmount = feeAmountBN.mul(ratio).toString();
+
     feeRate.lowest = BigNumber.from(feeRate.lowest)
       .mul(amount)
       .div(relayChainAmount)
@@ -147,19 +144,22 @@ export async function getBridgeFee(
 }
 
 export async function getVaultBalance(
-  fromChainId: number,
+  fromChainId: string,
   fromToken: Token,
-  toChainId: number,
-  rpcProvider: ethers.providers.JsonRpcProvider
+  toChainId: string,
+  rpcProvider: ethers.providers.JsonRpcProvider,
+  mapChainId:string
 ): Promise<VaultBalance> {
+  let fromChain = isNearChainId(fromChainId)
+  let toChain = isNearChainId(toChainId)
   const tokenRegister = new TokenRegister(TOKEN_REGISTER_ADDRESS, rpcProvider);
 
   if (fromToken.isNative) {
     fromToken = fromToken.wrapped;
   }
-  const mapTokenAddress = IS_MAP(fromChainId.toString())
+  const mapTokenAddress = IS_MAP(fromChain)
     ? fromToken.address
-    : await tokenRegister.getRelayChainToken(fromChainId.toString(), fromToken);
+    : await tokenRegister.getRelayChainToken(fromChain, fromToken);
   const vaultAddress = await tokenRegister.getVaultToken(mapTokenAddress);
 
   if (vaultAddress === ZERO_ADDRESS) {
@@ -167,12 +167,12 @@ export async function getVaultBalance(
   }
   const vaultToken = new VaultToken(vaultAddress, rpcProvider);
 
-  const tokenBalance = await vaultToken.getVaultBalance(toChainId.toString());
+  let tokenBalance = await vaultToken.getVaultBalance(toChain);
   let toChainTokenAddress = mapTokenAddress;
-  if (!IS_MAP(toChainId.toString())) {
+  if (!IS_MAP(toChain)) {
     toChainTokenAddress = await tokenRegister.getToChainToken(
       mapTokenAddress,
-      toChainId.toString()
+      toChain
     );
 
     if (toChainTokenAddress === '0x') {
@@ -180,11 +180,22 @@ export async function getVaultBalance(
         'Internal Error: Cannot find corresponding target token on target chain'
       );
     }
+
+    const mapToken = getTokenByAddressAndChainId(mapTokenAddress, mapChainId);
+    const toChainToken = getTokenByAddressAndChainId(
+      toChainTokenAddress,
+      toChain
+    );
+    tokenBalance = BigNumber.from(tokenBalance)
+      .mul(ethers.utils.parseUnits('1', toChainToken.decimals))
+      .div(ethers.utils.parseUnits('1', mapToken.decimals))
+      .toString();
+
   }
   return Promise.resolve({
     token: getTokenByAddressAndChainId(
       toChainTokenAddress,
-      toChainId.toString()
+      toChain
     ),
     balance: tokenBalance.toString(),
   });
@@ -240,8 +251,7 @@ export function toTargetToken(chainId: number, token: Token) {
       targetToken = USDC_NEART;
       break;
     default:
-      console.log('chainId', chainId);
-      throw new Error('There is no such token in the chain');
+      throw new Error(`There is no such token in the ${chainId} chain`);
   }
 
   return targetToken;
@@ -476,9 +486,13 @@ function getTokenByAddressAndChainId(
 ): Token {
   const supportedToken: Token[] = ID_TO_ALL_TOKEN(chainId);
   for (let i = 0; i < supportedToken.length; i++) {
+    let address = supportedToken[i]!.address
+    if (chainId == '5566818579631833089' || chainId == '5566818579631833088') {
+      address = supportedToken[i]!.name!
+    }
     if (
       getHexAddress(
-        supportedToken[i]!.address,
+        address,
         chainId,
         false
       ).toLowerCase() === tokenAddress.toLowerCase()
@@ -498,32 +512,26 @@ function getTokenByAddressAndChainId(
 
 //Waiting for data to be injected
 const ID_TO_ALL_TOKEN = (id: string): Token[] => {
-  //test token
-  const MAP_TEST_MOST = new Token(
-    212,
-    '0xc74bc33a95a62D90672aEFAf4bA784285903cf09',
-    18,
-    'MOST',
-    'MOST Token'
-  );
-
-  const BSC_TEST_MOST = new Token(
-    97,
-    '0x688f3Ef5f728995a9DcB299DAEC849CA2E49ddE1',
-    18,
-    'MOST',
-    'MOST Token'
-  );
 
   switch (id) {
     case '212':
-      return [MAP_TEST_MOST];
+      return [
+        mUSDC_MAPT
+      ];
     case '34434':
       return [];
     case '5566818579631833089':
-      return [];
+      return [
+        USDC_NEART
+      ];
     case '97':
-      return [BSC_TEST_MOST];
+      return [
+        BUSD_BSCT,
+      ];
+    case '80001':
+      return [
+        PUSD_POLYGON_MUMBAI
+      ];
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
