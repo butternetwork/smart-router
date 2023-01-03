@@ -1,4 +1,3 @@
-import { ChainId as QChainId } from '@davidwgrossman/quickswap-sdk';
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Currency, Fraction, Token, TradeType } from '@uniswap/sdk-core';
 import { TokenList } from '@uniswap/token-lists';
@@ -15,11 +14,9 @@ import { BigNumber, providers } from 'ethers';
 import JSBI from 'jsbi';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
-import { V3HeuristicGasModelFactory } from '.';
 import {
   CachingGasStationProvider,
   CachingTokenProviderWithFallback,
-  CachingV3PoolProvider,
   EIP1559GasPriceProvider,
   ETHGasStationInfoProvider,
   ISwapRouterProvider,
@@ -41,40 +38,20 @@ import {
 } from '../../providers/gas-price-provider';
 import { IV2PoolProvider } from '../../providers/interfaces/IPoolProvider';
 import { RawETHV2SubgraphPool } from '../../providers/interfaces/ISubgraphProvider';
-import { QuickV2PoolProvider } from '../../providers/quickswap/v2/pool-provider';
-import {
-  IQuickV2QuoteProvider,
-  QuickV2QuoteProvider,
-} from '../../providers/quickswap/v2/quote-provider';
-import { SushiV2PoolProvider } from '../../providers/sushiswap/v2/pool-provider';
-import {
-  ISushiV2QuoteProvider,
-  SushiV2QuoteProvider,
-} from '../../providers/sushiswap/v2/quote-provider';
 import { ITokenProvider, TokenProvider } from '../../providers/token-provider';
 import {
   ITokenValidatorProvider,
   TokenValidationResult,
   TokenValidatorProvider,
 } from '../../providers/token-validator-provider';
-import { V2PoolProvider } from '../../providers/uniswap/v2/pool-provider';
 import {
   ArbitrumGasData,
-  ArbitrumGasDataProvider,
   IL2GasDataProvider,
   OptimismGasData,
-  OptimismGasDataProvider,
 } from '../../providers/uniswap/v3/gas-data-provider';
-import {
-  IV3PoolProvider,
-  V3PoolProvider,
-} from '../../providers/uniswap/v3/pool-provider';
-import {
-  IV3QuoteProvider,
-  V3QuoteProvider,
-} from '../../providers/uniswap/v3/quote-provider';
+
 import { CurrencyAmount } from '../../util/amounts';
-import { ChainId, ID_TO_CHAIN_ID, ID_TO_NETWORK_NAME } from '../../util/chains';
+import { ChainId } from '../../util/chains';
 import { log } from '../../util/log';
 import { metric, MetricLoggerUnit } from '../../util/metric';
 import {
@@ -105,12 +82,9 @@ import { computeAllV2Routes } from './functions/compute-all-routes';
 import {
   CandidatePoolsBySelectionCriteria,
   getV2CandidatePools,
-  getV3CandidatePools as getV3CandidatePools,
   PoolId,
 } from './functions/get-candidate-pools';
-import { IV2GasModelFactory, IV3GasModelFactory } from './gas-models/gas-model';
-import { QuickV2HeuristicGasModelFactory } from './gas-models/quickswap/quick-v2-heuristic-gas-model';
-import { SushiV2HeuristicGasModelFactory } from './gas-models/sushiswap/sushi-v2-heuristic-gas-model';
+import { IV2GasModelFactory } from './gas-models/gas-model';
 import { V2HeuristicGasModelFactory } from './gas-models/v2/v2-heuristic-gas-model';
 import {
   _getBestRouteAndOutput,
@@ -119,8 +93,8 @@ import {
 import axios from 'axios';
 import {
   MAP_MULTICALL_ADDRESS,
-  UNISWAP_MULTICALL_ADDRESS,
 } from '../../util/addresses';
+import { MapPoolProvider } from '../../providers/hiveswap/pool-provider';
 export type AlphaRouterParams = {
   /**
    * The chain id for this instance of the Alpha Router.
@@ -311,7 +285,7 @@ export class MapAlphaRouter
         MAP_MULTICALL_ADDRESS
       );
     this.v2PoolProvider =
-      v2PoolProvider ?? new V2PoolProvider(chainId, this.multicall2Provider);
+      v2PoolProvider ?? new MapPoolProvider(chainId, this.multicall2Provider);
     this.v2QuoteProvider = v2QuoteProvider ?? new V2QuoteProvider();
     this.v2GasModelFactory =
       v2GasModelFactory ?? new V2HeuristicGasModelFactory();

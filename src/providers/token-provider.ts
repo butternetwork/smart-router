@@ -635,6 +635,35 @@ export class TokenProvider implements ITokenProvider {
 export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 
 export const GET_TOKEN_ICON = (address: string): string => {
+
+  switch (address) {
+    
+    //native token
+    case WBNB_BSCT.address:
+      return 'https://files.mapprotocol.io/bridge/bnb.png';
+    case WRAP_NEART.name:
+      return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
+    case WMATIC_POLYGON_MUMBAI.address:
+      return 'https://files.mapprotocol.io/bridge/polygon.png';
+   
+    //usdc 
+    case BUSD_BSCT.address:
+      return 'https://files.mapprotocol.io/bridge/busd.png';
+    case USDC_POLYGON_MUMBAI.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case mUSDC_MAPT.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_NEART.name:
+      return 'https://files.mapprotocol.io/bridge/usdt.png';
+    
+    //none
+    default:
+      return '';
+  }
+
+};
+
+export const GET_MAINNET_TOKEN_ICON = (address: string): string => {
   switch (address) {
     case WBNB_BNB.address:
       return 'https://files.mapprotocol.io/bridge/bnb.png';

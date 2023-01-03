@@ -71,7 +71,7 @@ enum RouterType {
   SRC_CHAIN = 0,
   TARGET_CHAIN = 1,
 }
-const mapChainId = '212';
+const mapChainId = '22776';
 
 @Injectable()
 export class RouterService {
@@ -96,25 +96,14 @@ export class RouterService {
       }, HttpStatus.OK);
     }
 
-    const rpcProvider = new ethers.providers.JsonRpcProvider(
-      'https://testnet-rpc.maplabs.io'
-    );
-
-    let tokenIn: Token = newToken(
-      fromChainId,
-      tokenInAddr,
-      tokenInDecimals,
-      tokenInSymbol
-    );
-    let tokenOut: Token = newToken(
-      toChainId,
-      tokenOutAddr,
-      tokenOutDecimals,
-      tokenOutSymbol
-    );
+    let rpcProvider = new ethers.providers.JsonRpcProvider('https://poc3-rpc.maplabs.io');
+    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
+    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
     let srcAmountOut = '0'
     let subFee = '0'
     let srcRouter: swapData[];
+    let mapRouter: swapData[];
+    let targetRouter: swapData[];
 
     if (fromChainId == mapChainId) {
       let amountBN = ethers.utils.parseUnits(amount, tokenIn.decimals)
@@ -182,9 +171,8 @@ export class RouterService {
       }
     }
 
-    let mapRouter: swapData[] = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
+    mapRouter = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
 
-    let targetRouter: swapData[];
     if (toChainId == mapChainId) {
       targetRouter = directSwap(
         mUSDC_MAPT,

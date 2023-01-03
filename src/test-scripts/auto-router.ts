@@ -54,7 +54,7 @@ async function main() {
   // await findBestRouter(ChainId.NEAR,USDC_NEAR,WNEAR_NEAR,amount)
   // await findBestRouter(ChainId.NEAR_TEST,USDC_NEAR,WNEAR_NEAR,amount)
   // await findBestRouter(ChainId.MAP,WMAP_MAP,USDC_MAP,amount)
-  // await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
+   await findBestRouter(ChainId.MAINNET,USDC_MAINNET,USDT_MAINNET,amount)
   // await findBestRouter(ChainId.POLYGON,USDT_POLYGON,USDC_POLYGON,amount)
 
   // await findBestRouter(ChainId.POLYGON_MUMBAI,WMATIC_POLYGON_MUMBAI,PUSD_POLYGON_MUMBAI,amount)
@@ -67,8 +67,8 @@ async function main() {
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 
-  await findBestRouter(ChainId.NEAR_TEST, WRAP_NEART, USDC_NEART, amount);
-  await findBestRouter(ChainId.NEAR_TEST, USDC_NEART, WRAP_NEART, amount);
+  // await findBestRouter(ChainId.NEAR_TEST, WRAP_NEART, USDC_NEART, amount);
+  // await findBestRouter(ChainId.NEAR_TEST, USDC_NEART, WRAP_NEART, amount);
 
   // console.log(utils.formatUnits("1000000000000000000000000",24))
   // console.log(utils.parseUnits("1000000000000000000000000",18).toString())
@@ -90,8 +90,8 @@ async function findBestRouter(
       provider = new ethers.providers.JsonRpcProvider(ETH_MAINNET_URL, 1);
       protocols = [
         ButterProtocol.UNI_V2,
-        //ButterProtocol.UNI_V3,
-        //ButterProtocol.SUSHISWAP,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
         //ButterProtocol.CURVE,
       ];
       break;

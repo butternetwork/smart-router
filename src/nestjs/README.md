@@ -28,8 +28,8 @@
 
 ## mapTest(WMAP) -> PolygonTest(WMATIC)
 
-`http://127.0.0.1:9009/router/best_route?fromChainId=212&toChainId=80001&amountIn=9.9&tokenInAddress=0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WMATIC&tokenInSymbol=WMAP`
+`http://127.0.0.1:9009/router/best_route?fromChainId=212&toChainId=80001&amountIn=9.9&tokenInAddress=0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WMATIC&tokenInSymbol=mUSDC`
 
 ## bscTest(WBNB) -> mapTest(WMAP)
 
-`http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=212&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703&tokenOutDecimal=18&tokenOutSymbol=WMAP&tokenInSymbol=WBNB`
+`http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=212&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703&tokenOutDecimal=18&tokenOutSymbol=mUSDC&tokenInSymbol=WBNB`
