@@ -34,6 +34,12 @@ export async function getBestRoute(
         provider: provider,
       });
       break;
+    case ChainId.GÖRLI:
+      router = new AlphaRouter({
+        chainId: chainId,
+        provider: provider,
+      });
+      break;
     case ChainId.BSC:
       router = new BSCAlphaRouter({
         chainId: chainId,

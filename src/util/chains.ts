@@ -5,6 +5,7 @@ import {
   BSC_MAINNET_URL,
   BSC_TESTNET_URL,
   ETH_MAINNET_URL,
+  ETH_TESTNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
   POLYGON_MUMBAI_URL,
@@ -364,6 +365,12 @@ export function getChainProvider(chainId: number) {
         ButterProtocol.SUSHISWAP,
       ];
       break;
+    case ChainId.GÖRLI:
+      provider = new ethers.providers.JsonRpcProvider(ETH_TESTNET_URL, chainId);
+      protocols = [
+        ButterProtocol.UNI_V2,
+      ];
+      break;
     case ChainId.BSC:
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
       protocols = [ButterProtocol.PANCAKESWAP];
@@ -409,6 +416,7 @@ export function getChainProvider(chainId: number) {
 export function IS_SUPPORT_CHAIN(id: string) {
   switch (id) {
     case '1':
+    case '5':
     case '137':
     case '56':
     case '97':

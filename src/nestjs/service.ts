@@ -4,8 +4,10 @@ import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
   mUSDC_MAPT,
+  USDC_ETHT,
   USDC_MAP,
   WBNB_BSCT,
+  WETH_ETHT,
   WMAP_MAP,
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
@@ -164,6 +166,7 @@ export class RouterService {
 
         if (toChainId != mapChainId) {
           const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
+          console.log('b',amountOut,vaultBalance.balance)
           isSufficientLiquidity(
             amountOut,
             vaultBalance.balance,
@@ -529,6 +532,8 @@ function newToken(
 function isWrapToken(address: string, chainId: number): string {
   if (address == ZERO_ADDRESS) {
     switch (chainId) {
+      case ChainId.GÖRLI:
+        return WETH_ETHT.address;
       case ChainId.BSC_TEST:
         return WBNB_BSCT.address;
       case ChainId.POLYGON_MUMBAI:

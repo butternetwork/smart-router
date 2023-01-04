@@ -19,6 +19,7 @@ import {
   AURORA_NEART,
   USDC_NEART,
   mUSDC_MAPT,
+  USDC_ETHT,
 } from '../providers/token-provider';
 import VaultTokenMetadata from '../abis/VaultToken.json';
 
@@ -79,8 +80,10 @@ const ID_TO_ALL_TOKEN = (id: string): Token[] => {
       return [
         mUSDC_MAPT
       ];
-    case '34434':
-      return [];
+    case '5':
+      return [
+        USDC_ETHT
+      ];
     case '5566818579631833089':
       return [
         USDC_NEART
@@ -107,6 +110,8 @@ const ID_TO_SUPPORTED_TOKEN = (id: string): Token[] => {
       return [USDC_POLYGON];
     case ChainId.NEAR:
       return [USDC_NEAR];
+    case ChainId.GÖRLI:
+      return [USDC_ETHT];
     case 212:
       return [mUSDC_MAPT];
     case ChainId.NEAR_TEST:
@@ -133,9 +138,11 @@ const ID_TO_DEFAULT_RPC_URL = (id: string): string => {
     // testnet
     case 212:
       return 'https://testnet-rpc.maplabs.io';
+    case ChainId.GÖRLI:
+      return 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161';
     case ChainId.BSC_TEST:
       return 'https://data-seed-prebsc-2-s2.binance.org:8545';
-    case ChainId.POLYGON:
+    case ChainId.POLYGON_MUMBAI:
       return 'https://rpc-mumbai.maticvigil.com/';
     case ChainId.NEAR_TEST:
       return 'https://rpc.testnet.near.org';
@@ -434,6 +441,9 @@ export function toTargetToken(chainId: number, token: Token) {
     case ChainId.MAINNET:
       targetToken = USDC_MAINNET;
       break;
+    case ChainId.GÖRLI:
+      targetToken = USDC_ETHT;
+      break; 
     case ChainId.BSC:
       targetToken = USDC_BNB;
       break;

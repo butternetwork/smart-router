@@ -33,3 +33,11 @@
 ## bscTest(WBNB) -> mapTest(WMAP)
 
 `http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=212&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x424D3bcdC96F42aC919F276D7D4f6C94f24e0703&tokenOutDecimal=18&tokenOutSymbol=mUSDC&tokenInSymbol=WBNB`
+
+## bscTest(WBNB) -> mapTest(WETH)
+
+`http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=5&amountIn=1.1&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WETH&tokenInSymbol=WBNB`
+
+## bscTest(WETH) -> mapTest(WBNB)
+
+`http://127.0.0.1:9009/router/best_route?fromChainId=5&toChainId=97&amountIn=1.1&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WBNB&tokenInSymbol=WETH`

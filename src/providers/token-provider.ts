@@ -538,6 +538,23 @@ export const WBNB_BSCT = new Token(
   'Wrapped BNB'
 );
 
+//ETH TESTNET
+export const USDC_ETHT = new Token(
+  ChainId.GÖRLI,
+  '0x86CBE739888bFbC0bcA6e2D6106cfC5B3B1F69A5',
+  18,
+  'bUSDC', //BUSD
+  'USDC' //BUSD
+);
+
+export const WETH_ETHT = new Token(
+  ChainId.GÖRLI,
+  '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+  18,
+  'WETH',
+  'Wrapped Ether'
+);
+
 export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
@@ -645,6 +662,8 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
     case WMATIC_POLYGON_MUMBAI.address:
       return 'https://files.mapprotocol.io/bridge/polygon.png';
+    case WETH_ETHT.address:
+      return 'https://files.mapprotocol.io/bridge/eth.png';
    
     //usdc 
     case BUSD_BSCT.address:
@@ -655,7 +674,9 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://files.mapprotocol.io/bridge/usdc.png';
     case USDC_NEART.name:
       return 'https://files.mapprotocol.io/bridge/usdc.png';
-    
+    case USDC_ETHT.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+
     //none
     default:
       return '';
