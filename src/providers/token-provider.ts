@@ -649,12 +649,12 @@ export const GET_TOKEN_ICON = (address: string): string => {
     //usdc 
     case BUSD_BSCT.address:
       return 'https://files.mapprotocol.io/bridge/busd.png';
-    case USDC_POLYGON_MUMBAI.address:
+    case PUSD_POLYGON_MUMBAI.address:
       return 'https://files.mapprotocol.io/bridge/usdc.png';
     case mUSDC_MAPT.address:
       return 'https://files.mapprotocol.io/bridge/usdc.png';
     case USDC_NEART.name:
-      return 'https://files.mapprotocol.io/bridge/usdt.png';
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
     
     //none
     default:
