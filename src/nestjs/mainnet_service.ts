@@ -5,8 +5,12 @@ import {
   GET_TOKEN_ICON,
   mUSDC_MAPT,
   USDC_MAP,
+  WBNB_BNB,
   WBNB_BSCT,
+  WETH_ETHT,
+  WETH_MAINNET,
   WMAP_MAP,
+  WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
 } from '../providers/token-provider';
@@ -15,7 +19,7 @@ import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
   getChainProvider,
-  IS_SUPPORT_CHAIN,
+  IS_SUPPORT_MAINNET,
   NULL_ADDRESS,
   ZERO_ADDRESS,
 } from '../util';
@@ -87,8 +91,8 @@ export class RouterService {
     fromChainId: string,
     toChainId: string
   ): Promise<allRouter> {
-    IS_SUPPORT_CHAIN(fromChainId);
-    IS_SUPPORT_CHAIN(toChainId);
+    IS_SUPPORT_MAINNET(fromChainId);
+    IS_SUPPORT_MAINNET(toChainId);
     if (fromChainId == toChainId) {
       throw new HttpException({
         status: HttpStatus.OK,
@@ -396,9 +400,6 @@ function formatData(
         }
 
         let _chainId = '5566818579631833088';
-        if (chainId == ChainId.NEAR_TEST) {
-          _chainId = '5566818579631833089';
-        }
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
@@ -501,10 +502,6 @@ function newToken(
     chainId = ChainId.NEAR;
     let address = isWrapToken(_address, chainId);
     token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
-  } else if (_chainId == '5566818579631833089') {
-    chainId = ChainId.NEAR_TEST;
-    let address = isWrapToken(_address, chainId);
-    token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
   } else {
     let address = isWrapToken(_address, chainId);
     chainId = Number(_chainId);
@@ -517,12 +514,16 @@ function newToken(
 function isWrapToken(address: string, chainId: number): string {
   if (address == ZERO_ADDRESS) {
     switch (chainId) {
-      case ChainId.BSC_TEST:
-        return WBNB_BSCT.address;
-      case ChainId.POLYGON_MUMBAI:
-        return WMATIC_POLYGON_MUMBAI.address;
-      case ChainId.NEAR_TEST:
+      case ChainId.MAINNET:
+        return WETH_MAINNET.address;
+      case ChainId.BSC:
+        return WBNB_BNB.address;
+      case ChainId.POLYGON:
+        return WMATIC_POLYGON.address;
+      case ChainId.NEAR:
         return WRAP_NEART.name!;
+      case ChainId.MAP:
+        return WMAP_MAP.address;
       default:
         return address;
     }
@@ -541,10 +542,7 @@ function formatReturn(
     let data: swapData[] = params;
     for (let i = 0; i < data.length; i++) {
       data[i]!.chainId = chainId;
-      if (
-        chainId == '5566818579631833088' ||
-        chainId == '5566818579631833089'
-      ) {
+      if (chainId == '5566818579631833088') {
         data[i]!.tokenIn.address = address;
         data[i]!.tokenOut.address = data[i]!.tokenOut.name;
       } else {
@@ -556,10 +554,7 @@ function formatReturn(
     let data: swapData[] = params;
     for (let i = 0; i < data.length; i++) {
       data[i]!.chainId = chainId;
-      if (
-        chainId == '5566818579631833088' ||
-        chainId == '5566818579631833089'
-      ) {
+      if ( chainId == '5566818579631833088') {
         data[i]!.tokenIn.address = data[i]!.tokenIn.name;
         data[i]!.tokenOut.address = address;
       } else {

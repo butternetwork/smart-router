@@ -17,7 +17,7 @@ import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
   getChainProvider,
-  IS_SUPPORT_CHAIN,
+  IS_SUPPORT_TESTNET,
   NULL_ADDRESS,
   ZERO_ADDRESS,
 } from '../util';
@@ -89,8 +89,8 @@ export class RouterService {
     fromChainId: string,
     toChainId: string
   ): Promise<allRouter> {
-    IS_SUPPORT_CHAIN(fromChainId);
-    IS_SUPPORT_CHAIN(toChainId);
+    IS_SUPPORT_TESTNET(fromChainId);
+    IS_SUPPORT_TESTNET(toChainId);
     if (fromChainId == toChainId) {
       throw new HttpException({
         status: HttpStatus.OK,
@@ -166,7 +166,6 @@ export class RouterService {
 
         if (toChainId != mapChainId) {
           const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
-          console.log('b',amountOut,vaultBalance.balance)
           isSufficientLiquidity(
             amountOut,
             vaultBalance.balance,

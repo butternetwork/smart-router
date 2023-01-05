@@ -32,6 +32,13 @@ export type TokenAccessor = {
 };
 
 // Some well known tokens on each chain for seeding cache / testing.
+export const WETH_MAINNET = new Token(
+  1,
+  '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  18,
+  'WETH',
+  'Wrapped Ether'
+)
 export const USDC_MAINNET = new Token(
   ChainId.MAINNET,
   '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
