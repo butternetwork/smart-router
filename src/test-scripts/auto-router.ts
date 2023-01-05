@@ -22,6 +22,8 @@ import {
   WRAP_NEART,
   AURORA_NEART,
   USDC_NEART,
+  WETH_ETHT,
+  USDC_ETHT,
 } from '../providers/token-provider';
 import { RouteWithValidQuote } from '../routers';
 import { _getExchangeMultipleArgs } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -41,6 +43,7 @@ import {
   BSC_MAINNET_URL,
   BSC_TESTNET_URL,
   ETH_MAINNET_URL,
+  ETH_TESTNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
   POLYGON_MUMBAI_URL,
@@ -67,8 +70,10 @@ async function main() {
   // await findBestRouter(ChainId.BSC_TEST,BUSD_BSCT,WBNB_BSCT,amount);
   // await findBestRouter(ChainId.BSC_TEST,WBNB_BSCT,BUSD_BSCT,amount);
 
-  await findBestRouter(ChainId.NEAR_TEST, WRAP_NEART, USDC_NEART, amount);
-  await findBestRouter(ChainId.NEAR_TEST, USDC_NEART, WRAP_NEART, amount);
+  // await findBestRouter(ChainId.NEAR_TEST, WRAP_NEART, USDC_NEART, amount);
+  // await findBestRouter(ChainId.NEAR_TEST, USDC_NEART, WRAP_NEART, amount);
+
+  await findBestRouter(ChainId.GÖRLI, WETH_ETHT, USDC_ETHT, amount);
 
   // console.log(utils.formatUnits("1000000000000000000000000",24))
   // console.log(utils.parseUnits("1000000000000000000000000",18).toString())
@@ -87,14 +92,20 @@ async function findBestRouter(
 
   switch (chainId) {
     case ChainId.MAINNET:
-      provider = new ethers.providers.JsonRpcProvider(ETH_MAINNET_URL, 1);
+      provider = new ethers.providers.JsonRpcProvider(ETH_MAINNET_URL, chainId);
       protocols = [
         ButterProtocol.UNI_V2,
-        //ButterProtocol.UNI_V3,
-        //ButterProtocol.SUSHISWAP,
+        ButterProtocol.UNI_V3,
+        ButterProtocol.SUSHISWAP,
         //ButterProtocol.CURVE,
       ];
       break;
+    case ChainId.GÖRLI:
+      provider = new ethers.providers.JsonRpcProvider(ETH_TESTNET_URL, chainId);
+      protocols = [
+        ButterProtocol.UNI_V2,
+      ];
+      break;  
     case ChainId.BSC: //bsc
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId); //forked net chianId
       protocols = [ButterProtocol.PANCAKESWAP];

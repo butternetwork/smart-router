@@ -41,6 +41,7 @@ import {
   USDT_ROPSTEN,
   WBNB_BSCT,
   WBTC_GÖRLI,
+  USDC_ETHT,
 } from '../../../providers/token-provider';
 import {
   ArbitrumGasData,
@@ -68,7 +69,7 @@ export const usdGasTokensByChain: { [chainId in ChainId]: Token[] } = {
   ],
   [ChainId.ARBITRUM_RINKEBY]: [DAI_ARBITRUM_RINKEBY, USDT_ARBITRUM_RINKEBY],
   [ChainId.KOVAN]: [DAI_KOVAN, USDC_KOVAN, USDT_KOVAN],
-  [ChainId.GÖRLI]: [USDC_GÖRLI, USDT_GÖRLI, WBTC_GÖRLI, DAI_GÖRLI],
+  [ChainId.GÖRLI]: [USDC_ETHT, USDC_GÖRLI, USDT_GÖRLI, WBTC_GÖRLI, DAI_GÖRLI],
   [ChainId.ROPSTEN]: [DAI_ROPSTEN, USDC_ROPSTEN, USDT_ROPSTEN],
   [ChainId.POLYGON]: [USDC_POLYGON],
   [ChainId.POLYGON_MUMBAI]: [PUSD_POLYGON_MUMBAI],

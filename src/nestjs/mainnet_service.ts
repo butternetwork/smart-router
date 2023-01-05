@@ -4,11 +4,13 @@ import {
   BRIDGE_SUPPORTED_TOKEN,
   GET_TOKEN_ICON,
   mUSDC_MAPT,
-  USDC_ETHT,
   USDC_MAP,
+  WBNB_BNB,
   WBNB_BSCT,
   WETH_ETHT,
+  WETH_MAINNET,
   WMAP_MAP,
+  WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
   WRAP_NEART,
 } from '../providers/token-provider';
@@ -17,7 +19,7 @@ import { getBestRoute } from '../routers/butter-router';
 import {
   ChainId,
   getChainProvider,
-  IS_SUPPORT_TESTNET,
+  IS_SUPPORT_MAINNET,
   NULL_ADDRESS,
   ZERO_ADDRESS,
 } from '../util';
@@ -73,7 +75,7 @@ enum RouterType {
   SRC_CHAIN = 0,
   TARGET_CHAIN = 1,
 }
-const mapChainId = '212';
+const mapChainId = '22776';
 
 @Injectable()
 export class RouterService {
@@ -89,8 +91,8 @@ export class RouterService {
     fromChainId: string,
     toChainId: string
   ): Promise<allRouter> {
-    IS_SUPPORT_TESTNET(fromChainId);
-    IS_SUPPORT_TESTNET(toChainId);
+    IS_SUPPORT_MAINNET(fromChainId);
+    IS_SUPPORT_MAINNET(toChainId);
     if (fromChainId == toChainId) {
       throw new HttpException({
         status: HttpStatus.OK,
@@ -98,25 +100,14 @@ export class RouterService {
       }, HttpStatus.OK);
     }
 
-    const rpcProvider = new ethers.providers.JsonRpcProvider(
-      'https://testnet-rpc.maplabs.io'
-    );
-
-    let tokenIn: Token = newToken(
-      fromChainId,
-      tokenInAddr,
-      tokenInDecimals,
-      tokenInSymbol
-    );
-    let tokenOut: Token = newToken(
-      toChainId,
-      tokenOutAddr,
-      tokenOutDecimals,
-      tokenOutSymbol
-    );
+    let rpcProvider = new ethers.providers.JsonRpcProvider('https://poc3-rpc.maplabs.io');
+    let tokenIn: Token = newToken(fromChainId,tokenInAddr,tokenInDecimals,tokenInSymbol);
+    let tokenOut: Token = newToken(toChainId,tokenOutAddr,tokenOutDecimals,tokenOutSymbol);
     let srcAmountOut = '0'
     let subFee = '0'
     let srcRouter: swapData[];
+    let mapRouter: swapData[];
+    let targetRouter: swapData[];
 
     if (fromChainId == mapChainId) {
       let amountBN = ethers.utils.parseUnits(amount, tokenIn.decimals)
@@ -184,9 +175,8 @@ export class RouterService {
       }
     }
 
-    let mapRouter: swapData[] = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
+    mapRouter = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
 
-    let targetRouter: swapData[];
     if (toChainId == mapChainId) {
       targetRouter = directSwap(
         mUSDC_MAPT,
@@ -410,9 +400,6 @@ function formatData(
         }
 
         let _chainId = '5566818579631833088';
-        if (chainId == ChainId.NEAR_TEST) {
-          _chainId = '5566818579631833089';
-        }
         swapPath.push({
           chainId: _chainId,
           amountIn: refRouter.amount.toExact(),
@@ -515,10 +502,6 @@ function newToken(
     chainId = ChainId.NEAR;
     let address = isWrapToken(_address, chainId);
     token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
-  } else if (_chainId == '5566818579631833089') {
-    chainId = ChainId.NEAR_TEST;
-    let address = isWrapToken(_address, chainId);
-    token = new Token(chainId, NULL_ADDRESS, decimals, _symbol, address);
   } else {
     let address = isWrapToken(_address, chainId);
     chainId = Number(_chainId);
@@ -531,14 +514,16 @@ function newToken(
 function isWrapToken(address: string, chainId: number): string {
   if (address == ZERO_ADDRESS) {
     switch (chainId) {
-      case ChainId.GÖRLI:
-        return WETH_ETHT.address;
-      case ChainId.BSC_TEST:
-        return WBNB_BSCT.address;
-      case ChainId.POLYGON_MUMBAI:
-        return WMATIC_POLYGON_MUMBAI.address;
-      case ChainId.NEAR_TEST:
+      case ChainId.MAINNET:
+        return WETH_MAINNET.address;
+      case ChainId.BSC:
+        return WBNB_BNB.address;
+      case ChainId.POLYGON:
+        return WMATIC_POLYGON.address;
+      case ChainId.NEAR:
         return WRAP_NEART.name!;
+      case ChainId.MAP:
+        return WMAP_MAP.address;
       default:
         return address;
     }
@@ -557,10 +542,7 @@ function formatReturn(
     let data: swapData[] = params;
     for (let i = 0; i < data.length; i++) {
       data[i]!.chainId = chainId;
-      if (
-        chainId == '5566818579631833088' ||
-        chainId == '5566818579631833089'
-      ) {
+      if (chainId == '5566818579631833088') {
         data[i]!.tokenIn.address = address;
         data[i]!.tokenOut.address = data[i]!.tokenOut.name;
       } else {
@@ -572,10 +554,7 @@ function formatReturn(
     let data: swapData[] = params;
     for (let i = 0; i < data.length; i++) {
       data[i]!.chainId = chainId;
-      if (
-        chainId == '5566818579631833088' ||
-        chainId == '5566818579631833089'
-      ) {
+      if ( chainId == '5566818579631833088') {
         data[i]!.tokenIn.address = data[i]!.tokenIn.name;
         data[i]!.tokenOut.address = address;
       } else {

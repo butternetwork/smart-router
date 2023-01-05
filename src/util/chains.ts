@@ -1,10 +1,12 @@
 import { Currency, Ether, NativeCurrency, Token } from '@uniswap/sdk-core';
 import { ethers } from 'ethers';
+import { WETH_MAINNET } from '../providers/token-provider';
 import { ButterProtocol } from './protocol';
 import {
   BSC_MAINNET_URL,
   BSC_TESTNET_URL,
   ETH_MAINNET_URL,
+  ETH_TESTNET_URL,
   MAP_MAINNET_URL,
   POLYGON_MAINNET_URL,
   POLYGON_MUMBAI_URL,
@@ -184,13 +186,7 @@ export const ID_TO_PROVIDER = (id: ChainId): string => {
 };
 
 export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
-  [ChainId.MAINNET]: new Token(
-    1,
-    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    18,
-    'WETH',
-    'Wrapped Ether'
-  ),
+  [ChainId.MAINNET]: WETH_MAINNET,
   [ChainId.ROPSTEN]: new Token(
     3,
     '0xc778417E063141139Fce010982780140Aa0cD5Ab',
@@ -364,6 +360,12 @@ export function getChainProvider(chainId: number) {
         ButterProtocol.SUSHISWAP,
       ];
       break;
+    case ChainId.GÖRLI:
+      provider = new ethers.providers.JsonRpcProvider(ETH_TESTNET_URL, chainId);
+      protocols = [
+        ButterProtocol.UNI_V2,
+      ];
+      break;
     case ChainId.BSC:
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
       protocols = [ButterProtocol.PANCAKESWAP];
@@ -406,16 +408,25 @@ export function getChainProvider(chainId: number) {
   return { provider, protocols };
 }
 
-export function IS_SUPPORT_CHAIN(id: string) {
+export function IS_SUPPORT_MAINNET(id: string) {
   switch (id) {
     case '1':
     case '137':
     case '56':
+    case '22776':
+    case '5566818579631833088':
+      break;
+    default:
+      throw new Error(`Unsupported chain id: ${id}`);
+  }
+}
+
+export function IS_SUPPORT_TESTNET(id: string) {
+  switch (id) {
+    case '5':
     case '97':
     case '212':
-    case '22776':
     case '80001':
-    case '5566818579631833088':
     case '5566818579631833089':
       break;
     default:

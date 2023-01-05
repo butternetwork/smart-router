@@ -32,6 +32,13 @@ export type TokenAccessor = {
 };
 
 // Some well known tokens on each chain for seeding cache / testing.
+export const WETH_MAINNET = new Token(
+  1,
+  '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  18,
+  'WETH',
+  'Wrapped Ether'
+)
 export const USDC_MAINNET = new Token(
   ChainId.MAINNET,
   '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -538,6 +545,23 @@ export const WBNB_BSCT = new Token(
   'Wrapped BNB'
 );
 
+//ETH TESTNET
+export const USDC_ETHT = new Token(
+  ChainId.GÖRLI,
+  '0x86CBE739888bFbC0bcA6e2D6106cfC5B3B1F69A5',
+  18,
+  'bUSDC', //BUSD
+  'USDC' //BUSD
+);
+
+export const WETH_ETHT = new Token(
+  ChainId.GÖRLI,
+  '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+  18,
+  'WETH',
+  'Wrapped Ether'
+);
+
 export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
@@ -635,6 +659,39 @@ export class TokenProvider implements ITokenProvider {
 export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 
 export const GET_TOKEN_ICON = (address: string): string => {
+
+  switch (address) {
+    
+    //native token
+    case WBNB_BSCT.address:
+      return 'https://files.mapprotocol.io/bridge/bnb.png';
+    case WRAP_NEART.name:
+      return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
+    case WMATIC_POLYGON_MUMBAI.address:
+      return 'https://files.mapprotocol.io/bridge/polygon.png';
+    case WETH_ETHT.address:
+      return 'https://files.mapprotocol.io/bridge/eth.png';
+   
+    //usdc 
+    case BUSD_BSCT.address:
+      return 'https://files.mapprotocol.io/bridge/busd.png';
+    case PUSD_POLYGON_MUMBAI.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case mUSDC_MAPT.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_NEART.name:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_ETHT.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+
+    //none
+    default:
+      return '';
+  }
+
+};
+
+export const GET_MAINNET_TOKEN_ICON = (address: string): string => {
   switch (address) {
     case WBNB_BNB.address:
       return 'https://files.mapprotocol.io/bridge/bnb.png';

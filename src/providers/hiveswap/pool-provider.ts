@@ -1,25 +1,25 @@
 import { Token } from '@uniswap/sdk-core';
-import { INIT_CODE_HASH, Pair, FACTORY_ADDRESS } from '@uniswap/v2-sdk';
+import { Pair } from '@uniswap/v2-sdk';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import _ from 'lodash';
-import { IUniswapV2Pair__factory } from '../../../types/v2';
-import { ChainId, CurrencyAmount, ETH_TEST_FACTORY_ADDRESS } from '../../../util';
-import { log } from '../../../util/log';
-import { poolToString } from '../../../util/routes';
+import { IUniswapV2Pair__factory } from '../../types/v2';
+import { ChainId, CurrencyAmount, MAP_FACTORY_ADDRESS } from '../../util';
+import { log } from '../../util/log';
+import { poolToString } from '../../util/routes';
 import {
   IReserves,
   IV2PoolProvider,
   V2PoolAccessor,
-} from '../../interfaces/IPoolProvider';
-import { IMulticallProvider, Result } from '../../multicall-provider';
-import { ProviderConfig } from '../../provider';
+} from '../interfaces/IPoolProvider';
+import { IMulticallProvider, Result } from '../multicall-provider';
+import { ProviderConfig } from '../provider';
 import { getCreate2Address } from '@ethersproject/address';
 import { pack, keccak256 } from '@ethersproject/solidity';
-import { ETH_INIT_CODE_HASH } from '../../../util/constants';
+import { MAP_INIT_CODE_HASH } from '../../util/constants';
 
-export type V2PoolRetryOptions = AsyncRetry.Options;
+type V2PoolRetryOptions = AsyncRetry.Options;
 
-export class V2PoolProvider implements IV2PoolProvider {
+export class MapPoolProvider implements IV2PoolProvider {
   // Computing pool addresses is slow as it requires hashing, encoding etc.
   // Addresses never change so can always be cached.
   private POOL_ADDRESS_CACHE: { [key: string]: string } = {};
@@ -152,24 +152,11 @@ export class V2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    let poolAddress:string
-    if(token0.chainId == 1){
-      poolAddress = computePairAddress({
-        factoryAddress: FACTORY_ADDRESS,
-        tokenA: token0,
-        tokenB: token1,
-        INIT_CODE_HASH: INIT_CODE_HASH
-      }); //Pair.getAddress(token0, token1);
-    }else if(token0.chainId == 5){
-      poolAddress = computePairAddress({
-        factoryAddress: ETH_TEST_FACTORY_ADDRESS,
-        tokenA: token0,
-        tokenB: token1,
-        INIT_CODE_HASH: ETH_INIT_CODE_HASH
-      }); //Pair.getAddress(token0, token1);
-    }else{
-      throw new Error(`uniswap_v2 not support the chainId ${token0.chainId}`)
-    }
+    const poolAddress = computePairAddress({
+      factoryAddress: MAP_FACTORY_ADDRESS,
+      tokenA: token0,
+      tokenB: token1,
+    }); //Pair.getAddress(token0, token1);
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
 
@@ -200,25 +187,23 @@ export class V2PoolProvider implements IV2PoolProvider {
 }
 
 const computePairAddress = ({
-  factoryAddress,
-  tokenA,
-  tokenB,
-  INIT_CODE_HASH,
-}: {
-  factoryAddress: string;
-  tokenA: Token;
-  tokenB: Token;
-  INIT_CODE_HASH: string
-}): string => {
-  const [token0, token1] = tokenA.sortsBefore(tokenB)
-    ? [tokenA, tokenB]
-    : [tokenB, tokenA]; // does safety checks
-  return getCreate2Address(
     factoryAddress,
-    keccak256(
-      ['bytes'],
-      [pack(['address', 'address'], [token0.address, token1.address])]
-    ),
-    INIT_CODE_HASH
-  );
-};
+    tokenA,
+    tokenB,
+  }: {
+    factoryAddress: string;
+    tokenA: Token;
+    tokenB: Token;
+  }): string => {
+    const [token0, token1] = tokenA.sortsBefore(tokenB)
+      ? [tokenA, tokenB]
+      : [tokenB, tokenA]; // does safety checks
+    return getCreate2Address(
+      factoryAddress,
+      keccak256(
+        ['bytes'],
+        [pack(['address', 'address'], [token0.address, token1.address])]
+      ),
+      MAP_INIT_CODE_HASH
+    );
+  };

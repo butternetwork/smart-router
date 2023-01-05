@@ -102,7 +102,6 @@ import { CurrencyAmount } from '../../util/amounts';
 import {
   ChainId,
   ID_TO_CHAIN_ID,
-  ID_TO_NETWORK_NAME,
   V2_SUPPORTED,
 } from '../../util/chains';
 import { log } from '../../util/log';
@@ -165,6 +164,7 @@ import {
 } from './functions/get-curve-best-router';
 import axios from 'axios';
 import {
+  ETH_TESTNET_MULTICALL_ADDRESS,
   MAP_MULTICALL_ADDRESS,
   MATIC_TEST_MULTICALL_ADDRESS,
   UNISWAP_MULTICALL_ADDRESS,
@@ -418,14 +418,14 @@ export class AlphaRouter
   }: AlphaRouterParams) {
     this.chainId = chainId;
     this.provider = provider;
-    if (chainId == ChainId.MAP) {
+    if (chainId == ChainId.GÖRLI) {
       this.multicall2Provider =
         multicall2Provider ??
         new UniswapMulticallProvider(
           chainId,
           provider,
           375_000,
-          MAP_MULTICALL_ADDRESS
+          ETH_TESTNET_MULTICALL_ADDRESS
         );
     } else {
       this.multicall2Provider =
@@ -576,8 +576,6 @@ export class AlphaRouter
         ),
         new TokenProvider(chainId, this.multicall2Provider)
       );
-
-    const chainName = ID_TO_NETWORK_NAME(chainId);
 
     this.gasPriceProvider =
       gasPriceProvider ??
@@ -1622,7 +1620,6 @@ export class AlphaRouter
         return tokenValidation == TokenValidationResult.STF;
       }
     );
-
     // Given all our candidate pools, compute all the possible ways to route from tokenIn to tokenOut.
     const { maxSwapsPerPath } = routingConfig;
     const routes = computeAllV2Routes(
