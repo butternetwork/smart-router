@@ -102,10 +102,8 @@ async function findBestRouter(
       break;
     case ChainId.GÖRLI:
       provider = new ethers.providers.JsonRpcProvider(ETH_TESTNET_URL, chainId);
-      protocols = [
-        ButterProtocol.UNI_V2,
-      ];
-      break;  
+      protocols = [ButterProtocol.UNI_V2];
+      break;
     case ChainId.BSC: //bsc
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId); //forked net chianId
       protocols = [ButterProtocol.PANCAKESWAP];

@@ -38,7 +38,7 @@ export const WETH_MAINNET = new Token(
   18,
   'WETH',
   'Wrapped Ether'
-)
+);
 export const USDC_MAINNET = new Token(
   ChainId.MAINNET,
   '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -659,9 +659,7 @@ export class TokenProvider implements ITokenProvider {
 export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 
 export const GET_TOKEN_ICON = (address: string): string => {
-
   switch (address) {
-    
     //native token
     case WBNB_BSCT.address:
       return 'https://files.mapprotocol.io/bridge/bnb.png';
@@ -671,8 +669,8 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://files.mapprotocol.io/bridge/polygon.png';
     case WETH_ETHT.address:
       return 'https://files.mapprotocol.io/bridge/eth.png';
-   
-    //usdc 
+
+    //usdc
     case BUSD_BSCT.address:
       return 'https://files.mapprotocol.io/bridge/busd.png';
     case PUSD_POLYGON_MUMBAI.address:
@@ -688,7 +686,6 @@ export const GET_TOKEN_ICON = (address: string): string => {
     default:
       return '';
   }
-
 };
 
 export const GET_MAINNET_TOKEN_ICON = (address: string): string => {

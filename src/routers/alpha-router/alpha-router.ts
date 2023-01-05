@@ -99,11 +99,7 @@ import {
 } from '../../providers/uniswap/v3/quote-provider';
 import { RawV3SubgraphPool } from '../../providers/uniswap/v3/subgraph-provider';
 import { CurrencyAmount } from '../../util/amounts';
-import {
-  ChainId,
-  ID_TO_CHAIN_ID,
-  V2_SUPPORTED,
-} from '../../util/chains';
+import { ChainId, ID_TO_CHAIN_ID, V2_SUPPORTED } from '../../util/chains';
 import { log } from '../../util/log';
 import { metric, MetricLoggerUnit } from '../../util/metric';
 import {

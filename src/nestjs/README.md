@@ -42,8 +42,6 @@
 
 `http://127.0.0.1:9009/router/best_route?fromChainId=5&toChainId=97&amountIn=1.1&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WBNB&tokenInSymbol=WETH`
 
-
-
 # Get mainnet example
 
 ## mapTest(WBNB) -> PolygonTest(WMATIC)
@@ -54,11 +52,9 @@
 
 `http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=212&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=mUSDC&tokenInSymbol=WBNB`
 
-
 ## bscTest(WBNB) -> NearTest(WNEAR)
 
 `http://127.0.0.1:9009/router/best_route?fromChainId=97&toChainId=5566818579631833089&amountIn=9.9&tokenInAddress=0x593F6F6748dc203DFa636c299EeA6a39C0734EEd&tokenInDecimal=18&tokenOutAddress=wrap.testnet&tokenOutDecimal=24&tokenOutSymbol=WNEAR&tokenInSymbol=BMOS`
-
 
 ## bscTest(WBNB) -> NearTest(WMAP)
 

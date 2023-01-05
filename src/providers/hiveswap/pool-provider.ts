@@ -187,23 +187,23 @@ export class MapPoolProvider implements IV2PoolProvider {
 }
 
 const computePairAddress = ({
+  factoryAddress,
+  tokenA,
+  tokenB,
+}: {
+  factoryAddress: string;
+  tokenA: Token;
+  tokenB: Token;
+}): string => {
+  const [token0, token1] = tokenA.sortsBefore(tokenB)
+    ? [tokenA, tokenB]
+    : [tokenB, tokenA]; // does safety checks
+  return getCreate2Address(
     factoryAddress,
-    tokenA,
-    tokenB,
-  }: {
-    factoryAddress: string;
-    tokenA: Token;
-    tokenB: Token;
-  }): string => {
-    const [token0, token1] = tokenA.sortsBefore(tokenB)
-      ? [tokenA, tokenB]
-      : [tokenB, tokenA]; // does safety checks
-    return getCreate2Address(
-      factoryAddress,
-      keccak256(
-        ['bytes'],
-        [pack(['address', 'address'], [token0.address, token1.address])]
-      ),
-      MAP_INIT_CODE_HASH
-    );
-  };
+    keccak256(
+      ['bytes'],
+      [pack(['address', 'address'], [token0.address, token1.address])]
+    ),
+    MAP_INIT_CODE_HASH
+  );
+};

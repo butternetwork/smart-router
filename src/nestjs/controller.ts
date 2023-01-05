@@ -9,7 +9,7 @@ import { RouterService } from './service';
 
 @Controller('router')
 export class RouterController {
-  constructor(private readonly routerService: RouterService) { }
+  constructor(private readonly routerService: RouterService) {}
 
   @Get('best_route')
   async getBestRoute(
@@ -38,7 +38,7 @@ export class RouterController {
       return bestRouter;
     } catch (error: unknown) {
       if (error instanceof HttpException) {
-        throw error
+        throw error;
       } else if (error instanceof Error) {
         throw new HttpException(
           error.message,

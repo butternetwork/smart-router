@@ -77,25 +77,15 @@ const TOKEN_REGISTER_ADDRESS_SET: { [mosSupportedChainId: string]: string } = {
 const ID_TO_ALL_TOKEN = (id: string): Token[] => {
   switch (id) {
     case '212':
-      return [
-        mUSDC_MAPT
-      ];
+      return [mUSDC_MAPT];
     case '5':
-      return [
-        USDC_ETHT
-      ];
+      return [USDC_ETHT];
     case '5566818579631833089':
-      return [
-        USDC_NEART
-      ];
+      return [USDC_NEART];
     case '97':
-      return [
-        BUSD_BSCT,
-      ];
+      return [BUSD_BSCT];
     case '80001':
-      return [
-        PUSD_POLYGON_MUMBAI
-      ];
+      return [PUSD_POLYGON_MUMBAI];
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -283,8 +273,8 @@ export async function getVaultBalance(
   rpcProvider: ethers.providers.JsonRpcProvider,
   mapChainId: string
 ): Promise<VaultBalance> {
-  let fromChain = isNearChainId(fromChainId)
-  let toChain = isNearChainId(toChainId)
+  let fromChain = isNearChainId(fromChainId);
+  let toChain = isNearChainId(toChainId);
   const tokenRegister = new TokenRegister(TOKEN_REGISTER_ADDRESS, rpcProvider);
 
   if (fromToken.isNative) {
@@ -323,13 +313,9 @@ export async function getVaultBalance(
       .mul(ethers.utils.parseUnits('1', toChainToken.decimals))
       .div(ethers.utils.parseUnits('1', mapToken.decimals))
       .toString();
-
   }
   return Promise.resolve({
-    token: getTokenByAddressAndChainId(
-      toChainTokenAddress,
-      toChain
-    ),
+    token: getTokenByAddressAndChainId(toChainTokenAddress, toChain),
     balance: tokenBalance.toString(),
   });
 }
@@ -348,19 +334,22 @@ export async function getTokenCandidates(
     TOKEN_REGISTER_ADDRESS_SET[mapChainId]
   );
 
-  let tokenArr = ID_TO_SUPPORTED_TOKEN(fromChainId).map(
-    (token: Token) => {
-      if (IS_NEAR(token.chainId.toString())) {
-        if (token.isNative) {
-          return getHexAddress(token.wrapped.address, token.chainId.toString(), false);
-        } else return getHexAddress(token.address, token.chainId.toString(), false);
-      } else {
-        if (token.isNative) {
-          return token.wrapped.address;
-        } else return token.address;
-      }
+  let tokenArr = ID_TO_SUPPORTED_TOKEN(fromChainId).map((token: Token) => {
+    if (IS_NEAR(token.chainId.toString())) {
+      if (token.isNative) {
+        return getHexAddress(
+          token.wrapped.address,
+          token.chainId.toString(),
+          false
+        );
+      } else
+        return getHexAddress(token.address, token.chainId.toString(), false);
+    } else {
+      if (token.isNative) {
+        return token.wrapped.address;
+      } else return token.address;
     }
-  );
+  });
   if (!IS_MAP(fromChainId)) {
     tokenArr = await batchGetRelayChainToken(
       tokenRegisterContract,
@@ -393,7 +382,7 @@ export async function getTargetToken(
   srcToken: Token,
   targetChainId: string,
   //rpcProvider: ethers.providers.JsonRpcProvider,
-  mapChainId : string
+  mapChainId: string
 ): Promise<Token> {
   const tokenAddress = await getTargetTokenAddress(
     srcToken,
@@ -411,9 +400,11 @@ export async function getTargetTokenAddress(
   srcToken: Token,
   targetChainId: string,
   //rpcProvider: ethers.providers.JsonRpcProvider,
-  mapChainId:string
+  mapChainId: string
 ): Promise<string> {
-  const provider = new ethers.providers.JsonRpcProvider(ID_TO_DEFAULT_RPC_URL(mapChainId));
+  const provider = new ethers.providers.JsonRpcProvider(
+    ID_TO_DEFAULT_RPC_URL(mapChainId)
+  );
   const tokenRegister = new TokenRegister(
     TOKEN_REGISTER_ADDRESS_SET[mapChainId]!,
     provider
@@ -443,7 +434,7 @@ export function toTargetToken(chainId: number, token: Token) {
       break;
     case ChainId.GÖRLI:
       targetToken = USDC_ETHT;
-      break; 
+      break;
     case ChainId.BSC:
       targetToken = USDC_BNB;
       break;
@@ -636,16 +627,13 @@ function getTokenByAddressAndChainId(
 ): Token {
   const supportedToken: Token[] = ID_TO_ALL_TOKEN(chainId);
   for (let i = 0; i < supportedToken.length; i++) {
-    let address = supportedToken[i]!.address
+    let address = supportedToken[i]!.address;
     if (chainId == '5566818579631833089' || chainId == '5566818579631833088') {
-      address = supportedToken[i]!.name!
+      address = supportedToken[i]!.name!;
     }
     if (
-      getHexAddress(
-        address,
-        chainId,
-        false
-      ).toLowerCase() === tokenAddress.toLowerCase()
+      getHexAddress(address, chainId, false).toLowerCase() ===
+      tokenAddress.toLowerCase()
     ) {
       return supportedToken[i]!;
     }

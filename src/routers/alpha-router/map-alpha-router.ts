@@ -91,9 +91,7 @@ import {
   _getUsdRate,
 } from './functions/get-curve-best-router';
 import axios from 'axios';
-import {
-  MAP_MULTICALL_ADDRESS,
-} from '../../util/addresses';
+import { MAP_MULTICALL_ADDRESS } from '../../util/addresses';
 import { MapPoolProvider } from '../../providers/hiveswap/pool-provider';
 export type AlphaRouterParams = {
   /**

@@ -3,7 +3,11 @@ import { INIT_CODE_HASH, Pair, FACTORY_ADDRESS } from '@uniswap/v2-sdk';
 import { default as AsyncRetry, default as retry } from 'async-retry';
 import _ from 'lodash';
 import { IUniswapV2Pair__factory } from '../../../types/v2';
-import { ChainId, CurrencyAmount, ETH_TEST_FACTORY_ADDRESS } from '../../../util';
+import {
+  ChainId,
+  CurrencyAmount,
+  ETH_TEST_FACTORY_ADDRESS,
+} from '../../../util';
 import { log } from '../../../util/log';
 import { poolToString } from '../../../util/routes';
 import {
@@ -152,23 +156,23 @@ export class V2PoolProvider implements IV2PoolProvider {
       return { poolAddress: cachedAddress, token0, token1 };
     }
 
-    let poolAddress:string
-    if(token0.chainId == 1){
+    let poolAddress: string;
+    if (token0.chainId == 1) {
       poolAddress = computePairAddress({
         factoryAddress: FACTORY_ADDRESS,
         tokenA: token0,
         tokenB: token1,
-        INIT_CODE_HASH: INIT_CODE_HASH
+        INIT_CODE_HASH: INIT_CODE_HASH,
       }); //Pair.getAddress(token0, token1);
-    }else if(token0.chainId == 5){
+    } else if (token0.chainId == 5) {
       poolAddress = computePairAddress({
         factoryAddress: ETH_TEST_FACTORY_ADDRESS,
         tokenA: token0,
         tokenB: token1,
-        INIT_CODE_HASH: ETH_INIT_CODE_HASH
+        INIT_CODE_HASH: ETH_INIT_CODE_HASH,
       }); //Pair.getAddress(token0, token1);
-    }else{
-      throw new Error(`uniswap_v2 not support the chainId ${token0.chainId}`)
+    } else {
+      throw new Error(`uniswap_v2 not support the chainId ${token0.chainId}`);
     }
 
     this.POOL_ADDRESS_CACHE[cacheKey] = poolAddress;
@@ -208,7 +212,7 @@ const computePairAddress = ({
   factoryAddress: string;
   tokenA: Token;
   tokenB: Token;
-  INIT_CODE_HASH: string
+  INIT_CODE_HASH: string;
 }): string => {
   const [token0, token1] = tokenA.sortsBefore(tokenB)
     ? [tokenA, tokenB]

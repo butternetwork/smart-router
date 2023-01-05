@@ -77,7 +77,6 @@ const mapChainId = '212';
 
 @Injectable()
 export class RouterService {
-
   async crossChainRouter(
     tokenInAddr: string,
     tokenInDecimals: number,
@@ -92,10 +91,13 @@ export class RouterService {
     IS_SUPPORT_TESTNET(fromChainId);
     IS_SUPPORT_TESTNET(toChainId);
     if (fromChainId == toChainId) {
-      throw new HttpException({
-        status: HttpStatus.OK,
-        error: 'fromChainId and toChainId cannot be the same',
-      }, HttpStatus.OK);
+      throw new HttpException(
+        {
+          status: HttpStatus.OK,
+          error: 'fromChainId and toChainId cannot be the same',
+        },
+        HttpStatus.OK
+      );
     }
 
     const rpcProvider = new ethers.providers.JsonRpcProvider(
@@ -114,12 +116,12 @@ export class RouterService {
       tokenOutDecimals,
       tokenOutSymbol
     );
-    let srcAmountOut = '0'
-    let subFee = '0'
+    let srcAmountOut = '0';
+    let subFee = '0';
     let srcRouter: swapData[];
 
     if (fromChainId == mapChainId) {
-      let amountBN = ethers.utils.parseUnits(amount, tokenIn.decimals)
+      let amountBN = ethers.utils.parseUnits(amount, tokenIn.decimals);
       const bridgeFee = await getBridgeFee(
         tokenIn,
         toChainId,
@@ -128,13 +130,12 @@ export class RouterService {
         mapChainId
       ); // chainId
 
-      srcAmountOut = amount
-      subFee = ethers.utils.formatUnits(amountBN.sub(bridgeFee.amount), tokenIn.decimals)
-      srcRouter = directSwap(
-        mUSDC_MAPT,
-        amount,
-        subFee
-      )
+      srcAmountOut = amount;
+      subFee = ethers.utils.formatUnits(
+        amountBN.sub(bridgeFee.amount),
+        tokenIn.decimals
+      );
+      srcRouter = directSwap(mUSDC_MAPT, amount, subFee);
     } else {
       srcRouter = await chainRouter(
         tokenIn,
@@ -144,12 +145,21 @@ export class RouterService {
       );
 
       if (srcRouter != null) {
-        const token = srcRouter[0]!.tokenOut
-        const fromToken = new Token(tokenIn.chainId, token.address, token.decimals, token.symbol, token.name)
+        const token = srcRouter[0]!.tokenOut;
+        const fromToken = new Token(
+          tokenIn.chainId,
+          token.address,
+          token.decimals,
+          token.symbol,
+          token.name
+        );
 
-        let amountOut = '0'
+        let amountOut = '0';
         for (let p of srcRouter) {
-          amountOut = ethers.utils.parseUnits(amountOut, p.tokenOut.decimals).add(ethers.utils.parseUnits(p.amountOut, p.tokenOut.decimals)).toString()
+          amountOut = ethers.utils
+            .parseUnits(amountOut, p.tokenOut.decimals)
+            .add(ethers.utils.parseUnits(p.amountOut, p.tokenOut.decimals))
+            .toString();
         }
 
         const bridgeFee = await getBridgeFee(
@@ -158,41 +168,45 @@ export class RouterService {
           amountOut,
           rpcProvider,
           mapChainId
-        )
-        
-        srcAmountOut = ethers.utils.formatUnits(amountOut, fromToken.decimals)
-        amountOut = ethers.BigNumber.from(amountOut).sub(bridgeFee.amount).toString()
-        subFee = ethers.utils.formatUnits(amountOut, fromToken.decimals)
+        );
+
+        srcAmountOut = ethers.utils.formatUnits(amountOut, fromToken.decimals);
+        amountOut = ethers.BigNumber.from(amountOut)
+          .sub(bridgeFee.amount)
+          .toString();
+        subFee = ethers.utils.formatUnits(amountOut, fromToken.decimals);
 
         if (toChainId != mapChainId) {
-          const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
+          const vaultBalance = await getVaultBalance(
+            fromChainId,
+            fromToken,
+            toChainId,
+            rpcProvider,
+            mapChainId
+          );
           isSufficientLiquidity(
             amountOut,
             vaultBalance.balance,
             fromToken.decimals,
             vaultBalance.token.decimals
-          )
+          );
         }
-
       } else {
-
-        throw new HttpException({
-          status: HttpStatus.OK,
-          error: "there isn't the best router in src chain",
-        }, HttpStatus.OK);
-        
+        throw new HttpException(
+          {
+            status: HttpStatus.OK,
+            error: "there isn't the best router in src chain",
+          },
+          HttpStatus.OK
+        );
       }
     }
 
-    let mapRouter: swapData[] = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
+    let mapRouter: swapData[] = directSwap(mUSDC_MAPT, srcAmountOut, subFee);
 
     let targetRouter: swapData[];
     if (toChainId == mapChainId) {
-      targetRouter = directSwap(
-        mUSDC_MAPT,
-        srcAmountOut,
-        subFee
-      );
+      targetRouter = directSwap(mUSDC_MAPT, srcAmountOut, subFee);
     } else {
       targetRouter = await chainRouter(
         tokenOut,
@@ -250,9 +264,7 @@ export class RouterService {
       };
     }
   }
-
 }
-
 
 async function findBestRouter(
   chainId: number,
@@ -292,7 +304,6 @@ async function findBestRouter(
 
   return [total, gasCostInUSD, swapRoute.route];
 }
-
 
 async function chainRouter(
   swapToken: Token,
@@ -377,7 +388,6 @@ async function chainRouter(
   return formatData(bestRouter, token1, token2, chainId);
 }
 
-
 function formatData(
   bestRouter: RouteWithValidQuote[],
   tokenIn: token,
@@ -423,10 +433,13 @@ function formatData(
           tokenOut: tokenOut,
         });
       } else {
-        throw new HttpException({
-          status: HttpStatus.OK,
-          error: "cannot get router of ref",
-        }, HttpStatus.OK); 
+        throw new HttpException(
+          {
+            status: HttpStatus.OK,
+            error: 'cannot get router of ref',
+          },
+          HttpStatus.OK
+        );
       }
     } else {
       for (let j = 0; j < bestRouter[i]!.poolAddresses.length; j++) {
@@ -464,7 +477,6 @@ function formatData(
   return swapPath;
 }
 
-
 function directSwap(
   token: Token,
   amountIn: string,
@@ -501,7 +513,6 @@ function directSwap(
   return router;
 }
 
-
 function newToken(
   _chainId: string,
   _address: string,
@@ -527,7 +538,6 @@ function newToken(
   return token;
 }
 
-
 function isWrapToken(address: string, chainId: number): string {
   if (address == ZERO_ADDRESS) {
     switch (chainId) {
@@ -545,7 +555,6 @@ function isWrapToken(address: string, chainId: number): string {
   }
   return address;
 }
-
 
 function formatReturn(
   params: swapData[],
@@ -584,39 +593,47 @@ function formatReturn(
     }
     return data;
   } else {
-    throw new Error('return incorrect data! please contact the administrator to fix.');
+    throw new Error(
+      'return incorrect data! please contact the administrator to fix.'
+    );
   }
 }
-
 
 function notExceedDecimals(num: string, decimal: number): string {
-  let len = num.split(".")[1]!.length
+  let len = num.split('.')[1]!.length;
   if (len > decimal) {
-    return Number(num).toFixed(decimal + 1).slice(0, -1)
+    return Number(num)
+      .toFixed(decimal + 1)
+      .slice(0, -1);
   }
-  return num
+  return num;
 }
 
-
-function isSufficientLiquidity(amount: string, balance: string, amountDecimal: number, balanceDecimal: number) {
-
+function isSufficientLiquidity(
+  amount: string,
+  balance: string,
+  amountDecimal: number,
+  balanceDecimal: number
+) {
   if (amountDecimal > balanceDecimal) {
-    let num1 = ethers.BigNumber.from(amount)
-    let num2 = ethers.utils.parseUnits(balance, amountDecimal - balanceDecimal)
+    let num1 = ethers.BigNumber.from(amount);
+    let num2 = ethers.utils.parseUnits(balance, amountDecimal - balanceDecimal);
     if (num2.gte(num1)) {
-      return true
+      return true;
     }
   } else {
-    let num1 = ethers.utils.parseUnits(amount, balanceDecimal - amountDecimal)
-    let num2 = ethers.BigNumber.from(balance)
+    let num1 = ethers.utils.parseUnits(amount, balanceDecimal - amountDecimal);
+    let num2 = ethers.BigNumber.from(balance);
     if (num2.gte(num1)) {
-      return true
+      return true;
     }
   }
 
-  throw new HttpException({
-    status: HttpStatus.OK,
-    error: "there isn't sufficiently liquidity to cross chain",
-  }, HttpStatus.OK);
-
+  throw new HttpException(
+    {
+      status: HttpStatus.OK,
+      error: "there isn't sufficiently liquidity to cross chain",
+    },
+    HttpStatus.OK
+  );
 }

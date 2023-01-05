@@ -362,9 +362,7 @@ export function getChainProvider(chainId: number) {
       break;
     case ChainId.GÖRLI:
       provider = new ethers.providers.JsonRpcProvider(ETH_TESTNET_URL, chainId);
-      protocols = [
-        ButterProtocol.UNI_V2,
-      ];
+      protocols = [ButterProtocol.UNI_V2];
       break;
     case ChainId.BSC:
       provider = new ethers.providers.JsonRpcProvider(BSC_MAINNET_URL, chainId);
