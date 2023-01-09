@@ -178,6 +178,9 @@ const IS_EVM = (id: string): boolean => {
     case '212':
     case '34434':
       return true;
+    case '1313161554':
+    case '1313161555':
+    case '5566818579631833088':
     case '5566818579631833089':
       return false;
     default:
@@ -203,6 +206,9 @@ const IS_NEAR = (id: string): boolean => {
     case '212':
     case '34434':
       return false;
+    case '1313161554':
+    case '1313161555':
+    case '5566818579631833088':
     case '5566818579631833089':
       return true;
     default:
@@ -364,10 +370,11 @@ export async function getTokenCandidates(
   if (!IS_MAP(fromChainId)) {
     tokenArr = await batchGetRelayChainToken(
       tokenRegisterContract,
-      fromChainId,
+      isNearChainId(fromChainId),
       tokenArr,
       mapUrl
     );
+    console.log('tokenArr',tokenArr)
   }
 
   if (IS_MAP(toChainId)) {
@@ -376,9 +383,10 @@ export async function getTokenCandidates(
   const toChainTokenList = await batchGetToChainToken(
     tokenRegisterContract,
     tokenArr,
-    toChainId,
+    isNearChainId(toChainId),
     mapUrl
   );
+  console.log('toChainTokenList',toChainTokenList)
   let supportedFromChainTokenArr: Token[] = [];
   for (let i = 0; i < toChainTokenList.length; i++) {
     if (toChainTokenList[i] != null && toChainTokenList[i] != '0x') {
@@ -386,7 +394,6 @@ export async function getTokenCandidates(
     }
   }
   return supportedFromChainTokenArr;
-  //return Promise.resolve([USDC_MAP]);
 }
 
 export async function getTargetToken(
@@ -404,7 +411,6 @@ export async function getTargetToken(
     throw new Error('token does not exist');
   }
   return getTokenByAddressAndChainId(tokenAddress, targetChainId);
-  //return USDC_MAP;
 }
 
 export async function getTargetTokenAddress(

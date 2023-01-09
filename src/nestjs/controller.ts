@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
-import { RouterService } from './service';
+import { RouterService } from './mainnet_service';
 
 @Controller('router')
 export class RouterController {

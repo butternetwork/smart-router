@@ -7,9 +7,11 @@ import {
   mUSDC_MAPT,
   PMOS_POLYGON_MUMBAI,
   PUSD_POLYGON_MUMBAI,
+  USDC_MAINNET,
   USDC_NEAR,
   USDC_NEART,
   WBNB_BSCT,
+  WETH_MAINNET,
   WMATIC_POLYGON_MUMBAI,
 } from '../providers';
 import { _getUsdRate } from '../routers/alpha-router/functions/get-curve-best-router';
@@ -94,15 +96,29 @@ async function testBridgeFee() {
 //testBridgeFee()
 
 async function testTokenCandidates(){
-    let tokens = await getTokenCandidates('97','80001','212')
+    let tokens 
+    // tokens = await getTokenCandidates('56','137','22776')
+    // console.log('TokenCandidates',tokens)
+    // tokens = await getTokenCandidates('137','1313161554','22776')
+    // console.log('TokenCandidates',tokens)
+    tokens = await getTokenCandidates('137','1313161554','22776')
     console.log('TokenCandidates',tokens)
+    // tokens = await getTokenCandidates('22776','1','22776')
+    // console.log('TokenCandidates',tokens)
 }
 
-testTokenCandidates()
+//testTokenCandidates()
 
 async function testTargetToken(){
-    let token = await getTargetToken(BUSD_BSCT,'80001','212')
+    let token = await getTargetToken(BUSD_BSCT,'80001','22776')
     console.log('TargetToken',token)
 }
 
-testTargetToken()
+//testTargetToken()
+
+let amount = 1265787038602503559606.403079210870707395
+let decimals = 6
+let BN = ethers.utils
+console.log('amount',amount)
+console.log('toFixed',amount.toFixed(decimals + 1))
+console.log('toFixed slice',amount.toFixed(decimals + 1).slice(0, -1))

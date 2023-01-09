@@ -155,15 +155,15 @@ export class RouterService {
         amountOut = ethers.BigNumber.from(amountOut).sub(bridgeFee.amount).toString()
         subFee = ethers.utils.formatUnits(amountOut, fromToken.decimals)
 
-        if (toChainId != mapChainId) {
-          const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
-          isSufficientLiquidity(
-            amountOut,
-            vaultBalance.balance,
-            fromToken.decimals,
-            vaultBalance.token.decimals
-          )
-        }
+        // if (toChainId != mapChainId) {
+        //   const vaultBalance = await getVaultBalance(fromChainId, fromToken, toChainId, rpcProvider, mapChainId)
+        //   isSufficientLiquidity(
+        //     amountOut,
+        //     vaultBalance.balance,
+        //     fromToken.decimals,
+        //     vaultBalance.token.decimals
+        //   )
+        // }
 
       } else {
 
@@ -175,7 +175,7 @@ export class RouterService {
       }
     }
 
-    mapRouter = directSwap(mUSDC_MAPT, srcAmountOut, subFee)
+    mapRouter = directSwap(USDC_MAP, srcAmountOut, subFee)
 
     if (toChainId == mapChainId) {
       targetRouter = directSwap(
@@ -305,7 +305,7 @@ async function chainRouter(
       tokenOut = swapToken;
       swapAmount = notExceedDecimals(swapAmount, tokenIn.decimals);
     }
-
+console.log('swapAmount, tokenIn.decimals',swapAmount, tokenIn.decimals)
     if (tokenIn.address == tokenOut.address || tokenIn.name == tokenOut.name) {
       return directSwap(tokenIn, amount, amount);
     }
@@ -570,7 +570,10 @@ function formatReturn(
 
 function notExceedDecimals(num: string, decimal: number): string {
   let len = num.split(".")[1]!.length
+  console.log('len',len)
   if (len > decimal) {
+    console.log('num,decimal',num,decimal)
+    console.log('notExceedDecimals',Number(num).toFixed(decimal + 1).slice(0, -1))
     return Number(num).toFixed(decimal + 1).slice(0, -1)
   }
   return num

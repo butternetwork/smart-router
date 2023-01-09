@@ -1,3 +1,4 @@
+import { USDC } from '@sushiswap/sdk';
 import { Token } from '@uniswap/sdk-core';
 import _ from 'lodash';
 import { IERC20Metadata__factory } from '../types/v3';
@@ -33,7 +34,7 @@ export type TokenAccessor = {
 
 // Some well known tokens on each chain for seeding cache / testing.
 export const WETH_MAINNET = new Token(
-  1,
+  ChainId.MAINNET,
   '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   18,
   'WETH',
@@ -566,7 +567,7 @@ export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
     protected multicall2Provider: IMulticallProvider
-  ) {}
+  ) { }
 
   public async getTokens(
     _addresses: string[],
@@ -634,10 +635,8 @@ export class TokenProvider implements ITokenProvider {
       }
 
       log.info(
-        `Got token symbol and decimals for ${
-          Object.values(addressToToken).length
-        } out of ${addresses.length} tokens on-chain ${
-          providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
+        `Got token symbol and decimals for ${Object.values(addressToToken).length
+        } out of ${addresses.length} tokens on-chain ${providerConfig ? `as of: ${providerConfig?.blockNumber}` : ''
         }`
       );
     }
@@ -661,7 +660,7 @@ export const BRIDGE_SUPPORTED_TOKEN: Token[] = [USDC_MAP];
 export const GET_TOKEN_ICON = (address: string): string => {
 
   switch (address) {
-    
+    //testnet
     //native token
     case WBNB_BSCT.address:
       return 'https://files.mapprotocol.io/bridge/bnb.png';
@@ -671,7 +670,6 @@ export const GET_TOKEN_ICON = (address: string): string => {
       return 'https://files.mapprotocol.io/bridge/polygon.png';
     case WETH_ETHT.address:
       return 'https://files.mapprotocol.io/bridge/eth.png';
-   
     //usdc 
     case BUSD_BSCT.address:
       return 'https://files.mapprotocol.io/bridge/busd.png';
@@ -682,6 +680,30 @@ export const GET_TOKEN_ICON = (address: string): string => {
     case USDC_NEART.name:
       return 'https://files.mapprotocol.io/bridge/usdc.png';
     case USDC_ETHT.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+
+    //mainnet
+    //native token
+    case WBNB_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/bnb.png';
+    case WNEAR_NEAR.name:
+      return 'https://cryptologos.cc/logos/near-protocol-near-logo.png';
+    case WMATIC_POLYGON.address:
+      return 'https://files.mapprotocol.io/bridge/polygon.png';
+    case WETH_MAINNET.address:
+      return 'https://files.mapprotocol.io/bridge/eth.png';
+    case WMAP_MAP.address:
+      return 'https://files.mapprotocol.io/bridge/map.png';
+    //usdc 
+    case USDC_BNB.address:
+      return 'https://files.mapprotocol.io/bridge/busd.png';
+    case USDC_POLYGON.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_MAP.address:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_NEAR.name:
+      return 'https://files.mapprotocol.io/bridge/usdc.png';
+    case USDC_MAINNET.address:
       return 'https://files.mapprotocol.io/bridge/usdc.png';
 
     //none

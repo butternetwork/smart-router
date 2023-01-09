@@ -186,7 +186,13 @@ export const ID_TO_PROVIDER = (id: ChainId): string => {
 };
 
 export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
-  [ChainId.MAINNET]: WETH_MAINNET,
+  [ChainId.MAINNET]: new Token(
+    1,
+    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    18,
+    'WETH',
+    'Wrapped Ether'
+  ),
   [ChainId.ROPSTEN]: new Token(
     3,
     '0xc778417E063141139Fce010982780140Aa0cD5Ab',

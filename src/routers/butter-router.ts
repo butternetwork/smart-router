@@ -112,7 +112,7 @@ export async function getBestRoute(
   const routerConfig: Partial<AlphaRouterConfig> = {
     protocols: protocols,
   };
-
+console.log('debug router')
   const swapRoute = await router.route(
     inAmount,
     tokenOut,

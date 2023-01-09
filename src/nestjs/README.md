@@ -48,7 +48,7 @@
 
 ## mapTest(WBNB) -> PolygonTest(WMATIC)
 
-`http://127.0.0.1:9009/router/best_route?fromChainId=212&toChainId=80001&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WMATIC&tokenInSymbol=mUSDC`
+`http://127.0.0.1:9009/router/best_route?fromChainId=56&toChainId=137&amountIn=9.9&tokenInAddress=0x0000000000000000000000000000000000000000&tokenInDecimal=18&tokenOutAddress=0x0000000000000000000000000000000000000000&tokenOutDecimal=18&tokenOutSymbol=WMATIC&tokenInSymbol=WBNB`
 
 ## bscTest(WMATIC) -> mapTest(WBNB)
 

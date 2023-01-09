@@ -1578,6 +1578,7 @@ export class AlphaRouter
     routesWithValidQuotes: V2RouteWithValidQuote[];
     candidatePools: CandidatePoolsBySelectionCriteria;
   }> {
+    console.log('v2PoolsUnsanitized',v2PoolsUnsanitized)
     log.info('Starting to get V2 quotes');
     // Fetch all the pools that we will consider routing via. There are thousands
     // of pools, so we filter them to a set of candidate pools that we expect will
