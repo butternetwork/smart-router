@@ -483,7 +483,8 @@ function directSwap(
   amountOut: string
 ): swapData[] {
   let icon_key = token.address;
-  if (token.chainId == ChainId.NEAR) {
+
+  if (token.chainId == ChainId.NEAR_TEST) {
     icon_key = token.name!;
   }
 
@@ -491,8 +492,8 @@ function directSwap(
     {
       chainId: token.chainId.toString(),
       dexName: '',
-      amountIn: amountIn,
-      amountOut: amountOut,
+      amountIn: notExceedDecimals(amountIn, token.decimals),
+      amountOut: notExceedDecimals(amountOut, token.decimals),
       tokenIn: {
         address: token.address,
         name: token.name!,
@@ -585,6 +586,7 @@ function formatReturn(
         chainId == '5566818579631833088' ||
         chainId == '5566818579631833089'
       ) {
+        console.log('11')
         data[i]!.tokenIn.address = data[i]!.tokenIn.name;
         data[i]!.tokenOut.address = address;
       } else {
